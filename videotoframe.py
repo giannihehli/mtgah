@@ -2,8 +2,8 @@ import os
 import cv2
 
 # define directories and paths
-dir = "H:\\data\\tests\\"
-vid = "C0020"
+dir = "H:/data/calibration/gopro1"
+vid = "GX010011"
 vid_path = vid + ".MP4"
 
 # change working directory to data storage
@@ -24,7 +24,7 @@ count = 0
 # loop for the whole video
 while success:
     # save frame as JPEG file
-    cv2.imwrite(vid + "\\" "%d.jpg" % count, image)
+    cv2.imwrite(vid + '/' '%d.jpg' % count, image)
     success, image = vidcap.read()
-    print("Read frame ", count, ": ", success)
+    print("Save frame ", count, ": ", success)
     count += 1
