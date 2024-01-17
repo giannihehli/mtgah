@@ -2,16 +2,9 @@ import os
 import cv2
 from glob import glob
 
-<<<<<<< Updated upstream
-# define directories and paths
-dir = "H:\\data\\tests\\"
-vid = "C0020"
-vid_path = vid + ".MP4"
-=======
 def videotoframe(dir):
     # define video and paths
     input_files = dir + "/*.MP4"
->>>>>>> Stashed changes
 
     # change working directory to data storage
     os.chdir(dir)
@@ -22,15 +15,6 @@ def videotoframe(dir):
 
         print("Processing video: ", vid)
 
-<<<<<<< Updated upstream
-# loop for the whole video
-while success:
-    # save frame as JPEG file
-    cv2.imwrite(vid + "\\" "%d.jpg" % count, image)
-    success, image = vidcap.read()
-    print("Read frame ", count, ": ", success)
-    count += 1
-=======
         # create output folder and save frames or skip if already exists
         try:
             os.mkdir(vid)
@@ -53,4 +37,3 @@ while success:
 
 if __name__ == "__main__":
     videotoframe("H:/data/calibration/gopro1")
->>>>>>> Stashed changes
