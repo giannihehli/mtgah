@@ -2,7 +2,11 @@ import os
 import cv2
 from glob import glob
 
+<<<<<<< HEAD
 def videostosframe(dir):
+=======
+def videotoframe(dir):
+>>>>>>> videotoframe
     # define video and paths
     input_files = dir + "/*.MP4"
 
