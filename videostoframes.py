@@ -2,11 +2,7 @@ import os
 import cv2
 from glob import glob
 
-<<<<<<< HEAD
-def videostosframe(dir):
-=======
-def videotoframe(dir):
->>>>>>> videotoframe
+def videostoframes(dir):
     # define video and paths
     input_files = dir + "/*.MP4"
 
@@ -40,4 +36,4 @@ def videotoframe(dir):
             pass
 
 if __name__ == "__main__":
-    videotoframe("H:/data/calibration/gopro1")
+    videostoframes("H:/data/calibration/gopro1")
