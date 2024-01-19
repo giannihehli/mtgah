@@ -36,4 +36,4 @@ def videostoframes(dir):
             pass
 
 if __name__ == "__main__":
-    videostoframes("H:/data/calibration/gopro1")
+    videostoframes("H:/data/tests")

@@ -50,16 +50,16 @@ def calibrate(camera, view):
             Xs_W.append(X_W)     # the chess corner in 3D
             xs_I.append(x_I_sub) # is projected to this 2D position
         else:     # if not found
-            print("Detection failed :", image_path)
+            print("Detection failed : ", image_path)
             continue 
 
     # CALIBRATION
     rep, K, d, rvec, tvec = cv2.calibrateCamera(Xs_W, xs_I, (image.shape[1], image.shape[0]), None, None, flags=cv2.CALIB_FIX_ASPECT_RATIO)
 
-    print("Intrinsic parameter K = ", K)
-    print("Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
-
     np.savetxt(output_path + "K.txt", K)
+    print("Save intrinsic parameter K = ", K)
+    np.savetxt(output_path + "d.txt", d)
+    print("Save Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
 
     if view:
         plot_calibration(rep, K, d, rvec, tvec, X_W, output_path)
