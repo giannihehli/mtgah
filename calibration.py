@@ -4,6 +4,7 @@ import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from termcolor import colored
 
 module_path = os.path.abspath(os.path.join(".."))
 if module_path not in sys.path:
@@ -40,31 +41,37 @@ def calibrate(camera, view, check):
     Xs_W = []
     xs_I = []
 
+    # Count variables
+    count_found = 0
+    count_failed = 0
+
     for image_path in glob(input_files): # for each chessboard image
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)      # load the image
         found, x_I = cv2.findChessboardCorners(image, (cols, rows)) # detech the chess corners
 
         if found: # if found
-            print("Detection successful : ", image_path)
+            count_found += 1
+            print(colored("Detection successful : ", "green"), image_path)
             term = (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_COUNT, 30, 0.1)
             x_I_sub = cv2.cornerSubPix(image, x_I, (5,5), (-1,-1), term) # refine the corner positions
             Xs_W.append(X_W)     # the chess corner in 3D
             xs_I.append(x_I_sub) # is projected to this 2D position
 
             if check: # if check show detected Corners
-                print(x_I)
                 fnl = cv2.drawChessboardCorners(image, (7, 7), x_I, found)
                 cv2.namedWindow('resizedImg', cv2.WINDOW_NORMAL)
                 cv2.imshow("resizedImg", fnl)
-                cv2.waitKey(0)
+                cv2.imwrite(output_path + "detected corners/detected_" + os.path.basename(image_path), fnl)
+                #cv2.waitKey(0)
 
         else:     # if not found
-            print("Detection failed : ", image_path)
+            count_failed += 1
+            print(colored("Detection failed : ", "red"), image_path)
             continue 
 
     # CALIBRATION
     rep, K, d, rvec, tvec = cv2.calibrateCamera(Xs_W, xs_I, (image.shape[1], image.shape[0]), None, None, flags=cv2.CALIB_FIX_ASPECT_RATIO)
-
+    print("Calibration successful : ", rep, " / found: ", count_found, " / failed: ", count_failed)
     np.savetxt(output_path + "K.txt", K)
     print("Save intrinsic parameter K = ", K)
     np.savetxt(output_path + "d.txt", d)
@@ -114,8 +121,7 @@ def plot_calibration(rep, K, d, rvec, tvec, X_W, output_path):
             print("Plot camera", i_ex, "at", t_c2w)
 
         ax_in.plot(X_W[:,0], X_W[:,1], X_W[:,2], ".")
-
     plt.savefig(output_path + "result.pdf")
 
 if __name__=="__main__":
-    rep, K, d, rvec, tvec, X_W = calibrate("sony", True, False)
+    rep, K, d, rvec, tvec, X_W = calibrate("sony", view=True, check=False)
