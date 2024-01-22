@@ -12,8 +12,8 @@ def undistortImage(camera, K, d, data_path, img_name):
 
     # undistort
     img_undst = cv2.undistort(img, K, d, None, newcameramtx)
-    print("Save undistorted image: ", img_name)
-    cv2.imwrite(data_path + "/calibresult.png", img_undst)
+    print("Save undistorted image: ", "calib_" + img_name)
+    cv2.imwrite(data_path + "calib_" + img_name, img_undst)
 
 if __name__ == "__main__":
 
