@@ -20,7 +20,7 @@ if os.path.isfile(calib_path + "K.txt"):
     d = np.loadtxt(calib_path + "d.txt")  # distortion coefficients[5x1]
 else:
     print("Calibrating camera...")
-    rep, K, d, rvec, tvec, X_W = calibration.calibrate(camera, True)
+    rep, K, d, rvec, tvec, X_W = calibration.calibrate(camera, view=True, check=True)
 
 # Undistort images
 undistortImage(camera, K, d, calib_path, "DSC00154.JPG")

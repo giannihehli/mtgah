@@ -11,7 +11,7 @@ if module_path not in sys.path:
 
 from pycalib.plot import plotCamera
 
-def calibrate(camera, view):
+def calibrate(camera, view, check):
         
     # CALIBRATION PARAMETERS
     # Chessboard configuration
@@ -45,10 +45,19 @@ def calibrate(camera, view):
         found, x_I = cv2.findChessboardCorners(image, (cols, rows)) # detech the chess corners
 
         if found: # if found
+            print("Detection successful : ", image_path)
             term = (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_COUNT, 30, 0.1)
             x_I_sub = cv2.cornerSubPix(image, x_I, (5,5), (-1,-1), term) # refine the corner positions
             Xs_W.append(X_W)     # the chess corner in 3D
             xs_I.append(x_I_sub) # is projected to this 2D position
+
+            if check: # if check show detected Corners
+                print(x_I)
+                fnl = cv2.drawChessboardCorners(image, (7, 7), x_I, found)
+                cv2.namedWindow('resizedImg', cv2.WINDOW_NORMAL)
+                cv2.imshow("resizedImg", fnl)
+                cv2.waitKey(0)
+
         else:     # if not found
             print("Detection failed : ", image_path)
             continue 
@@ -109,4 +118,4 @@ def plot_calibration(rep, K, d, rvec, tvec, X_W, output_path):
     plt.savefig(output_path + "result.pdf")
 
 if __name__=="__main__":
-    rep, K, d, rvec, tvec, X_W = calibrate("sony", True)
+    rep, K, d, rvec, tvec, X_W = calibrate("sony", True, False)
