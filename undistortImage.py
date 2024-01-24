@@ -13,6 +13,8 @@ def undistortImage(K, d, data_path, img_name):
     print("Save undistorted image: ", "calib_" + img_name)
     cv2.imwrite(data_path + "calib_" + img_name + ".PNG", img_undst)
 
+    return "calib_" + img_name + ".PNG"
+
 if __name__ == "__main__":
 
     camera = "gopro1" # "sony", "gopro1", "gopro2

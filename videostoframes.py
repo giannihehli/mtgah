@@ -2,9 +2,9 @@ import os
 import cv2
 from glob import glob
 
-def videostoframes(dir):
+def videostoframes(dir, files):
     # define video and paths
-    input_files = dir + "/*.MP4"
+    input_files = dir + files
 
     # change working directory to data storage
     os.chdir(dir)
@@ -36,4 +36,4 @@ def videostoframes(dir):
             pass
 
 if __name__ == "__main__":
-    videostoframes("H:/data/tests")
+    videostoframes("H:/data/tests/", "C0027 - Trim.MP4") # "/*.MP4" for all files
