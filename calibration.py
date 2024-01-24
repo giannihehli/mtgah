@@ -47,9 +47,9 @@ def calibrate(camera, view, check):
 
     for image_path in glob(input_files): # for each chessboard image
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)      # load the image
-        found, x_I = cv2.findChessboardCorners(image, (cols, rows)) # detech the chess corners
+        ret, x_I = cv2.findChessboardCorners(image, (cols, rows)) # detech the chess corners
 
-        if found: # if found
+        if ret: # if found
             count_found += 1
             print(colored("Detection successful : ", "green"), image_path)
             term = (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_COUNT, 30, 0.1)
@@ -58,7 +58,7 @@ def calibrate(camera, view, check):
             xs_I.append(x_I_sub) # is projected to this 2D position
 
             if check: # if check show detected Corners
-                fnl = cv2.drawChessboardCorners(image, (7, 7), x_I, found)
+                fnl = cv2.drawChessboardCorners(image, (cols, rows), x_I, ret)
                 cv2.namedWindow('resizedImg', cv2.WINDOW_NORMAL)
                 cv2.imshow("resizedImg", fnl)
                 cv2.imwrite(output_path + "detected corners/detected_" + os.path.basename(image_path), fnl)

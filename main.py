@@ -8,7 +8,7 @@ import videostoframes
 import calibration
 
 # Define used parameters
-camera = "gopro1" # "sony", "gopro1", "gopro2
+camera = "sony" # "sony", "gopro1", "gopro2
 calib_path = "H:/data/calibration/" + camera + "/"
 data_path = "H:/data/calibration/" + camera + "/"
 
@@ -23,4 +23,4 @@ else:
     rep, K, d, rvec, tvec, X_W = calibration.calibrate(camera, view=True, check=True)
 
 # Undistort images
-undistortImage(camera, K, d, calib_path, "0")
+undistortImage(K, d, calib_path, "DSC00165")
