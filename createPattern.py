@@ -24,11 +24,11 @@ def createPattern(pattern, pattern_type, height, width):
 
 if __name__ == "__main__":
     # Define size of image
-    height = 2000
-    width = 2000
+    height = 1200
+    width = 1600
 
     # Define pattern type
-    pattern_type = "finder" # "finder", "alignment"
+    pattern_type = "chessboard" # "finder", "alignment", chessboard
     
     # Define pattern
     match pattern_type:
@@ -56,4 +56,11 @@ if __name__ == "__main__":
                                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
                                 )
+        case "chessboard":
+            pattern = np.array([[0, 1, 0, 1, 0, 1, 0, 1],
+                                [1, 0, 1, 0, 1, 0, 1, 0],
+                                [0, 1, 0, 1, 0, 1, 0, 1],
+                                [1, 0, 1, 0, 1, 0, 1, 0],
+                                [0, 1, 0, 1, 0, 1, 0, 1],
+                                [1, 0, 1, 0, 1, 0, 1, 0]])
     createPattern(pattern, pattern_type, height, width)
