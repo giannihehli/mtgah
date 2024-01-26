@@ -2,9 +2,9 @@ import os
 import cv2
 from glob import glob
 
-def videostoframes(dir, files):
+def videostosframe(dir):
     # define video and paths
-    input_files = dir + files
+    input_files = dir + "/*.MP4"
 
     # change working directory to data storage
     os.chdir(dir)
@@ -26,7 +26,7 @@ def videostoframes(dir, files):
             # loop for the whole video
             while success:
                 # save frame as JPEG file
-                cv2.imwrite(vid + "/" + vid + "_%d.jpg" % count, image)
+                cv2.imwrite(vid + "/" "%d.jpg" % count, image)
                 success, image = vidcap.read()
                 print("Save frame ", count, ": ", success)
                 count += 1
@@ -36,4 +36,4 @@ def videostoframes(dir, files):
             pass
 
 if __name__ == "__main__":
-    videostoframes("H:/data/aruco/", "C0032 - Trim.MP4") # "/*.MP4" for all files
+    videotoframe("H:/data/calibration/gopro1")

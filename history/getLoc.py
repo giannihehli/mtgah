@@ -1,3 +1,5 @@
+# This script was supposed to detect chessboard patterns in the cornes of the basis. However, it did not work.
+
 # import all packages and libraries
 import numpy as np
 import cv2 as cv

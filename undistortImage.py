@@ -17,7 +17,7 @@ def undistortImage(K, d, data_path, img_name):
 
 if __name__ == "__main__":
 
-    camera = "gopro1" # "sony", "gopro1", "gopro2
+    camera = "sony" # "sony", "gopro1", "gopro2
     # Import calibration parameters
     K = np.loadtxt("H:/data/calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
     d = np.loadtxt("H:/data/calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]

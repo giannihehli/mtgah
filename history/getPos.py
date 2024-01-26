@@ -1,3 +1,6 @@
+# This script was supposed to detect QR-Codes in the corner or find the corner of the basis 
+# through classic corner detection such as Harris. However, it did not work.
+
 # Import libraries and packages
 import numpy as np
 import cv2 as cv

@@ -1,3 +1,5 @@
+# This script was written to calibrate the camera. However, a different version was found and used instead.
+
 # IMPORT LIBRARIES
 import sys, os, cv2
 import numpy as np
