@@ -103,11 +103,9 @@ def detect(image, marker, K, d):
     for i in range(len(rvec)):
        cv2.drawFrameAxes(frame, K, d, rvec[i], tvec[i], 0.1) """
 
-    print(corners, ids)
-
     # show the output frame
-    cv2.imshow("Frame", frame)
-    cv2.waitKey(0)
+    #cv2.imshow("Frame", frame)
+    #cv2.waitKey(0)
     cv2.imwrite("H:/data/aruco/C0031 - Trim_0_detected.JPG", frame)
 
     return frame, corners, ids
