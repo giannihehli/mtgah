@@ -80,11 +80,11 @@ def calibrate(camera, view, check):
     print("Save Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
 
     if view:
-        plot_calibration(rep, K, d, rvec, tvec, X_W, output_path)
+        plot_calibration(rvec, tvec, X_W, output_path)
 
-    return rep, K, d, rvec, tvec, X_W
+    return K, d, rvec, tvec, X_W
 
-def plot_calibration(rep, K, d, rvec, tvec, X_W, output_path):
+def plot_calibration(rvec, tvec, X_W, output_path):
     # plotCamera() config
     plot_mode   = 1    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
     plot_range  = 4000 # target volume [-plot_range:plot_range]
@@ -126,4 +126,4 @@ def plot_calibration(rep, K, d, rvec, tvec, X_W, output_path):
     plt.savefig(output_path + "result.pdf")
 
 if __name__=="__main__":
-    rep, K, d, rvec, tvec, X_W = calibrate("sony", view=True, check=False)
+    K, d, rvec, tvec, X_W = calibrate("sony", view=True, check=False)

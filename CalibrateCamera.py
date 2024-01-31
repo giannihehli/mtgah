@@ -7,6 +7,9 @@ import cv2
 import pickle
 import glob
 import os
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from pycalib.plot import plotCamera
 from termcolor import colored
 
 def calibrate(camera):
@@ -33,8 +36,8 @@ def calibrate(camera):
 
     # Need a set of images or a video taken with the camera you want to calibrate
     # Input images capturing the chessboard above
-    input_files = "H:/data/calibration/" + camera + "/*.jpg"
-    output_path = "H:/data/calibration/" + camera
+    input_files = "H:/data/calibration/" + camera + "/moving/*.jpg"
+    output_path = "H:/data/calibration/" + camera + "/moving"
 
 
     # All images used should be the same size, which if taken with the same camera shouldn"t be a problem
@@ -109,7 +112,7 @@ def calibrate(camera):
     print(imageSize)
     # Now that we"ve seen all of our images, perform the camera calibration
     # based on the set of points we"ve discovered
-    rep, K, d, rvec, tvec = cv2.calibrateCamera(
+    ret, K, d, rvec, tvec = cv2.calibrateCamera(
             objectPoints=objpoints,
             imagePoints=imgpoints,
             imageSize=imageSize,
@@ -124,6 +127,51 @@ def calibrate(camera):
         
     # Print to console our success
     print("Calibration successful on " + str(count_found) + " images.")
+
+    if ret:
+        plot_calibration(rvec, tvec, objp, output_path)
+
+def plot_calibration(rvec, tvec, X_W, output_path):
+    # plotCamera() config
+    plot_mode   = 1    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
+    plot_range  = 20 # target volume [-plot_range:plot_range]
+    camera_size = 1  # size of the camera in plot
+
+    # 3D PLOT
+    fig_in = plt.figure()
+    fig_in.show()
+    ax_in = Axes3D(fig_in, auto_add_to_figure=False)
+    fig_in.add_axes(ax_in)
+
+    ax_in.set_xlim(-plot_range, plot_range)
+    ax_in.set_ylim(-plot_range, plot_range)
+    ax_in.set_zlim(-plot_range, plot_range)
+
+    if plot_mode == 0: # fixed camera = plot in CCS
+        
+        plotCamera(ax_in, np.eye(3), np.zeros((1,3)), color="b", scale=camera_size) # camera is at (0,0,0)
+
+        for i_ex in range(len(rvec)):
+            X_C = np.zeros((X_W.shape))
+            for i_x in range(X_W.shape[0]):
+                R_w2c = cv2.Rodrigues(rvec[i_ex])[0] # convert to the rotation matrix
+                t_w2c = tvec[i_ex].reshape(3)
+                X_C[i_x,:] = R_w2c.dot(X_W[i_x,:]) + t_w2c # Transform chess corners in WCS to CCS
+                    
+            ax_in.plot(X_C[:,0], X_C[:,1], X_C[:,2], ".") # plot chess corners in CCS
+
+    elif plot_mode == 1: # fixed chessboard = plot in WCS
+        
+        for i_ex in range(len(rvec)):
+            R_c2w = np.linalg.inv(cv2.Rodrigues(rvec[i_ex])[0]) # Camera orientation in world coordinate system
+            t_c2w = -R_c2w.dot(tvec[i_ex]).reshape((1,3)) # Camera position in world coordinate system
+            
+            plotCamera(ax_in, R_c2w, t_c2w, color="b", scale=camera_size)
+            print("Plot camera", i_ex, "at", t_c2w)
+
+        ax_in.plot(X_W[:,0], X_W[:,1], X_W[:,2], ".")
+
+    plt.savefig(output_path + "/result.pdf")
 
 if __name__ == "__main__":
     # Camera selection
