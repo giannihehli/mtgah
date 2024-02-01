@@ -109,10 +109,10 @@ def calibrate(camera):
         print("Calibration was unsuccessful. We couldn't detect chessboards in any of the images supplied. Try changing the patternSize passed into findChessboardCorners(), or try different pictures of chessboards.")
         # Exit for failure
         exit()
-    print(imageSize)
+    
     # Now that we"ve seen all of our images, perform the camera calibration
     # based on the set of points we"ve discovered
-    ret, K, d, rvec, tvec = cv2.calibrateCamera(
+    rpe, K, d, rvec, tvec = cv2.calibrateCamera(
             objectPoints=objpoints,
             imagePoints=imgpoints,
             imageSize=imageSize,
@@ -124,17 +124,20 @@ def calibrate(camera):
     print("Save intrinsic parameter K = ", K)
     np.savetxt("calibration/" + camera + "/d.txt", d)
     print("Save Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
-        
+
+    print("RMS re-projection error :", rpe)
+    
+    plot_calibration(rvec, tvec, objp, output_path)
+
     # Print to console our success
     print("Calibration successful on " + str(count_found) + " images.")
 
-    if ret:
-        plot_calibration(rvec, tvec, objp, output_path)
+
 
 def plot_calibration(rvec, tvec, X_W, output_path):
     # plotCamera() config
-    plot_mode   = 1    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
-    plot_range  = 20 # target volume [-plot_range:plot_range]
+    plot_mode   = 0    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
+    plot_range  = 30 # target volume [-plot_range:plot_range]
     camera_size = 1  # size of the camera in plot
 
     # 3D PLOT
@@ -142,7 +145,7 @@ def plot_calibration(rvec, tvec, X_W, output_path):
     fig_in.show()
     ax_in = Axes3D(fig_in, auto_add_to_figure=False)
     fig_in.add_axes(ax_in)
-
+    
     ax_in.set_xlim(-plot_range, plot_range)
     ax_in.set_ylim(-plot_range, plot_range)
     ax_in.set_zlim(-plot_range, plot_range)
@@ -170,8 +173,10 @@ def plot_calibration(rvec, tvec, X_W, output_path):
             print("Plot camera", i_ex, "at", t_c2w)
 
         ax_in.plot(X_W[:,0], X_W[:,1], X_W[:,2], ".")
-
-    plt.savefig(output_path + "/result.pdf")
+    
+    plt.show()
+    cv2.waitKey(0)
+    plt.savefig("calibration/" + camera + "/result.pdf")
 
 if __name__ == "__main__":
     # Camera selection
