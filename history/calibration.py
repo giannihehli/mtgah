@@ -20,13 +20,19 @@ def calibrate(camera, view, check):
     # Chessboard configuration
     rows = 9   # Number of corners (not cells) in row
     cols = 6  # Number of corners (not cells) in column
-    size = 243 # Physical size of a cell (the distance between neighrboring corners). Any positive number works.
+    size = 0.0243 # [m] Physical size of a cell (the distance between neighrboring corners). Any positive number works.
 
+    # Theroetical object points for the chessboard we're calibrating against
+    X_W = np.empty([rows * cols, 3], dtype=np.float32)
+    for i_row in range(0, rows):
+        for i_col in range(0, cols):
+            X_W[i_row*cols+i_col] = np.array([size*i_col, size*i_row, 0], dtype=np.float32)
+    
     # Input images capturing the chessboard above
     match camera:
         case "sony":
-            input_files = "H:/data/calibration/sony/*.jpg"
-            output_path = "H:/data/calibration/sony/"
+            input_files = "H:/data/calibration/sony/moving2/*.jpg"
+            output_path = "H:/data/calibration/sony/moving2/"
         case "gopro1":
             input_files = "H:/data/calibration/gopro1/*.jpg"
             output_path = "H:/data/calibration/gopro1/"
@@ -34,14 +40,9 @@ def calibrate(camera, view, check):
             input_files = "H:/data/calibration/gopro2/*.jpg"
             output_path = "H:/data/calibration/gopro2/"
 
-    X_W = np.empty([rows * cols, 3], dtype=np.float32)
-    for i_row in range(0, rows):
-        for i_col in range(0, cols):
-            X_W[i_row*cols+i_col] = np.array([size*i_col, size*i_row, 0], dtype=np.float32)
-
     # 2D POSITIONS OF THE CHESS CORNERS
-    Xs_W = []
-    xs_I = []
+    objpoints = []
+    imgpoints = []
 
     # Count variables
     count_found = 0
@@ -49,18 +50,18 @@ def calibrate(camera, view, check):
 
     for image_path in glob(input_files): # for each chessboard image
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)      # load the image
-        ret, x_I = cv2.findChessboardCorners(image, (cols, rows)) # detech the chess corners
+        ret, corners = cv2.findChessboardCorners(image, (cols, rows)) # detech the chess corners
 
         if ret: # if found
             count_found += 1
-            print(colored("Detection successful : ", "green"), image_path)
+            print(colored("Detection successful : ", "green"), os.path.basename(image_path))
             term = (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_COUNT, 30, 0.1)
-            x_I_sub = cv2.cornerSubPix(image, x_I, (5,5), (-1,-1), term) # refine the corner positions
-            Xs_W.append(X_W)     # the chess corner in 3D
-            xs_I.append(x_I_sub) # is projected to this 2D position
+            corners_sub = cv2.cornerSubPix(image, corners, (5,5), (-1,-1), term) # refine the corner positions
+            objpoints.append(X_W)     # the chess corner in 3D
+            imgpoints.append(corners_sub) # is projected to this 2D position
 
             if check: # if check show detected Corners
-                fnl = cv2.drawChessboardCorners(image, (cols, rows), x_I, ret)
+                fnl = cv2.drawChessboardCorners(image, (cols, rows), corners, ret)
                 cv2.namedWindow('resizedImg', cv2.WINDOW_NORMAL)
                 cv2.imshow("resizedImg", fnl)
                 cv2.imwrite(output_path + "detected corners/detected_" + os.path.basename(image_path), fnl)
@@ -72,12 +73,14 @@ def calibrate(camera, view, check):
             continue 
 
     # CALIBRATION
-    rep, K, d, rvec, tvec = cv2.calibrateCamera(Xs_W, xs_I, (image.shape[1], image.shape[0]), None, None, flags=cv2.CALIB_FIX_ASPECT_RATIO)
-    print("Calibration successful : ", rep, " / found: ", count_found, " / failed: ", count_failed)
+    rpe, K, d, rvec, tvec = cv2.calibrateCamera(objpoints, imgpoints, (image.shape[1], image.shape[0]), None, None, flags=cv2.CALIB_FIX_ASPECT_RATIO)
+    print("Calibration successful / RPE: ", rpe, " / found: ", count_found, " / failed: ", count_failed)
     np.savetxt(output_path + "K.txt", K)
     print("Save intrinsic parameter K = ", K)
     np.savetxt(output_path + "d.txt", d)
     print("Save Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
+
+    print("RMS re-projection error :", rpe)
 
     if view:
         plot_calibration(rvec, tvec, X_W, output_path)
@@ -86,9 +89,9 @@ def calibrate(camera, view, check):
 
 def plot_calibration(rvec, tvec, X_W, output_path):
     # plotCamera() config
-    plot_mode   = 1    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
-    plot_range  = 4000 # target volume [-plot_range:plot_range]
-    camera_size = 200  # size of the camera in plot
+    plot_mode   = 0    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
+    plot_range  = 1 # target volume [-plot_range:plot_range]
+    camera_size = 0.03  # size of the camera in plot
 
     # 3D PLOT
     fig_in = plt.figure()
@@ -124,6 +127,8 @@ def plot_calibration(rvec, tvec, X_W, output_path):
 
         ax_in.plot(X_W[:,0], X_W[:,1], X_W[:,2], ".")
     plt.savefig(output_path + "result.pdf")
+    plt.show()
+    cv2.waitKey(0)
 
 if __name__=="__main__":
     K, d, rvec, tvec, X_W = calibrate("sony", view=True, check=False)

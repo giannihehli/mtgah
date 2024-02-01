@@ -11,19 +11,22 @@ from undistortImage import undistort
 
 def locate(corners, pattern, K, d):
     # Get pose estimation
-    ret, rvec, tvec = cv2.solvePnP(pattern, corners, K, d)
+    retval, rvec, tvec = cv2.solvePnP(pattern, corners, K, d)
     print(cv2.solvePnP(pattern, corners, K, d))
 
-    if ret:
+    if retval:
         # Refine pose estimation with Levenber-Marquardt iterative minimization
         rvec, tvec = cv2.solvePnPRefineLM(pattern, corners, K, d, rvec, tvec)
         
+        # Get reprojectioin error of pose estimation
+        get_rpe(corners, pattern, K, d, rvec, tvec)
+
         return rvec, tvec
-    elif not ret:
+    elif not retval:
         print("Pose estimation failed. Try different pattern or camera parameters.")
         exit()
 
-def plot_calibration(rvec, tvec, X_W, output_path):
+def plot_result(rvec, tvec, X_W, output_path):
     # plotCamera() config
     plot_range  = 2000 # target volume [-plot_range:plot_range]
     camera_size = 100  # size of the camera in plot
@@ -53,6 +56,16 @@ def plot_calibration(rvec, tvec, X_W, output_path):
     plt.show()
     cv2.waitKey(0)
 
+def get_rpe(imgpoints, objpoints, K, d, rvec, tvec):
+    # Function to get reprojectioin error of pose estimation
+    mean_error = 0
+    for i in range(len(objpoints)):
+        imgpoints2, _ = cv2.projectPoints(objpoints[i], rvec, tvec, K, d)
+        print("imgpoints2: ", imgpoints2)
+        error = cv2.norm(imgpoints[i]- imgpoints2, cv2.NORM_L2)/len(imgpoints2)
+        mean_error += error
+    print( "total error: {}".format(mean_error/len(objpoints)))    
+
 if __name__ == "__main__":
     camera = "sony" # "sony", "gopro1", "gopro2
     # Import calibration parameters
@@ -63,6 +76,7 @@ if __name__ == "__main__":
     marker = "DICT_4X4_50"
     image = cv2.imread("H:/data/aruco/DSC00233.JPG")
     img_undst = undistort(K, d, image)
+    #img_undst = image
     cv2.imshow("undistorted", cv2.resize(img_undst, (1800, 1200)))
     cv2.waitKey(0)
     img_det, corners, ids = detect(img_undst, marker, K, d)
@@ -82,11 +96,6 @@ if __name__ == "__main__":
                         [499.5, 503, 0], [586.7, 503.9, 0], [585.4, 591.2, 0], [498, 590.3, 0],
                         [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], [15.6, 590.5, 0]])
 
-    """     # Print shapes and types of arrays
-    print("corners: ", corners_sort)
-    print("pattern: ", pattern) """
-
-
     rvec, tvec = locate(corners_sort, pattern, K, d)
 
-    plot_calibration(rvec, tvec, pattern, "H:/data/aruco/")
+    plot_result(rvec, tvec, pattern, "H:/data/aruco/")

@@ -95,14 +95,6 @@ def detect(image, marker, K, d):
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5, (0, 255, 0), 2)
 
-    """# Estimate pose of each marker and return the values rvec and tvec---(different from those of camera coefficients)
-    rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners, 0.0875, K, d)
-
-
-    # Draw Axis
-    for i in range(len(rvec)):
-       cv2.drawFrameAxes(frame, K, d, rvec[i], tvec[i], 0.1) """
-
     # show the output frame
     #cv2.imshow("Frame", frame)
     #cv2.waitKey(0)
