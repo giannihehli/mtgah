@@ -11,17 +11,23 @@ from undistortImage import undistort
 
 def locate(corners, pattern, K, d):
     # Get pose estimation
-    retval, rvec, tvec = cv2.solvePnP(pattern, corners, K, d)
+    retval, rvec, tvec, rpe = cv2.solvePnPGeneric(pattern, corners, K, d, useExtrinsicGuess=True, flags=cv2.SOLVEPNP_EPNP)
     print(cv2.solvePnP(pattern, corners, K, d))
+    print("retval: ", retval)
+    print("rvec: ", rvec[0])
+    print("tvec: ", tvec[0])
+    print("rpe: ", rpe)
 
     if retval:
         # Refine pose estimation with Levenber-Marquardt iterative minimization
-        rvec, tvec = cv2.solvePnPRefineLM(pattern, corners, K, d, rvec, tvec)
-        
-        # Get reprojectioin error of pose estimation
-        get_rpe(corners, pattern, K, d, rvec, tvec)
+        # rvec, tvec = cv2.solvePnPRefineLM(pattern, corners, K, d, rvec, tvec)
+        print("Reprojection error: ", rpe)
 
-        return rvec, tvec
+        # Get reprojectioin error of pose estimation
+        get_rpe(corners, pattern, K, d, rvec[0], tvec[0])
+
+        return rvec[0], tvec[0]
+
     elif not retval:
         print("Pose estimation failed. Try different pattern or camera parameters.")
         exit()
@@ -61,7 +67,6 @@ def get_rpe(imgpoints, objpoints, K, d, rvec, tvec):
     mean_error = 0
     for i in range(len(objpoints)):
         imgpoints2, _ = cv2.projectPoints(objpoints[i], rvec, tvec, K, d)
-        print("imgpoints2: ", imgpoints2)
         error = cv2.norm(imgpoints[i]- imgpoints2, cv2.NORM_L2)/len(imgpoints2)
         mean_error += error
     print( "total error: {}".format(mean_error/len(objpoints)))    
@@ -95,7 +100,29 @@ if __name__ == "__main__":
                         [498.8, 8.2, 0], [586, 8.2, 0], [586.5, 95.4, 0], [499.2, 95, 0],
                         [499.5, 503, 0], [586.7, 503.9, 0], [585.4, 591.2, 0], [498, 590.3, 0],
                         [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], [15.6, 590.5, 0]])
+    
+    pattern_2d = np.float32([[12.5, 6.2], [99.5, 8], [98.6, 95], [11.5, 93.2],
+                        [498.8, 8.2], [586, 8.2], [586.5, 95.4], [499.2, 95],
+                        [499.5, 503], [586.7, 503.9], [585.4, 591.2], [498, 590.3],
+                        [16.2, 503.1], [103.3, 503.2], [102.7, 590.5], [15.6, 590.5]])
 
     rvec, tvec = locate(corners_sort, pattern, K, d)
 
-    plot_result(rvec, tvec, pattern, "H:/data/aruco/")
+    corners_float = corners_sort.astype(np.float32)
+    print("corners_sort = ", corners_sort)
+    print("pattern = ", pattern_2d)
+
+    # Get homography matrix
+    h = cv2.findHomography(pattern_2d, corners_sort, cv2.RANSAC)
+
+    print(h)
+
+    retval, rotM, tvec, test = cv2.decomposeHomographyMat(h[0], K)
+    print("retval: ", retval)
+    print("rotM: ", cv2.Rodrigues(rotM[i]))
+    print("rvec: ", rvec)
+    print("tvec: ", tvec)
+    print("test: ", test)
+
+    for i in range(len(rotM)):
+        plot_result(cv2.Rodrigues(rotM[i])[0], tvec[i], pattern, "H:/data/aruco/")
