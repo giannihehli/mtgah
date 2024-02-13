@@ -5,7 +5,7 @@ import cv2
 import cv2.aruco as aruco
 import sys
 
-def detect(image, marker, K, d):
+def detect(image, marker):
 
     # define names of each possible ArUco tag OpenCV supports
     ARUCO_DICT = {
@@ -24,13 +24,8 @@ def detect(image, marker, K, d):
         "DICT_7X7_50": cv2.aruco.DICT_7X7_50,
         "DICT_7X7_100": cv2.aruco.DICT_7X7_100,
         "DICT_7X7_250": cv2.aruco.DICT_7X7_250,
-        "DICT_7X7_1000": cv2.aruco.DICT_7X7_1000,
-        "DICT_ARUCO_ORIGINAL": cv2.aruco.DICT_ARUCO_ORIGINAL,
-        "DICT_APRILTAG_16h5": cv2.aruco.DICT_APRILTAG_16h5,
-        "DICT_APRILTAG_25h9": cv2.aruco.DICT_APRILTAG_25h9,
-        "DICT_APRILTAG_36h10": cv2.aruco.DICT_APRILTAG_36h10,
-        "DICT_APRILTAG_36h11": cv2.aruco.DICT_APRILTAG_36h11
-    }
+        "DICT_7X7_1000": cv2.aruco.DICT_7X7_1000
+        }
 
     # verify that the supplied ArUCo tag exists and is supported by
     # OpenCV
@@ -106,9 +101,9 @@ if __name__ == "__main__":
 
     camera = "sony" # "sony", "gopro1", "gopro2
     # Import calibration parameters
-    K = np.loadtxt("C:/Users/hehligia/OneDrive - ETH Zurich/Documents/Code/masterthesis/calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
-    d = np.loadtxt("C:/Users/hehligia/OneDrive - ETH Zurich/Documents/Code/masterthesis/calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
+    K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
+    d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
 
     marker = "DICT_4X4_50"
     image = cv2.imread("H:/data/aruco/C0031 - Trim_0.JPG")
-    img_det, corners, ids = detect(image, marker, K, d)
+    img_det, corners, ids = detect(image, marker)

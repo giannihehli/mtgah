@@ -32,9 +32,12 @@ else:
 input_files = data_path + "/*.JPG"
 images = glob.glob(input_files)
 
-for image_path in images:
+for img_path in images:
+    # Load image
+    image = cv2.imread(img_path)
+
     # Undistort images
-    img_undst = undistort(K, d, data_path, image_path)
+    img_undst = undistort(K, d, image)
     # Detect markers
     marker = "DICT_4X4_50"
-    img_det, corners, ids = detect(marker, img_undst)
+    img_det, corners, ids = detect(img_undst, marker)
