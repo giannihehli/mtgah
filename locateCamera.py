@@ -74,8 +74,8 @@ def get_rpe(imgpoints, objpoints, K, d, rvec, tvec):
 if __name__ == "__main__":
     camera = "sony" # "sony", "gopro1", "gopro2
     # Import calibration parameters
-    K = np.loadtxt("C:/Users/hehligia/OneDrive - ETH Zurich/Documents/Code/masterthesis/calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
-    d = np.loadtxt("C:/Users/hehligia/OneDrive - ETH Zurich/Documents/Code/masterthesis/calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
+    K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
+    d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
 
     # Get corners and ids of detected markers
     marker = "DICT_4X4_50"
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     #img_undst = image
     cv2.imshow("undistorted", cv2.resize(img_undst, (1800, 1200)))
     cv2.waitKey(0)
-    img_det, corners, ids = detect(img_undst, marker, K, d)
+    img_det, corners, ids = detect(img_undst, marker)
     cv2.imshow("detected", cv2.resize(img_det, (1800, 1200)))
     cv2.waitKey(0)
     # Arange corners and ids in clockwise order
