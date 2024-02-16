@@ -80,6 +80,9 @@ def calibrate(camera, data_path):
             # If our image size is unknown, set it now
             if not imageSize:
                 imageSize = (gray.shape[1], gray.shape[0])
+                print("Image size: ", imageSize)
+                print("objpoints: ", objpoints)
+                print("imgpoints: ", imgpoints)
         
             # Draw the corners to a new image to show whoever is performing the calibration
             # that the board was properly detected
@@ -128,6 +131,7 @@ def calibrate(camera, data_path):
     print("Saved Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
 
     print("RMS re-projection error :", rpe)
+    print("translation vectors : ", tvec)
     
     plot_calibration(rvec, tvec, objp)
 
@@ -176,6 +180,8 @@ def plot_calibration(rvec, tvec, X_W):
             
             plotCamera(ax_in, R_c2w, t_c2w, color="b", scale=camera_size)
             print("Plot camera", i_ex, "at", t_c2w)
+            print("Rotation: ", R_c2w)
+            print("Translation: ", t_c2w)
 
         ax_in.plot(X_W[:,0], X_W[:,1], X_W[:,2], ".")
     
