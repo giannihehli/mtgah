@@ -4,7 +4,6 @@
 
 import numpy as np
 import cv2
-import pickle
 import glob
 import os
 import matplotlib.pyplot as plt
@@ -12,7 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from pycalib.plot import plotCamera
 from termcolor import colored
 
-def calibrate(camera):
+def calibrate(camera, data_path):
 
     # Chessboard variables
     rows = 9
@@ -33,7 +32,7 @@ def calibrate(camera):
 
     # Need a set of images or a video taken with the camera you want to calibrate
     # Input images capturing the chessboard above
-    input_files = "H:/data/calibration/" + camera + "/moving2/*.jpg"
+    input_files = data_path + "/*.jpg"
     output_path = "H:/data/calibration/" + camera + "/moving2"
     #input_files = "H:/data/calibration/" + camera + "/*.jpg"
     #output_path = "H:/data/calibration/" + camera
@@ -123,22 +122,21 @@ def calibrate(camera):
         
     # Save values to be used where matrix+dist is required, for instance for posture estimation
     print("Calibration successful / RPE: ", rpe, " / found: ", count_found, " / failed: ", count_failed)
-    print("Current working directory: ", os.getcwd())
     np.savetxt("calibration/" + camera + "/K.txt", K)
-    print("Save intrinsic parameter K = ", K)
+    print("Saved intrinsic parameter K = ", K)
     np.savetxt("calibration/" + camera + "/d.txt", d)
-    print("Save Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
+    print("Saved Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
 
     print("RMS re-projection error :", rpe)
     
-    plot_calibration(rvec, tvec, objp, output_path)
+    plot_calibration(rvec, tvec, objp)
 
     # Print to console our success
 
-def plot_calibration(rvec, tvec, X_W, output_path):
+def plot_calibration(rvec, tvec, X_W):
     # plotCamera() config
-    plot_mode   = 0    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
-    plot_range  = 1 # target volume [-plot_range:plot_range]
+    plot_mode   = 1    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
+    plot_range  = 0.5 # target volume [-plot_range:plot_range]
     camera_size = 0.03  # size of the camera in plot
 
     # 3D PLOT
@@ -150,6 +148,12 @@ def plot_calibration(rvec, tvec, X_W, output_path):
     ax_in.set_xlim(-plot_range, plot_range)
     ax_in.set_ylim(-plot_range, plot_range)
     ax_in.set_zlim(-plot_range, plot_range)
+
+    ax_in.set_xlabel('X')
+    ax_in.set_ylabel('Y')
+    ax_in.set_zlabel('Z')
+    ax_in.legend()
+    ax_in.set_title('Camera Position and chessboards in 3D space')
 
     if plot_mode == 0: # fixed camera = plot in CCS
         
@@ -182,4 +186,8 @@ def plot_calibration(rvec, tvec, X_W, output_path):
 if __name__ == "__main__":
     # Camera selection
     camera = "sony" # "sony", "gopro1", "gopro2
-    calibrate(camera)
+
+    # Define data path
+    data_path = "H:/data/calibration/" + camera + "/moving2"
+
+    calibrate(camera, data_path)
