@@ -45,6 +45,7 @@ def detect(image, marker):
     # detect ArUco markers in the input frame
     (corners, ids, rejected) = detector.detectMarkers(frame)
 
+    ## Display detection result
     # Draw a square around the markers
     cv2.aruco.drawDetectedMarkers(frame, corners)
 
@@ -68,12 +69,6 @@ def detect(image, marker):
             bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
             topLeft = (int(topLeft[0]), int(topLeft[1]))
 
-            # draw the bounding box of the ArUCo detection
-            """ cv2.line(frame, topLeft, topRight, (0, 255, 0), 2)
-            cv2.line(frame, topRight, bottomRight, (0, 255, 0), 2)
-            cv2.line(frame, bottomRight, bottomLeft, (0, 255, 0), 2)
-            cv2.line(frame, bottomLeft, topLeft, (0, 255, 0), 2) """
-
             # compute and draw the center (x, y)-coordinates of the
             # ArUco marker
             cX = int((topLeft[0] + bottomRight[0]) / 2.0)
@@ -91,9 +86,9 @@ def detect(image, marker):
                 0.5, (0, 255, 0), 2)
 
     # show the output frame
-    #cv2.imshow("Frame", frame)
-    #cv2.waitKey(0)
-    cv2.imwrite("H:/data/aruco/C0031 - Trim_0_detected.JPG", frame)
+#    cv2.imshow("Frame", frame)
+#    cv2.waitKey(0)
+#    cv2.imwrite("detected.JPG", frame)
 
     return frame, corners, ids
 
