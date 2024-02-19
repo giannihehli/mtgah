@@ -139,7 +139,7 @@ def calibrate(camera, data_path):
 
 def plot_calibration(rvec, tvec, X_W):
     # plotCamera() config
-    plot_mode   = 1    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
+    plot_mode   = 0    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
     plot_range  = 0.5 # target volume [-plot_range:plot_range]
     camera_size = 0.03  # size of the camera in plot
 
@@ -171,6 +171,8 @@ def plot_calibration(rvec, tvec, X_W):
                 X_C[i_x,:] = R_w2c.dot(X_W[i_x,:]) + t_w2c # Transform chess corners in WCS to CCS
                     
             ax_in.plot(X_C[:,0], X_C[:,1], X_C[:,2], ".") # plot chess corners in CCS
+            print("Rotation: ", R_w2c)
+            print("Translation: ", t_w2c)
 
     elif plot_mode == 1: # fixed chessboard = plot in WCS
         
