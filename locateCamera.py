@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     
     # Load and undistort image
-    image = cv2.imread("DSC00233.JPG")
+    image = cv2.imread("DSC00317.JPG")
     img_undst = undistort(K, d, image)
 
     # Show undistorted image
