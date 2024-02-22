@@ -72,9 +72,9 @@ def calibrate(camera, data_path):
             corners_acc = cv2.cornerSubPix(
                     image=gray, 
                     corners=corners, 
-                    winSize=(11, 11), 
+                    winSize=(5, 5), 
                     zeroZone=(-1, -1),
-                    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)) # Last parameter is about termination critera
+                    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)) # Last parameter is about termination critera
             imgpoints.append(corners_acc)
 
             # If our image size is unknown, set it now
@@ -121,7 +121,8 @@ def calibrate(camera, data_path):
             imagePoints=imgpoints,
             imageSize=imageSize,
             cameraMatrix=None,
-            distCoeffs=None)
+            distCoeffs=None,
+            flags=cv2.CALIB_FIX_ASPECT_RATIO)
         
     # Save values to be used where matrix+dist is required, for instance for posture estimation
     print("Calibration successful / RPE: ", rpe, " / found: ", count_found, " / failed: ", count_failed)
@@ -129,8 +130,6 @@ def calibrate(camera, data_path):
     print("Saved intrinsic parameter K = ", K)
     np.savetxt("calibration/" + camera + "/d.txt", d)
     print("Saved Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
-
-    print("RMS re-projection error :", rpe)
     
     plot_calibration(rvec, tvec, objp)
 
