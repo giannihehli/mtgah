@@ -33,7 +33,7 @@ def calibrate(camera, data_path):
     # Need a set of images or a video taken with the camera you want to calibrate
     # Input images capturing the chessboard above
     input_files = data_path + "/*.jpg"
-    output_path = "H:/data/calibration/" + camera + "/moving2"
+    output_path = "H:/data/calibration/" + camera + "/moving3"
     #input_files = "H:/data/calibration/" + camera + "/*.jpg"
     #output_path = "H:/data/calibration/" + camera
 
@@ -131,7 +131,6 @@ def calibrate(camera, data_path):
     print("Saved Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
 
     print("RMS re-projection error :", rpe)
-    print("translation vectors : ", tvec)
     
     plot_calibration(rvec, tvec, objp)
 
@@ -171,8 +170,6 @@ def plot_calibration(rvec, tvec, X_W):
                 X_C[i_x,:] = R_w2c.dot(X_W[i_x,:]) + t_w2c # Transform chess corners in WCS to CCS
                     
             ax_in.plot(X_C[:,0], X_C[:,1], X_C[:,2], ".") # plot chess corners in CCS
-            print("Rotation: ", R_w2c)
-            print("Translation: ", t_w2c)
 
     elif plot_mode == 1: # fixed chessboard = plot in WCS
         
@@ -182,8 +179,6 @@ def plot_calibration(rvec, tvec, X_W):
             
             plotCamera(ax_in, R_c2w, t_c2w, color="b", scale=camera_size)
             print("Plot camera", i_ex, "at", t_c2w)
-            print("Rotation: ", R_c2w)
-            print("Translation: ", t_c2w)
 
         ax_in.plot(X_W[:,0], X_W[:,1], X_W[:,2], ".")
     
@@ -196,6 +191,6 @@ if __name__ == "__main__":
     camera = "sony" # "sony", "gopro1", "gopro2
 
     # Define data path
-    data_path = "H:/data/calibration/" + camera + "/moving2"
+    data_path = "H:/data/calibration/" + camera + "/moving3"
 
     calibrate(camera, data_path)
