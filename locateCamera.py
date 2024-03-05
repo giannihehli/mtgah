@@ -74,7 +74,7 @@ def plot_result(rvec, tvec, K, objpoints):
 if __name__ == "__main__":
 
     # Define used camera
-    camera = "sony" # "sony", "gopro1", "gopro2
+    camera = "sony_hs" # "sony", "sony_hs", "gopro1", "gopro2
 
     # Import calibration parameters
     K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
@@ -93,7 +93,7 @@ if __name__ == "__main__":
                                 [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], [15.6, 590.5, 0]]
                                 )
         case "rough":
-            image = cv2.imread("data/DSC00388.JPG")
+            image = cv2.imread("data/C0037 - Trim_0.JPG")
             pattern = 0.001 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
                                 [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
                                 [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     for i in range(len(ids)):
         corners_sort[ids[i]*4:ids[i]*4+4] = corners[i]
 
-#    print("corners_sort = ", corners_sort)
+    print("corners_sort = ", corners_sort)
 #    print("pattern = ", pattern)
 
     # Calculate camera position and rotation vetor

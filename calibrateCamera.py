@@ -33,7 +33,7 @@ def calibrate(camera, data_path):
     # Need a set of images or a video taken with the camera you want to calibrate
     # Input images capturing the chessboard above
     input_files = data_path + "/*.jpg"
-    output_path = "H:/data/calibration/" + camera + "/moving3"
+    output_path = data_path
     #input_files = "H:/data/calibration/" + camera + "/*.jpg"
     #output_path = "H:/data/calibration/" + camera
 
@@ -90,7 +90,13 @@ def calibrate(camera, data_path):
             # Pause to display each image, waiting for key press
             #cv2.imshow("Chessboard", img)
             #cv2.waitKey(0)
+            try:
+                os.mkdir(output_path + "/detected")
+            except FileExistsError:
+                pass
+            
             cv2.imwrite(output_path + "/detected/det_" + os.path.basename(image_path), img)
+        
         else:     # if not found
             count_failed += 1
             print(colored("Detection failed : ", "red"), os.path.basename(image_path))
@@ -187,9 +193,9 @@ def plot_calibration(rvec, tvec, X_W):
 
 if __name__ == "__main__":
     # Camera selection
-    camera = "sony" # "sony", "gopro1", "gopro2
+    camera = "sony_hs" # "sony", "sony_hs" "gopro1", "gopro2
 
     # Define data path
-    data_path = "H:/data/calibration/" + camera + "/moving3"
+    data_path = "H:/data/calibration/" + camera
 
     calibrate(camera, data_path)
