@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # Importing user-defined modules
 from undistortImage import undistort
 
-def threshold(image):
+def thresholding(image):
     img_gb = cv2.GaussianBlur(image, (5, 5), 0)
 
     cv2.imshow("img_blur", img_gb)
@@ -48,5 +48,5 @@ if __name__ == "__main__":
     img_undst = undistort(K, d, image)
 
     # Threshold image
-    img_thr = threshold(img_undst)
+    img_thr = thresholding(img_undst)
 
