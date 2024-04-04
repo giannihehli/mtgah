@@ -37,4 +37,4 @@ def videostoframes(dir, files):
             pass
 
 if __name__ == "__main__":
-    videostoframes("H:/data/tests/sony/", "C0027 - Trim.MP4") # "/*.MP4" for all files
+    videostoframes("H:/data/tests/sony", "C0027 - Trim.MP4") # "/*.MP4" for all files

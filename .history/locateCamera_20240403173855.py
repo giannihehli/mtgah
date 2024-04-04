@@ -12,13 +12,9 @@ from undistortImage import undistort
 def locate(corners, pattern, K, d):
 
     # Get pose estimation
-#    _, rvec, tvec, rpe = cv2.solvePnPGeneric(pattern, corners, K, d)
-    rpe, rvec, tvec, inliers = cv2.solvePnPRansac(pattern, corners, K, d, flags=cv2.SOLVEPNP_EPNP)
-    # Ensure rvec and tvec are in the correct format
-    rvec = np.array(rvec).reshape(-1, 3)
-    tvec = np.array(tvec).reshape(-1, 3)
+    rvec, tvec, rpe = cv2.solvePnP(pattern, corners, K, d)
 
-    print("rvec: ", rvec)
+    print("rvec ", rvec)
     print("tvec: ", tvec)
     print("rpe PnP: ", rpe)
 
