@@ -11,7 +11,7 @@ import calibrateCamera
 from undistortImage import undistort
 from detectMarkers import detect
 from locateCamera import locate
-from thresholding import threshold
+from filterImage import threshold
 
 # Define used parameters
 camera = "sony" # "sony", "gopro1", "gopro2
@@ -66,6 +66,8 @@ for img_path in images:
 
     # Locate camera
     rvec, tvec = locate(corners, pattern, K, d)
+
+    # Warp perspective
 
     # Threshold image
     img_thr = threshold(img_undst)

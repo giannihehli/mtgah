@@ -30,7 +30,7 @@ def get_rpe(img_undst, imgpoints, objpoints, K, rvec, tvec):
     for i in range(len(objpoints)):
         reprojected, _ = cv2.projectPoints(objpoints[i], rvec, tvec, K, np.zeros((5,1)))
         img_rep = cv2.circle(img_undst, (int(reprojected[0][0][0]), int(reprojected[0][0][1])), 5, (0,0,255), -1)
-        img_corners = cv2.circle(img_rep, (int(corners_sort[i][0]), int(corners_sort[i][1])), 5, (0,255,0), -1)
+        img_corners = cv2.circle(img_rep, (int(imgpoints[i][0]), int(imgpoints[i][1])), 5, (0,255,0), -1)
         error = cv2.norm(imgpoints[i]- reprojected, cv2.NORM_L2)/len(reprojected)
         print("error ", i, ": ", error)
         mean_error += error
@@ -125,23 +125,13 @@ if __name__ == "__main__":
     cv2.imshow("detected", cv2.resize(img_det, (1920, 1080)))
     cv2.waitKey(0)
 
-    ## Arange corners and ids in clockwise order
-    # Initialize corner_sort array with needed array dimension
-    corners_sort = np.ones((len(ids)*4, 2))
-
-    # Sort corners and ids in clockwise order
-    for i in range(len(ids)):
-        corners_sort[ids[i]*4:ids[i]*4+4] = corners[i]
-
-    print("corners_sort = ", corners_sort)
 #    print("pattern = ", pattern)
 
     # Calculate camera position and rotation vetor
-    rvec, tvec = locate(corners_sort, pattern, K, d)
+    rvec, tvec = locate(corners, pattern, K, d)
 
     # Get reprojectioin error of pose estimation
-    rpe = get_rpe(img_undst, corners_sort, pattern, K, rvec, tvec)
+    rpe = get_rpe(img_undst, corners, pattern, K, rvec, tvec)
 
     # Plot result
     plot_result(rvec, tvec, K, pattern)
-

@@ -30,7 +30,7 @@ def get_rpe(img_undst, imgpoints, objpoints, K, rvec, tvec):
     for i in range(len(objpoints)):
         reprojected, _ = cv2.projectPoints(objpoints[i], rvec, tvec, K, np.zeros((5,1)))
         img_rep = cv2.circle(img_undst, (int(reprojected[0][0][0]), int(reprojected[0][0][1])), 5, (0,0,255), -1)
-        img_corners = cv2.circle(img_rep, (int(corners_sort[i][0]), int(corners_sort[i][1])), 5, (0,255,0), -1)
+        img_corners = cv2.circle(img_rep, (int(imgpoints[i][0]), int(imgpoints[i][1])), 5, (0,255,0), -1)
         error = cv2.norm(imgpoints[i]- reprojected, cv2.NORM_L2)/len(reprojected)
         print("error ", i, ": ", error)
         mean_error += error
@@ -105,8 +105,7 @@ if __name__ == "__main__":
                                 )
 
     # Undistort image
-    img_undst = undistort(K, 2*d, image)
-#    img_undst = image
+    img_undst = undistort(K, d, image)
 
     # Show undistorted image
 #    cv2.imshow("undistorted", cv2.resize(img_undst, (1920, 1080)))
@@ -126,23 +125,41 @@ if __name__ == "__main__":
     cv2.imshow("detected", cv2.resize(img_det, (1920, 1080)))
     cv2.waitKey(0)
 
-    ## Arange corners and ids in clockwise order
-    # Initialize corner_sort array with needed array dimension
-    corners_sort = np.ones((len(ids)*4, 2))
-
-    # Sort corners and ids in clockwise order
-    for i in range(len(ids)):
-        corners_sort[ids[i]*4:ids[i]*4+4] = corners[i]
-
-    print("corners_sort = ", corners_sort)
 #    print("pattern = ", pattern)
 
     # Calculate camera position and rotation vetor
-    rvec, tvec = locate(corners_sort, pattern, K, d)
+    rvec, tvec = locate(corners, pattern, K, d)
 
     # Get reprojectioin error of pose estimation
-    rpe = get_rpe(img_undst, corners_sort, pattern, K, rvec, tvec)
+#    rpe = get_rpe(img_undst, corners, pattern, K, rvec, tvec)
 
     # Plot result
-    plot_result(rvec, tvec, K, pattern)
+#    plot_result(rvec, tvec, K, pattern)
 
+    ## Test wrap function directly from detected corners
+    print(corners)
+
+    print("top left: ", corners[0])
+    print("top right: ", corners[5])
+    print("bottom right: ", corners[10])
+    print("bottom left: ", corners[15])
+
+    src = np.array([[corners[0][0], corners[0][1]], [corners[5][0], corners[5][1]], [corners[10][0], corners[10][1]], [corners[15][0], corners[15][1]]], dtype=np.float32)
+    print(src)
+    
+    print("pattern = ", pattern)
+
+    dst = 1000* np.array([[pattern[0][0], pattern[0][1]], [pattern[5][0], pattern[5][1]], [pattern[10][0], pattern[10][1]], [pattern[15][0], pattern[15][1]]], dtype=np.float32)
+    print(dst)
+
+    # Get perspective transform matrix
+    M = cv2.getPerspectiveTransform(src, dst)
+
+    # Wrap the image
+    img_wrapped = cv2.warpPerspective(img_undst, M, (6000, 6000))
+
+    # Display the transformed image
+    cv2.imshow('frame', cv2.resize(img_undst, (1080, 1080))) # Initial Capture
+    cv2.waitKey(0)
+    cv2.imshow('frame1', cv2.resize(img_wrapped, (1080, 1080))) # Transformed Capture
+    cv2.waitKey(0)
