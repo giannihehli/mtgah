@@ -41,7 +41,7 @@ def detect(image, marker):
 
     # resize image
 #    frame = imutils.resize(image, width=1000)
-    frame = image
+    frame = image.copy()
 
     # detect ArUco markers in the input frame
     (corners, ids, rejected) = detector.detectMarkers(frame)

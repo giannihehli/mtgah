@@ -11,6 +11,7 @@ import calibrateCamera
 from undistortImage import undistort
 from detectMarkers import detect
 from locateCamera import locate
+from warpPerspective import warp
 from filterImage import threshold
 
 # Define used parameters
@@ -19,7 +20,7 @@ calib_path = "H:/data/calibration/" + camera + "/"
 data_path = "H:/data/aruco/C0032 - Trim/"
 
 # Define used basis
-basis =  "rough" # "rough", "smooth"
+basis =  "smooth" # "rough", "smooth"
 
 # Load image and define reference pattern in clockwise order in world frame (3D) in [mm]
 match basis:
@@ -65,11 +66,14 @@ for img_path in images:
     img_det, corners, ids = detect(img_undst, marker)
 
     # Locate camera
-    rvec, tvec = locate(corners, pattern, K, d)
+#    rvec, tvec = locate(corners, pattern, K, d)
 
     # Warp perspective
+    img_warp = warp(corners, pattern, img_undst)
+    cv2.imshow('wraped', cv2.resize(img_warp, (1080, 1080))) # Transformed Capture
+    cv2.waitKey(0)
 
     # Threshold image
-    img_thr = threshold(img_undst)
+    img_thr, _ = threshold(img_warp)
 
     # Measure distances

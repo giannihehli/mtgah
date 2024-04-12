@@ -9,8 +9,19 @@ from locateCamera import locate
 from detectMarkers import detect
 
 
-def warp():
-    pass
+def warp(corners, pattern, image):
+    
+    src = np.array([[corners[0][0], corners[0][1]], [corners[5][0], corners[5][1]], [corners[10][0], corners[10][1]], [corners[15][0], corners[15][1]]], dtype=np.float32)
+
+    dst = 10000* np.array([[pattern[0][0], pattern[0][1]], [pattern[5][0], pattern[5][1]], [pattern[10][0], pattern[10][1]], [pattern[15][0], pattern[15][1]]], dtype=np.float32)
+
+    # Get perspective transform matrix
+    M = cv2.getPerspectiveTransform(src, dst)
+
+    # Wrap the image
+    img_warp = cv2.warpPerspective(image, M, (6000, 6000))
+
+    return img_warp
 
 if __name__ == "__main__":
 
@@ -48,10 +59,22 @@ if __name__ == "__main__":
     # Undistort image
     img_undst = undistort(K, d, image)
 
+    # Show undistorted image
+    cv2.imshow('img_undst', img_undst) # Initial Capture
+    cv2.waitKey(0)
+
     # Detect markers
-    marker = "DICT_4X4_50"
+    marker = "DICT_4X4_50" 
     img_det, corners, ids = detect(img_undst, marker) 
 
-    # Locate camera
-    rvec, tvec = locate(corners, pattern, K, d)
+    img_warp = warp(corners, pattern, img_undst)
 
+    # Display the transformed image
+    
+    f, axarr = plt.subplots(2, 1)
+    axarr[0].imshow(img_undst)
+    axarr[1].imshow(img_warp)
+    plt.show()
+
+    cv2.imshow('warped', cv2.resize(img_warp, (1080, 1080))) # Transformed Capture
+    cv2.waitKey(0)
