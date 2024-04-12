@@ -19,7 +19,7 @@ def warp(corners, pattern, image):
     M = cv2.getPerspectiveTransform(src, dst)
 
     # Wrap the image
-    img_warp = cv2.warpPerspective(image, M, (6000, 6000))
+    img_warp = cv2.warpPerspective(image, M, (int(6000), int(6000)))
 
     return img_warp
 

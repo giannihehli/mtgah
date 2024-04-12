@@ -11,12 +11,15 @@ def threshold(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Apply Gaussian blur
-    img_gb = cv2.GaussianBlur(image, (5, 5), 0)
+    img_gb = cv2.GaussianBlur(image, (45, 45), 0)
     # Apply bilateral filter
     img_bf = cv2.bilateralFilter(image,9,75,75)
 
     _, img_thr_gb = cv2.threshold(img_gb, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     _, img_thr_bf = cv2.threshold(img_bf, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+#    _, img_thr_gb = cv2.threshold(img_gb, 70, 255, cv2.THRESH_BINARY)
+#    _, img_thr_bf = cv2.threshold(img_bf, 70, 255, cv2.THRESH_BINARY)
 
     return img_thr_gb, img_thr_bf
 
@@ -30,7 +33,7 @@ if __name__ == "__main__":
     d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
     
     # Import image
-    image = cv2.imread("H:/data/tests/sony/C0027 - Trim/C0027 - Trim_60.jpg", cv2.IMREAD_GRAYSCALE)
+    image = cv2.imread("H:/data/tests/sony/C0027 - Trim/C0027 - Trim_60.jpg")
 
     cv2.imshow("image", image)
     cv2.waitKey(0)
@@ -41,10 +44,8 @@ if __name__ == "__main__":
     # Threshold image
     img_thr_gb, img_thr_bf = threshold(img_undst)
     
-    f, axarr = plt.subplots(2, 2,sharex=True, sharey=True)
-    axarr[0,0].imshow(img_gb)
-    axarr[0,1].imshow(img_bf)
-    axarr[1,0].imshow(img_thr_gb)
-    axarr[1,1].imshow(img_thr_bf)
+    f, axarr = plt.subplots(1, 2,sharex=True, sharey=True)
+    axarr[1].imshow(img_thr_gb)
+    axarr[1].imshow(img_thr_bf)
     plt.show()
 
