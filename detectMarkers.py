@@ -53,8 +53,8 @@ def detect(image, marker):
         refined_corner = cv2.cornerSubPix(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), np.float32(corner), (5,5), (-1,-1), term)
         corners_sub.append(refined_corner)
         
-    print("corners detect = ", corners)
-    print("corners_sub detect = ", corners_sub)
+#    print("corners detect = ", corners)
+#    print("corners_sub detect = ", corners_sub)
 
     ## Display detection result
     # Draw a square around the markers
@@ -97,7 +97,7 @@ def detect(image, marker):
                 5, (0, 255, 0), 10)
 
     # show the output frame
-#    cv2.imshow("Frame", frame)
+#    cv2.imshow("frame", cv2.resize(frame, (1080, 1080)))
 #    cv2.waitKey(0)
 #    cv2.imwrite("detected.JPG", frame)
 
@@ -110,7 +110,7 @@ def detect(image, marker):
     for i in range(len(ids)):
         corners_sort[ids[i]*4:ids[i]*4+4] = corners_sub[i]
 
-    print("corners_sort = ", corners_sort)
+#    print("corners_sort = ", corners_sort)
 
     return frame, corners_sort, ids
 
@@ -122,5 +122,7 @@ if __name__ == "__main__":
     d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
 
     marker = "DICT_4X4_50"
-    image = cv2.imread("H:/data/aruco/C0031 - Trim_0.JPG")
+    image = cv2.imread("data/f_r8_d113_h40_160.JPG")
     img_det, corners, ids = detect(image, marker)
+    cv2.imshow("image", img_det)
+    cv2.waitKey(0)

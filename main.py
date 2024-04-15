@@ -13,14 +13,15 @@ from detectMarkers import detect
 from locateCamera import locate
 from warpPerspective import warp
 from filterImage import threshold
+from measureDistance import measure
 
 # Define used parameters
 camera = "sony" # "sony", "gopro1", "gopro2
 calib_path = "H:/data/calibration/" + camera + "/"
-data_path = "H:/data/aruco/C0032 - Trim/"
+data_path = "H:/data/tests/sony_hs/f_r8_d113_h40/"
 
 # Define used basis
-basis =  "smooth" # "rough", "smooth"
+basis =  "rough" # "rough", "smooth"
 
 # Load image and define reference pattern in clockwise order in world frame (3D) in [mm]
 match basis:
@@ -51,11 +52,12 @@ else:
 # videostoframes.videostoframes(data_path, "C0032 - Trim.MP4") # "/*.MP4" for all files
 
 # Get input images
-input_files = data_path + "/*.JPG"
+input_files = data_path + "*.JPG"
 images = glob.glob(input_files)
 
 for img_path in images:
     # Load image
+    print("Load image: ", img_path)
     image = cv2.imread(img_path)
 
     # Undistort images
@@ -75,3 +77,4 @@ for img_path in images:
     img_thr, _ = threshold(img_warp)
 
     # Measure distances
+    measure(img_warp, img_thr)

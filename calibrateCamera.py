@@ -13,10 +13,10 @@ from termcolor import colored
 
 def calibrate(camera, data_path):
 
-    # Chessboard variables
-    rows = 9
-    cols = 6
-    size = 0.0243 # [m] Physical size of a cell (the distance between neighrboring corners). Any positive number works.
+    # Chessboard variables for how many corners and size
+    rows = 12
+    cols = 8
+    size = 0.0194272727272727 # [m] Physical size of a cell (the distance between neighrboring corners). Any positive number works.
 
     # Theoretical object points for the chessboard we"re calibrating against,
     # These will come out like: 
@@ -81,8 +81,6 @@ def calibrate(camera, data_path):
             if not imageSize:
                 imageSize = (gray.shape[1], gray.shape[0])
                 print("Image size: ", imageSize)
-                print("objpoints: ", objpoints)
-                print("imgpoints: ", imgpoints)
         
             # Draw the corners to a new image to show whoever is performing the calibration
             # that the board was properly detected

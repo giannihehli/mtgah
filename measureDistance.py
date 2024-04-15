@@ -2,6 +2,8 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from numpy import linalg
+from datetime import datetime
 
 # Importing user-defined modules
 from undistortImage import undistort
@@ -10,6 +12,8 @@ from warpPerspective import warp
 from filterImage import threshold
 
 def measure(image, image_thr):
+    print('start time: ', datetime.now())
+    
     # Define horizontal search window
     horizontal_left = 300
     horizontal_right = 5700
@@ -19,7 +23,7 @@ def measure(image, image_thr):
     # Define vertical search window
     vertical_x = 3000
     vertical_width = 1000
-    vertical_bottom = 5700
+    vertical_bottom = 5500
 
     # Draw search windows
     image_windows = image.copy()
@@ -42,44 +46,89 @@ def measure(image, image_thr):
         while image_thr[int(y_left), int(x_left)] == 0 and y_left < horizontal_y + horizontal_width/2:
             y_left += 1
             
-    print('left match value: ', image_thr[int(x_left), int(y_left)])
-    print('left match coordinates: ', x_left, int(y_left))
-    cv2.circle(image_windows, (int(x_left), int(y_left)), 10, (0, 255, 0), 5)   
+    print('left match value: ', image_thr[int(y_left),int(x_left)])
+    print('left match coordinates: ', x_left, y_left)   
 
     # Define right loop parameters
     x_right = horizontal_right
     y_right = horizontal_y - horizontal_width/2
 
-    # Search for edges from left top to right bottom
+    # Search for edges from right top to left bottom
     while image_thr[int(y_right), int(x_right)] == 0:
         x_right -= 1
         y_right = horizontal_y - horizontal_width/2
         while image_thr[int(y_right), int(x_right)] == 0 and y_right < horizontal_y + horizontal_width/2:
             y_right += 1           
 
-    print('right match value: ', image_thr[int(x_right), int(y_right)])
-    print('right match coordinates: ', x_right, int(y_right))
-    cv2.circle(image_windows, (int(x_right), int(y_right)), 10, (0, 255, 0), 5)   
+    print('right match value: ', image_thr[int(y_right), int(x_right)])
+    print('right match coordinates: ', x_right, y_right)
+  
 
     # Define bottom loop parameters
     x_bottom = vertical_x - vertical_width/2
     y_bottom = vertical_bottom
 
-    # Search for edges from left top to right bottom
+    # Search for edges from left bottom to right top
     while image_thr[int(y_bottom), int(x_bottom)] == 0:
         y_bottom -= 1
         x_bottom = vertical_x - vertical_width/2
         while image_thr[int(y_bottom), int(x_bottom)] == 0 and x_bottom < vertical_x + vertical_width/2:
             x_bottom += 1           
 
-    print('bottom match value: ', image_thr[int(x_bottom), int(y_bottom)])
-    print('bottom match coordinates: ', x_bottom, int(y_bottom))
-    cv2.circle(image_windows, (int(x_bottom), int(y_bottom)), 10, (0, 255, 0), 5) 
+    print('bottom match value: ', image_thr[int(y_bottom), int(x_bottom)])
+    print('bottom match coordinates: ', x_bottom, y_bottom)
   
+    # Post-process results
+    y_left = 0
+    count_left = 0    
+    y_right = 0
+    count_right = 0
+    x_bottom = 0
+    count_bottom = 0
+
+    # Look for mean of y_left and y_right
+    for i in range(horizontal_width):
+        if image_thr[int(horizontal_y - horizontal_width/2 + i), int(x_left)] == 255:
+            y_left = y_left + horizontal_y - horizontal_width/2 + i
+            count_left += 1
+            
+    for i in range(horizontal_width):        
+        if image_thr[int(horizontal_y - horizontal_width/2 + i), int(x_right)] == 255:
+            y_right = y_right + horizontal_y - horizontal_width/2 + i
+            count_right += 1
+
+    for i in range(vertical_width):
+        if image_thr[int(y_bottom), int(vertical_x - vertical_width/2 + i)] == 255:
+            x_bottom = x_bottom + vertical_x - vertical_width/2 + i
+            count_bottom += 1        
+
+    # Calculate mean for y_left and y_right
+    y_left = y_left / count_left
+    y_right = y_right / count_right
+    x_bottom = x_bottom / count_bottom
+    
+    print('left match value: ', image_thr[int(y_left),int(x_left)])
+    print('left match coordinates: ', x_left, y_left)
+
+    print('right match value: ', image_thr[int(y_right), int(x_right)])
+    print('right match coordinates: ', x_right, y_right)
+
+    print('bottom match value: ', image_thr[int(y_bottom), int(x_bottom)])
+    print('bottom match coordinates: ', x_bottom, y_bottom)
+
+    print('end time: ', datetime.now())
+
+    # Display results on image
+    cv2.circle(image_windows, (int(x_left), int(y_left)), 10, (0, 255, 0), 5)
+    cv2.circle(image_windows, (int(x_right), int(y_right)), 10, (0, 255, 0), 5) 
+    cv2.circle(image_windows, (int(x_bottom), int(y_bottom)), 10, (0, 255, 0), 5) 
+
     # Plot result
     f, axarr = plt.subplots(1, 2,sharex=True, sharey=True)
     axarr[0].imshow(image_windows)
     axarr[1].imshow(image_thr)
+    manager = plt.get_current_fig_manager()
+    manager.window.showMaximized()
     plt.show()
 
 """     cv2.imshow("image windows", cv2.resize(image_windows, (1080, 1080)))
@@ -115,7 +164,7 @@ if __name__ == "__main__":
                                 )
 
     # Import image
-    image = cv2.imread("data/DSC00434.JPG")
+    image = cv2.imread("data/f_r8_d113_h40_160.JPG")
 
     # Undistort image
     img_undst = undistort(K, d, image)
@@ -124,11 +173,24 @@ if __name__ == "__main__":
     marker = "DICT_4X4_50"
     img_det, corners, ids = detect(img_undst, marker)
 
-    cv2.imshow("image", cv2.resize(img_det, (1920, 1080)))
+    cv2.imshow("image_det", cv2.resize(img_det, (1920, 1080)))
     cv2.waitKey(0)
 
     # Warp perspective
-    img_warp = warp(corners, pattern, img_undst)
+    img_warp, M = warp(corners, pattern, img_undst)
+    cv2.imshow("image_warp", cv2.resize(img_warp, (1080, 1080)))
+    cv2.waitKey(0)
+
+    img_warp_det, corners_warp, ids_warp = detect(img_warp, marker)
+
+    # Check size of detected markers
+    for marker in range(4):
+        for corner in range(3):
+#            print('warpped marker', marker, ' L', corner, ': ', linalg.norm([corners_warp[marker*4+corner+1][0] - corners_warp[marker*4+corner][0], corners_warp[marker*4+corner+1][1] - corners_warp[marker*4+corner][1]]))
+#            print('pattern marker', marker, ' L', corner, ': ', 10000*linalg.norm([pattern[marker*4+corner+1][0] - pattern[marker*4+corner][0], pattern[marker*4+corner+1][1] - pattern[marker*4+corner][1]]))
+            print('marker', marker+1, ' diff', corner+1, ': ', linalg.norm([corners_warp[marker*4+corner+1][0] - corners_warp[marker*4+corner][0], corners_warp[marker*4+corner+1][1] - corners_warp[marker*4+corner][1]])-10000*linalg.norm([pattern[marker*4+corner+1][0] - pattern[marker*4+corner][0], pattern[marker*4+corner+1][1] - pattern[marker*4+corner][1]]))
+    cv2.imshow("image_warp", cv2.resize(img_warp, (1080, 1080)))
+    cv2.waitKey(0)
 
     # Threshold image
     img_thr_gb, img_thr_bf = threshold(img_warp)

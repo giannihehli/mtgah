@@ -22,7 +22,7 @@ def videostoframes(dir, files):
             # open video
             vidcap = cv2.VideoCapture(vid_path)
             success,image = vidcap.read()
-            count = 0
+            count = 100
 
             # loop for the whole video
             while success:
@@ -37,4 +37,4 @@ def videostoframes(dir, files):
             pass
 
 if __name__ == "__main__":
-    videostoframes("H:/data/tests/sony/", "C0027 - Trim.MP4") # "/*.MP4" for all files
+    videostoframes("H:/data/tests/sony_hs/", "f_r8_d113_h40.MP4") # "/*.MP4" for all files
