@@ -19,9 +19,9 @@ def warp(corners, pattern, image):
     M = cv2.getPerspectiveTransform(src, dst)
 
     # Wrap the image
-    img_warp = cv2.warpPerspective(image, M, (int(6000), int(6000)))
+    img_warp = cv2.warpPerspective(image, M, (int(6000), int(6000)), cv2.INTER_LINEAR + cv2.WARP_INVERSE_MAP)
 
-    return img_warp
+    return img_warp, M
 
 if __name__ == "__main__":
 
@@ -67,7 +67,20 @@ if __name__ == "__main__":
     marker = "DICT_4X4_50" 
     img_det, corners, ids = detect(img_undst, marker) 
 
-    img_warp = warp(corners, pattern, img_undst)
+    img_warp, M = warp(corners, pattern, img_undst)
+        
+    # Check transformation
+    rpe = 0
+    img_warp_det, corners_warp, ids_warp = detect(img_warp, marker)
+    print("Transformation matrix: \n", M)
+    for i in range(len(corners)):
+        print('corners ', i, ': ', [corners[i][0], corners[i][1]])
+        img_pts = M.dot([corners[i][0], corners[i][1], 1])/M[2, :].dot([corners[i][0], corners[i][1], 1])
+        print('img_pts ', i, ': ', img_pts[0:2])
+        print('corner_warp ', i, ': ', corners_warp[i][0], corners_warp[i][1])
+        rpe = rpe + np.linalg.norm([corners_warp[i][0], corners_warp[i][1]] - img_pts[0:2])
+
+    print('RPE: ', rpe/len(pattern))    
 
     # Display the transformed image
     

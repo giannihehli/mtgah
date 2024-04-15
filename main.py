@@ -69,7 +69,7 @@ for img_path in images:
 #    rvec, tvec = locate(corners, pattern, K, d)
 
     # Warp perspective
-    img_warp = warp(corners, pattern, img_undst)
+    img_warp, M = warp(corners, pattern, img_undst)
 
     # Threshold image
     img_thr, _ = threshold(img_warp)
