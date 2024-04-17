@@ -77,4 +77,7 @@ for img_path in images:
     img_thr, _ = threshold(img_warp)
 
     # Measure distances
-    measure(img_warp, img_thr)
+    d_horizontal, r_vertical = measure(img_warp, img_thr)
+
+    print("Horizontal distance: ", d_horizontal/2)
+    print("Vertical distance: ", r_vertical)

@@ -131,11 +131,11 @@ def measure(image, image_thr):
     manager.window.showMaximized()
     plt.show()
 
-"""     cv2.imshow("image windows", cv2.resize(image_windows, (1080, 1080)))
-    cv2.waitKey(0)
-    cv2.imshow("image threshold", cv2.resize(image_thr, (1080, 1080)))
-    cv2.waitKey(0) """
+    # Calculate distances
+    d_horizontal = x_right - x_left
+    r_vertical = y_bottom - (y_right + y_left) / 2
 
+    return d_horizontal, r_vertical
 if __name__ == "__main__":
     
     # Define used camera
