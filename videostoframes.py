@@ -2,7 +2,7 @@ import os
 import cv2
 from glob import glob
 
-def videostoframes(dir, files):
+def extract(dir, files):
     # define video and paths
     input_files = dir + files
 
@@ -37,4 +37,4 @@ def videostoframes(dir, files):
             pass
 
 if __name__ == "__main__":
-    videostoframes("G:/data_lars/", "*.MP4") # "*.MP4" for all files
+    extract("G:/data_lars/", "*.MP4") # "*.MP4" for all files

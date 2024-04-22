@@ -123,19 +123,19 @@ def measure(image, image_thr):
     cv2.circle(image_windows, (int(x_right), int(y_right)), 10, (0, 255, 0), 5) 
     cv2.circle(image_windows, (int(x_bottom), int(y_bottom)), 10, (0, 255, 0), 5) 
 
-    # Plot result
+    """    # Plot result
     f, axarr = plt.subplots(1, 2,sharex=True, sharey=True)
     axarr[0].imshow(image_windows)
     axarr[1].imshow(image_thr)
     manager = plt.get_current_fig_manager()
     manager.window.showMaximized()
-    plt.show()
+    plt.show() """
 
     # Calculate distances
     d_horizontal = x_right - x_left
     r_vertical = y_bottom - (y_right + y_left) / 2
 
-    return d_horizontal, r_vertical
+    return d_horizontal, r_vertical, image_windows
 if __name__ == "__main__":
     
     # Define used camera
