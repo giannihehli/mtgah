@@ -12,7 +12,7 @@ from warpPerspective import warp
 from filterImage import threshold
 
 def measure(image, image_thr):
-    print('start time: ', datetime.now())
+#    print('start time: ', datetime.now())
     
     # Define horizontal search window
     horizontal_left = 300
@@ -46,8 +46,8 @@ def measure(image, image_thr):
         while image_thr[int(y_left), int(x_left)] == 0 and y_left < horizontal_y + horizontal_width/2:
             y_left += 1
             
-    print('left match value: ', image_thr[int(y_left),int(x_left)])
-    print('left match coordinates: ', x_left, y_left)   
+    """ print('left match value: ', image_thr[int(y_left),int(x_left)])
+    print('left match coordinates: ', x_left, y_left)  """  
 
     # Define right loop parameters
     x_right = horizontal_right
@@ -60,8 +60,8 @@ def measure(image, image_thr):
         while image_thr[int(y_right), int(x_right)] == 0 and y_right < horizontal_y + horizontal_width/2:
             y_right += 1           
 
-    print('right match value: ', image_thr[int(y_right), int(x_right)])
-    print('right match coordinates: ', x_right, y_right)
+    """ print('right match value: ', image_thr[int(y_right), int(x_right)])
+    print('right match coordinates: ', x_right, y_right) """
   
 
     # Define bottom loop parameters
@@ -75,8 +75,8 @@ def measure(image, image_thr):
         while image_thr[int(y_bottom), int(x_bottom)] == 0 and x_bottom < vertical_x + vertical_width/2:
             x_bottom += 1           
 
-    print('bottom match value: ', image_thr[int(y_bottom), int(x_bottom)])
-    print('bottom match coordinates: ', x_bottom, y_bottom)
+    """ print('bottom match value: ', image_thr[int(y_bottom), int(x_bottom)])
+    print('bottom match coordinates: ', x_bottom, y_bottom) """
   
     # Post-process results
     y_left = 0
@@ -107,7 +107,7 @@ def measure(image, image_thr):
     y_right = y_right / count_right
     x_bottom = x_bottom / count_bottom
     
-    print('left match value: ', image_thr[int(y_left),int(x_left)])
+    """ print('left match value: ', image_thr[int(y_left),int(x_left)])
     print('left match coordinates: ', x_left, y_left)
 
     print('right match value: ', image_thr[int(y_right), int(x_right)])
@@ -116,7 +116,7 @@ def measure(image, image_thr):
     print('bottom match value: ', image_thr[int(y_bottom), int(x_bottom)])
     print('bottom match coordinates: ', x_bottom, y_bottom)
 
-    print('end time: ', datetime.now())
+    print('end time: ', datetime.now()) """
 
     # Display results on image
     cv2.circle(image_windows, (int(x_left), int(y_left)), 10, (0, 255, 0), 5)
