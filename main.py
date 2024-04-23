@@ -15,6 +15,7 @@ from locateCamera import locate
 from warpPerspective import warp
 from filterImage import threshold
 from measureDistance import measure
+from plotParameters import plot
 
 # Define used parameters
 camera = "sony" # "sony", "gopro1", "gopro2
@@ -30,8 +31,8 @@ else:
     print("Calibrating camera...")
     rep, K, d, rvec, tvec, X_W = calibrateCamera.calibrate(camera, view=True, check=True)
 
-# Extract frames from all videos
-extract(data_path, "*.MP4")
+""" # Extract frames from all videos
+extract(data_path, "*.MP4") """
 
 for vid_path in glob.glob(data_path + "*.MP4"):
     # Load video in video capture
@@ -72,12 +73,15 @@ for vid_path in glob.glob(data_path + "*.MP4"):
 
     # Initialize lists for measured distances
     horizontal_diameter = []
+    horizontal_radius = []
+    horizontal_velocity = [0]
     vertical_radius = []
+    vertical_velocity = [0]
     time = []
 
     for frame in range(frame_count):
         # Load image
-        print("Load frame ", frame)
+        print("Analyse frame ", frame)
         ret, image = cap.read()
 
         if ret == False:
@@ -110,18 +114,23 @@ for vid_path in glob.glob(data_path + "*.MP4"):
 
         # Append measured parameters to lists
         horizontal_diameter.append(d_horizontal)
+        horizontal_radius.append(d_horizontal/2)
         vertical_radius.append(r_vertical)
         time.append(frame/fps)
+
+        if frame >= 1:
+            horizontal_velocity.append((horizontal_radius[frame]-horizontal_radius[frame-1]) * fps)
+            vertical_velocity.append((vertical_radius[frame] - vertical_radius[frame-1]) * fps)
 
     # Release video capture
     cap.release()
 
-    # Name measured parameters
-    name = ['time', 'horizontal_diameter', 'vertical_radius']
-
     # Save measured parameters to csv file
-    dict = {'time': time, 'horizontal_diameter': horizontal_diameter, 'vertical_radius': vertical_radius}
+    dict = {'time': time, 'horizontal_diameter': horizontal_diameter, 'horizontal_radius': horizontal_radius, 'horizontal_velocity': horizontal_velocity, 'vertical_radius': vertical_radius, 'vertical_velocity': vertical_velocity}
     df = pd.DataFrame(dict)
     df.to_csv(f'{data_path}{vid}.csv')
     
+    # Plot measured parameters
+    plot(df, vid)
+
     break
