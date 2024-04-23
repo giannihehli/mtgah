@@ -37,4 +37,4 @@ def extract(dir, files):
             pass
 
 if __name__ == "__main__":
-    extract("G:/data_lars/", "*.MP4") # "*.MP4" for all files
+    extract("H:/data/tests/sony_hs/", "f_r8_d113_h40.MP4") # "*.MP4" for all files

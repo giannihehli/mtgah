@@ -12,46 +12,44 @@ def plot(df, vid):
     fig.suptitle(vid, fontsize=16)
 
     # Plot radius parameters at top right
-    axis[0, 0].set_title('Radius')
-    axis[0, 0].plot(df['time'], df['horizontal_radius'], label = 'Horizontal Radius [mm]', color = 'blue')
-    axis[0, 0].plot(df['time'], df['vertical_radius'], label = 'Vertical Radius [mm]', color = 'orange')
+    axis[0, 0].set_title('Distance')
+    axis[0, 0].plot(df['time'], df['distance_right'], label = 'Distance Right [mm]', color = 'blue')
+    axis[0, 0].plot(df['time'], df['distance_left'], label = 'Distance Left [mm]', color = 'green')
+    axis[0, 0].plot(df['time'], df['distance_bottom'], label = 'Distance Bottom [mm]', color = 'orange')
     axis[0, 0].set_xlabel('Time [s]')
     axis[0, 0].set_ylabel('Radius [mm]')
     axis[0, 0].legend()
 
     # Plot velocity parameters at top left
     axis[0, 1].set_title('Velocity')
-    axis[0, 1].plot(df['time'], df['horizontal_velocity'], label = 'Horizontal Velocity [mm/s]', color = 'blue')
-    axis[0, 1].plot(df['time'], df['vertical_velocity'], label = 'Vertical Velocity [mm/s]', color = 'orange')
+    axis[0, 1].plot(df['time'], df['velocity_right'], label = 'Velocity Right [mm/s]', color = 'blue')
+    axis[0, 1].plot(df['time'], df['velocity_left'], label = 'Velocity Left [mm/s]', color = 'green')
+    axis[0, 1].plot(df['time'], df['velocity_bottom'], label = 'Velocity Bottom [mm/s]', color = 'orange')
     axis[0, 1].set_xlabel('Time [s]')
     axis[0, 1].set_ylabel('Velocity [mm/s]')
     axis[0, 1].legend()
 
-    # Plot radius comparsion at bottom right
-    axis[1, 0].set_title('Horizontal vs. Vertical Radius')
-    axis[1, 0].plot(df['horizontal_radius'], df['vertical_radius'], label = 'Radius [mm]', color = 'blue')
-    axis[1, 0].set_xlabel('Horizontal Radius [mm]')
-    axis[1, 0].set_ylabel('Vertical Radius [mm]')
+    # Plot radius ratio at bottom right
+    axis[1, 0].set_title('Ratio Horizontal vs. Vertical Radius')
+    axis[1, 0].plot(df['distance_right'], df['distance_bottom'], label = 'Distance Right [mm]', color = 'blue')
+    axis[1, 0].plot(df['distance_left'], df['distance_bottom'], label = 'Distance Left [mm]', color = 'green')
+    axis[1, 0].set_xlabel('Horizontal Distance [mm]')
+    axis[1, 0].set_ylabel('Vertical Distance [mm]')
     axis[1, 0].set_aspect('equal', 'box')
+    axis[1, 0].legend()
 
-    # Plot velocity comparsion at bottom left
-    axis[1, 1].set_title('Horizontal vs. Vertical Velocity')
-    axis[1, 1].plot(df['horizontal_velocity'], df['vertical_velocity'], label = 'Velocity [mm/s]', color = 'blue')
+    # Plot velocity ratio at bottom left
+    axis[1, 1].set_title('Ratio Horizontal vs. Vertical Velocity')
+    axis[1, 1].plot(df['velocity_right'], df['velocity_bottom'], label = 'Velocity Right[mm/s]', color = 'blue')
+    axis[1, 1].plot(df['velocity_left'], df['velocity_bottom'], label = 'Velocity Left [mm/s]', color = 'green')
     axis[1, 1].set_xlabel('Horizontal Velocity [mm/s]')
     axis[1, 1].set_ylabel('Vertical Velocity [mm/s]')
     axis[1, 1].set_aspect('equal', 'box')
+    axis[1, 1].legend()
 
     plt.show()
-    
-    """ plt.plot(df['time'], df['horizontal_radius'], label = 'Horizontal Radius [mm]', color = 'blue')
-    plt.plot(df['time'], df['vertical_radius'], label = 'Vertical Radius [mm]', color = 'orange')
-    plt.xlabel('Time [s]')
-    plt.ylabel('Radius [mm]')
-    plt.legend()
-    plt.show() """
 
-#    plt.plot(df['time'], df['horizontal_velocity'], label = 'Horizontal Velocity [mm/s]', color = 'blue')
-
+    return
 
 if __name__ == "__main__":
     # Import measured parameters

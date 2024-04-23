@@ -18,11 +18,11 @@ def measure(image, image_thr):
     horizontal_left = 300
     horizontal_right = 5700
     horizontal_y = 3000
-    horizontal_width = 500
+    horizontal_width = 300
 
     # Define vertical search window
     vertical_x = 3000
-    vertical_width = 1000
+    vertical_width = 300
     vertical_bottom = 5500
 
     # Draw search windows
@@ -131,11 +131,8 @@ def measure(image, image_thr):
     manager.window.showMaximized()
     plt.show() """
 
-    # Calculate distances
-    d_horizontal = x_right - x_left
-    r_vertical = y_bottom - (y_right + y_left) / 2
+    return x_right, x_left, y_bottom, image_windows
 
-    return d_horizontal, r_vertical, image_windows
 if __name__ == "__main__":
     
     # Define used camera
@@ -151,13 +148,13 @@ if __name__ == "__main__":
     # Load image and define reference pattern in clockwise order in world frame (3D) in [mm]
     match basis:
         case "smooth":
-            pattern = 0.001 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], [98.6, 95, 0], [11.5, 93.2, 0],
+            pattern = 10 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], [98.6, 95, 0], [11.5, 93.2, 0],
                                 [498.8, 8.2, 0], [586, 8.2, 0], [586.5, 95.4, 0], [499.2, 95, 0],
                                 [499.5, 503, 0], [586.7, 503.9, 0], [585.4, 591.2, 0], [498, 590.3, 0],
                                 [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], [15.6, 590.5, 0]]
                                 )
         case "rough":
-            pattern = 0.001 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
+            pattern = 10 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
                                 [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
                                 [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
                                 [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], [12.6, 587.3, 0]]
