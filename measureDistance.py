@@ -18,15 +18,15 @@ def measure(image, image_thr):
     horizontal_left = 300
     horizontal_right = 5700
     horizontal_y = 3000
-    horizontal_width = 500
+    horizontal_width = 200
 
     # Define vertical search window
     vertical_x = 3000
-    vertical_width = 500
+    vertical_width = 200
     vertical_bottom = 5500
 
     # Define pre-search thresholds
-    pre_search_threshold = 50
+    pre_search_threshold = 300
 
     # Draw search windows
     image_windows = image.copy()
@@ -147,9 +147,9 @@ def measure(image, image_thr):
     cv2.circle(image_windows, (int(x_bottom), int(y_bottom)), 10, (0, 255, 0), 5) 
     
     # Plot result
-    """ f, axarr = plt.subplots(1, 2,sharex=True, sharey=True)
-    axarr[0].imshow(image_windows)
-    axarr[1].imshow(image_thr)
+    """ fig, axis = plt.subplots(1, 2,sharex=True, sharey=True)
+    axis[0].imshow(image_windows)
+    axis[1].imshow(image_thr)
     manager = plt.get_current_fig_manager()
     manager.window.showMaximized()
     plt.show() """
@@ -193,18 +193,20 @@ if __name__ == "__main__":
     marker = "DICT_4X4_50"
     img_det, corners, ids = detect(img_undst, marker)
 
-    cv2.imshow("image_det", cv2.resize(img_det, (1920, 1080)))
-    cv2.waitKey(0)
+    """ cv2.imshow("image_det", cv2.resize(img_det, (1920, 1080)))
+    cv2.waitKey(0) """
 
     # Warp perspective
     img_warp, M = warp(corners, pattern, img_undst)
-    cv2.imshow("image_warp", cv2.resize(img_warp, (1080, 1080)))
-    cv2.waitKey(0)
+
+    """ cv2.imshow("image_warp", cv2.resize(img_warp, (1080, 1080)))
+    cv2.waitKey(0) """
 
     # Detect markers in warped image
     img_warp_det, corners_warp, ids_warp = detect(img_warp, marker)
-    cv2.imshow("image_warp", cv2.resize(img_warp_det, (1080, 1080)))
-    cv2.waitKey(0)
+
+    """ cv2.imshow("image_warp", cv2.resize(img_warp_det, (1080, 1080)))
+    cv2.waitKey(0) """
 
     # Check size of detected markers
     for marker in range(4):
@@ -217,4 +219,17 @@ if __name__ == "__main__":
     img_thr_gb, img_thr_bf = threshold(img_warp)
 
     # Measure distance
-    measure(img_warp, img_thr_gb)
+    _, _, _, img_mes_gb = measure(img_warp, img_thr_gb)
+    _, _, _, img_mes_bf = measure(img_warp, img_thr_bf)
+
+    # Plot result
+    fig, axis = plt.subplots(2, 2,sharex=True, sharey=True)
+    axis[0, 0].set_title('Gaussian Blur Threshold')
+    axis[0, 0].imshow(img_thr_gb)
+    axis[0, 0].set_title('Bilateral Filter Threshold')
+    axis[0, 1].imshow(img_thr_bf)
+    axis[0, 0].set_title('Gaussian Blur Measurement')
+    axis[1, 0].imshow(img_mes_gb)
+    axis[0, 0].set_title('bilateral Filter Measurement')
+    axis[1, 1].imshow(img_mes_bf)
+    plt.show()

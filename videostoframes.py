@@ -27,7 +27,7 @@ def extract(dir, files):
             # loop for the whole video
             while success:
                 # save frame as JPEG file
-                cv2.imwrite(vid + "/" + vid + "_frame_%d.jpg" % count, image)
+                cv2.imwrite(vid + "/" + vid + "_%d.jpg" % count, image)
                 success, image = vidcap.read()
                 print("Save frame ", count, ": ", success)
                 count += 1
