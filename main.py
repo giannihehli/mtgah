@@ -148,14 +148,14 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     cap.release()
 
     # Get initial distance
-    distance_right_min = min(distance_right)
-    distance_left_max = max(distance_left)
-    distance_bottom_min = min(distance_bottom)
+    distance_right_median = np.median(distance_right)
+    distance_left_median = np.median(distance_left)
+    distance_bottom_median = np.median(distance_bottom)
 
     # Set initial distance to zero with conversion factor to [mm]
-    distance_right = [0.1 * (distance - distance_right_min) for distance in distance_right]
-    distance_left = [-0.1 * (distance - distance_left_max) for distance in distance_left]
-    distance_bottom = [0.1 * (distance - distance_bottom_min) for distance in distance_bottom]
+    distance_right = [0.1 * (distance - distance_right_median) for distance in distance_right]
+    distance_left = [-0.1 * (distance - distance_left_median) for distance in distance_left]
+    distance_bottom = [0.1 * (distance - distance_bottom_median) for distance in distance_bottom]
 
     # Save measured parameters to dataframe
     dict = {'time': time, 'distance_left': distance_left, 'distance_right': distance_right, 'velocity_left': velocity_left, 'velocity_right': velocity_right, 'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom}
