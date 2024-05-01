@@ -37,6 +37,18 @@ if __name__ == "__main__":
     
     # Load image and define reference pattern in clockwise order in world frame (3D) in [mm]
     match basis:
+        case 'r0-pa':
+            image = cv2.imread("data/f_r0-pa_d113_h40_100.JPG")
+            pattern = 100 * np.array([[0.9, 0.84, 0], [8.96, 0.82, 0], [8.95, 8.92, 0], [0.87, 8.93, 0],
+                                     [50.87, 0.82, 0], [58.95, 0.82, 0], [58.9, 8.91, 0], [50.83, 8.9, 0],
+                                     [50.74, 51.07, 0], [58.83, 51.02, 0], [58.88, 59.1, 0], [50.8, 59.14, 0],
+                                     [0.86, 51.02, 0], [8.94, 51.07, 0], [8.88, 59.17, 0], [0.79, 59.11, 0]])
+        case 'r0-pe':
+            image = cv2.imread("data/f_r0-pe_d113_h40_100.JPG")
+            pattern = 100 * np.array([[59.07, 0.87, 0], [59.18, 8.96, 0], [51.07, 8.95, 0], [50.98, 0.86, 0],
+                                     [59.18, 50.87, 0], [59.13, 58.93, 0], [51.06, 58.9, 0], [51.09, 50.82, 0],
+                                     [8.91, 50.74, 0], [8.96, 58.83, 0], [0.88, 58.88, 0], [0.85, 50.8, 0],
+                                     [8.89, 0.86, 0], [8.92, 8.94, 0], [0.82, 8.88, 0], [0.81, 0.8, 0]])
         case "smooth":
             image = cv2.imread("data/DSC00233.JPG")
             pattern = 10 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], [98.6, 95, 0], [11.5, 93.2, 0],
@@ -53,20 +65,20 @@ if __name__ == "__main__":
                                 )
 
 
-    cv2.imshow("image", image)
+    cv2.imshow("image", cv2.resize(image, (1920, 1080)))
     cv2.waitKey(0)
 
     # Undistort image
     img_undst = undistort(K, d, image)
 
     # Show undistorted image
-    cv2.imshow('img_undst', img_undst) # Initial Capture
+    cv2.imshow('img_undst', cv2.resize(img_undst, (1920, 1080))) # Initial Capture
     cv2.waitKey(0)
 
     # Detect markers
     marker = "DICT_4X4_50" 
     img_det, corners, ids = detect(img_undst, marker) 
-    cv2.imshow('img_det', img_det) # Detected Capture
+    cv2.imshow('img_det', cv2.resize(img_det, (1920, 1080))) # Detected Capture
     cv2.waitKey(0)
 
     img_warp, M = warp(corners, pattern, img_undst)

@@ -15,22 +15,22 @@ def create_aruco_page(marker_size, spacing, aruco_dict_name):
     aruco_dict = cv2.aruco.Dictionary_get(getattr(cv2.aruco, aruco_dict_name))
 
     # Create a blank canvas
-    canvas_size = 2 * marker_size + spacing + 1
+    canvas_size = 2 * marker_size + 2*spacing + 1
     canvas = np.ones((canvas_size, canvas_size), dtype=np.uint8) * 255
     
     # Generate ArUco markers
     aruco_codes = [0, 1, 2, 3]  # First four ArUco markers
     markers = [generate_aruco(marker_size, code, aruco_dict) for code in aruco_codes]
-    
+
     # Arrange markers on the canvas
-    canvas[marker_size + spacing+1:, marker_size + spacing+1:] = markers[0]  # ArUco marker 0 (bottom right)
-    canvas[marker_size + spacing+1:, :marker_size] = markers[1]           # ArUco marker 1 (bottom left)
-    canvas[:marker_size, :marker_size] = markers[2]                     # ArUco marker 2 (top left)
-    canvas[:marker_size, marker_size + spacing+1:] = markers[3]            # ArUco marker 3 (top right)
+    canvas[int(marker_size + 1.5*spacing +1):int(2*marker_size + 1.5*spacing +1), int(marker_size + 1.5*spacing +1):int(2*marker_size + 1.5*spacing +1)] = markers[0]  # ArUco marker 0 (bottom right)
+    canvas[int(marker_size + 1.5*spacing +1):int(2*marker_size + 1.5*spacing +1), int(0.5*spacing):int(marker_size + 0.5*spacing)] = markers[1]           # ArUco marker 1 (bottom left)
+    canvas[int(0.5*spacing):int(marker_size + 0.5*spacing), int(0.5*spacing):int(marker_size + 0.5*spacing)] = markers[2]                     # ArUco marker 2 (top left)
+    canvas[int(0.5*spacing):int(marker_size + 0.5*spacing), int(marker_size + 1.5*spacing+1):int(2*marker_size + 1.5*spacing+1)] = markers[3]            # ArUco marker 3 (top right)
 
     # Add separating lines
     line_width = 1
-    cross_position = marker_size + spacing // 2
+    cross_position = marker_size + spacing
     cv2.line(canvas, (0, cross_position), (2*canvas_size, cross_position), color=0, thickness=line_width)
     cv2.line(canvas, (cross_position, 0), (cross_position, 2*canvas_size), color=0, thickness=line_width)
 
@@ -39,7 +39,7 @@ def create_aruco_page(marker_size, spacing, aruco_dict_name):
 if __name__ == "__main__":
     # Parameters
     marker_size = 1000  # Size of each ArUco marker
-    spacing = 300  # Spacing between markers
+    spacing = 200  # Spacing between and around markers
     aruco_dict_name = "DICT_4X4_1000"  # Default ArUco dictionary name. choose from:
 
     # "DICT_4X4_50", "DICT_4X4_100", "DICT_4X4_250", "DICT_4X4_1000", "DICT_5X5_50", "DICT_5X5_100",
