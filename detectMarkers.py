@@ -99,15 +99,16 @@ def detect(image, marker):
     # show the output frame
 #    cv2.imshow("frame", cv2.resize(frame, (1080, 1080)))
 #    cv2.waitKey(0)
-#    cv2.imwrite("detected.JPG", frame)
 
-    
+#    print("ids = ", ids)
+#    print("corners = ", corners_sub)
+
     ## Arange corners and ids in clockwise order
     # Initialize corner_sort array with needed array dimension
     corners_sort = np.ones((len(ids)*4, 2))
 
     # Sort corners and ids in clockwise order
-    for i in range(len(ids)):
+    for i in range(4):
         corners_sort[ids[i]*4:ids[i]*4+4] = corners_sub[i]
 
 #    print("corners_sort = ", corners_sort)
