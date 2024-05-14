@@ -19,7 +19,7 @@ from measureDistance import measure
 from plotParameters import plot
 
 # Define used parameters
-camera = 'sony' # 'sony', 'gopro1', 'gopro2
+camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
 calib_path = 'H:/data/calibration/' + camera + '/'
 data_path = 'H:/data/tests/sony_hs/'
 
@@ -199,7 +199,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     df = pd.DataFrame(dict)
     
     # Plot measured parameters
-    plot(df, vid)
+    plot(df, layout, basis, diameter, height)
 
     # Save parameters to csv file
     df.to_csv(f'{data_path}{vid}.csv')
