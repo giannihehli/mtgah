@@ -6,11 +6,41 @@ import matplotlib.pyplot as plt
 # Importing user-defined modules
 
 
-def plot(df, layout, basis, diameter, height):
+def plot(df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal):
 
     # Get direction
-    direction = basis.split('-')[1]
+    try:
+        direction = basis.split('-')[1]
+        basis = basis.split('-')[0]
+    except IndexError:
+        direction = 'pa'
     basis = basis.split('-')[0]
+
+    # Define experiment layout
+    match layout:
+        case 'f':
+            layout = 'flat'
+        case 'i':
+            layout = 'inclined'
+
+    # Define roughness basis
+    match basis:
+        case 'r8':
+            basis = '8 mm'
+        case 'r4':
+            basis = '4 mm'
+        case 'r0':
+            basis = '0 mm'
+            
+    # Define cylinder diameter
+    match diameter:
+        case 'd113':
+            diameter = '113 mm'        
+
+    # Define sand height
+    match height:
+        case 'h40':
+            height = '40 mm'
 
     # Define plot labels according to direction
     match direction:
@@ -27,6 +57,8 @@ def plot(df, layout, basis, diameter, height):
             vertical_distance = 'Parallel distance [mm]'
             horizontal_velocity = 'Perpendicular velocity [mm/s]'
             vertical_velocity = 'Parallel velocity [mm/s]'
+            horizontal_diameter = 'Perpendicular diameter'
+            vertical_diameter = 'Parallel diameter'
         case 'pe':
             distance_right = 'Distance parallel right [mm]'
             distance_left = 'Distance parallel left [mm]'
@@ -40,10 +72,12 @@ def plot(df, layout, basis, diameter, height):
             vertical_distance = 'Perpendicular distance [mm]'
             horizontal_velocity = 'Parallel velocity [mm/s]'
             vertical_velocity = 'Perpendicular velocity [mm/s]'
+            horizontal_diameter = 'Parallel diameter'
+            vertical_diameter = 'Perpendicular diameter'
 
     # Define subplots
     fig, axis = plt.subplots(2, 2, sharex = False, figsize = (1000, 1000))
-    fig.suptitle(f'{layout} with {basis} roughness basis, {diameter} mm cylinder and {height} mm sand height', fontsize=16)
+    fig.suptitle(f'{layout} mount with {basis} roughness basis, {diameter} cylinder and {height} sand height \n \n Final {horizontal_diameter}: {0.1 * diameter_horizontal} mm \n Final {vertical_diameter}: {0.1 * diameter_vertical} mm', fontsize=16)
 
     # Plot radius parameters at top left
     axis[0, 0].set_title('Distance')
@@ -104,4 +138,8 @@ if __name__ == "__main__":
     diameter = vid.split('_')[2]
     height = vid.split('_')[3]
 
-    plot(df, layout, basis, diameter, height)
+    # Define diameter of final deposit
+    diameter_vertical = 2078
+    diameter_horizontal = 1853
+
+    plot(df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)

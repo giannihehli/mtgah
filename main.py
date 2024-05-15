@@ -17,17 +17,33 @@ from warpPerspective import warp
 from filterImage import threshold
 from measureDistance import measure
 from plotParameters import plot
+from measureTop import measuretop
 
-# Define used parameters
+############################################################################################################
+# ONLY SECTION TO ADJUST PARAMETERS
+
+# Define used camera
 camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
+
+# Define path with calibration parameters
 calib_path = 'H:/data/calibration/' + camera + '/'
+
+# Define path with data to be analysed
 data_path = 'H:/data/tests/sony_hs/'
+
+# Define images for output
+img_out = None # None, frame, _undst', '_det', '_warp', '_thr', '_mes'
 
 # Define used marker
 marker = 'DICT_4X4_1000'
 
-# Define images for output
-img_out = None # None _undst', '_det', '_warp', '_thr', '_mes'
+# Define gaussian blur kernel size
+kernel_size = 5
+
+# Define filter threshold
+threshold = 100
+
+############################################################################################################
 
 # Calibrate camera
 if os.path.isfile('calibration/' + camera + '/K.txt'):
@@ -101,7 +117,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 
     # Make directory for output images
     if img_out:
-        output_folder = f'{data_path}{vid}{img_out}'
+        output_folder = f'{data_path}{vid}{img_out}/'
         try: 
             os.mkdir(output_folder)
             print('Directory ', output_folder, ' created.')
@@ -155,7 +171,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         # If needed save images to folder
         if img_out:
             print(f'Saving img{img_out}')
-            cv2.imwrite(f'{output_folder}/{frame+100}{img_out}.jpg', locals().get(f'img{img_out}'))
+            cv2.imwrite(f'{output_folder}{frame+100}{img_out}.jpg', locals().get(f'img{img_out}'))
 
         # Append measured parameters to lists
         distance_right.append(x_right)
@@ -168,6 +184,22 @@ for vid_path in glob.glob(data_path + '*.MP4'):
             velocity_right.append((distance_right[frame]-distance_right[frame-1]) * 0.1 * fps)
             velocity_left.append((distance_left[frame]-distance_left[frame-1]) * -0.1 * fps)
             velocity_bottom.append((distance_bottom[frame] - distance_bottom[frame-1]) * 0.1 * fps)
+
+        # Show and output last frame as .tiff file
+        if frame == frame_count-1:
+            # Show last frame
+#            cv2.imshow(str(frame), cv2.resize(img_thr, (1080, 1080)))
+#            cv2.waitKey(0)
+
+            try: 
+                os.mkdir(f'{data_path}end frame tiffs')
+                print('Directory end frame tiffs created and last frame saved as threshold.')
+                cv2.imwrite(f'{data_path}end frame tiffs/{vid}.tiff', img_thr)
+            except FileExistsError:
+                print('Directory end frame tiffs already exists but last frame saved as threshold.')
+                cv2.imwrite(f'{data_path}end frame tiffs/{vid}.tiff', img_thr)
+                
+            distance_top, img_mes_top = measuretop(img_warp, img_thr)
 
     # Release video capture
     cap.release()
@@ -198,8 +230,12 @@ for vid_path in glob.glob(data_path + '*.MP4'):
             'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom}
     df = pd.DataFrame(dict)
     
+    # Get final diameter
+    diameter_vertical = distance_bottom[-1] - distance_top
+    diameter_horizontal = distance_right[-1] - distance_left[-1]
+
     # Plot measured parameters
-    plot(df, layout, basis, diameter, height)
+    plot(df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
 
     # Save parameters to csv file
     df.to_csv(f'{data_path}{vid}.csv')
