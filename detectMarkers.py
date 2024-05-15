@@ -97,11 +97,11 @@ def detect(image, marker):
                 5, (0, 255, 0), 10)
 
     # show the output frame
-#    cv2.imshow("frame", cv2.resize(frame, (1080, 1080)))
-#    cv2.waitKey(0)
+    """ cv2.imshow("frame", cv2.resize(frame, (1080, 1080)))
+    cv2.waitKey(0)
 
-#    print("ids = ", ids)
-#    print("corners = ", corners_sub)
+    print("ids = ", ids)
+    print("corners = ", corners_sub) """
 
     ## Arange corners and ids in clockwise order
     # Initialize corner_sort array with needed array dimension

@@ -32,16 +32,20 @@ calib_path = 'H:/data/calibration/' + camera + '/'
 data_path = 'H:/data/tests/sony_hs/'
 
 # Define images for output
-img_out = None # None, frame, _undst', '_det', '_warp', '_thr', '_mes'
+img_out = '' # None, _undst', '_det', '_warp', '_thr', '_mes'
 
 # Define used marker
 marker = 'DICT_4X4_1000'
 
-# Define gaussian blur kernel size
-kernel_size = 5
+# Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
+kernel_size = 35 # must be positive and odd
 
-# Define filter threshold
-threshold = 100
+# Define bilateral filter parameters (200, 25)
+sigma_color = 50 # Filter sigma in the color space. A larger value of the parameter means that farther colors within the pixel neighborhood (see sigmaSpace) will be mixed together, resulting in larger areas of semi-equal color.
+sigma_space = 35 # Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
+
+# Define filter threshold (otsu)
+filter_threshold = 90 # Threshold value for binary thresholding
 
 ############################################################################################################
 
@@ -159,7 +163,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.waitKey(0)
 
         # Threshold image
-        _ , img_thr = threshold(img_warp) # img_thr_gb, img_thr_bf
+        _ , img_thr = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold) # img_thr_gb, img_thr_bf
 #        cv2.imshow('image_thr', cv2.resize(img_thr, (1080, 1080)))
 #        cv2.waitKey(0)
 
@@ -204,6 +208,10 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     # Release video capture
     cap.release()
 
+    # Get final diameter
+    diameter_vertical = round(distance_bottom[-1] - distance_top, 1)
+    diameter_horizontal = round(distance_right[-1] - distance_left[-1], 1)
+
     # Get initial distance
     distance_right_cor = min(distance_right)
     distance_left_cor = max(distance_left)
@@ -229,13 +237,9 @@ for vid_path in glob.glob(data_path + '*.MP4'):
             'radius_horizontal': radius_horizontal, 'velocity_horizontal': velocity_horizontal, 
             'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom}
     df = pd.DataFrame(dict)
-    
-    # Get final diameter
-    diameter_vertical = distance_bottom[-1] - distance_top
-    diameter_horizontal = distance_right[-1] - distance_left[-1]
-
+ 
     # Plot measured parameters
-    plot(df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
+    plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
 
     # Save parameters to csv file
     df.to_csv(f'{data_path}{vid}.csv')

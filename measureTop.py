@@ -74,26 +74,39 @@ def measuretop(image, image_thr):
     cv2.circle(image_windows, (int(x_top), int(y_top)), 10, (0, 255, 0), 5) 
     
     # Plot result
-    fig, axis = plt.subplots(1, 2,sharex=True, sharey=True)
+    """ fig, axis = plt.subplots(1, 2,sharex=True, sharey=True)
     axis[0].imshow(image_windows)
     axis[1].imshow(image_thr)
     manager = plt.get_current_fig_manager()
     manager.window.showMaximized()
-    plt.show()
+    plt.show() """
 
     return y_top, image_windows
 
 if __name__ == "__main__":
-    
+       
     # Define used camera
     camera = "sony" # "sony", "sony_hs", "gopro1", "gopro2
+
+    # Define used marker
+    marker = 'DICT_4X4_50'
+
+    # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter
+    kernel_size = 25 # must be positive and odd
+
+    # Define bilateral filter
+    sigma_color = 15
+    sigma_space = 35
+
+    # Define filter threshold
+    filter_threshold = 90
 
     # Import calibration parameters
     K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
     d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
     
     # Define used basis
-    basis =  "smooth" # "rough", "smooth"
+    basis =  "rough" # "rough", "smooth"
 
     # Load image and define reference pattern in clockwise order in world frame (3D) in [mm]
     match basis:
@@ -117,7 +130,7 @@ if __name__ == "__main__":
     img_undst = undistort(K, d, image)
     
     # Detect markers
-    marker = "DICT_4X4_50"
+    marker = "DICT_4X4_1000"
     img_det, corners, ids = detect(img_undst, marker)
 
     """ cv2.imshow("image_det", cv2.resize(img_det, (1920, 1080)))
@@ -143,11 +156,11 @@ if __name__ == "__main__":
             print('marker', marker+1, ' diff', corner+1, ': ', linalg.norm([corners_warp[marker*4+corner+1][0] - corners_warp[marker*4+corner][0], corners_warp[marker*4+corner+1][1] - corners_warp[marker*4+corner][1]])-linalg.norm([pattern[marker*4+corner+1][0] - pattern[marker*4+corner][0], pattern[marker*4+corner+1][1] - pattern[marker*4+corner][1]]))
 
     # Threshold image
-    img_thr_gb, img_thr_bf = threshold(img_warp)
+    img_thr_gb, img_thr_bf = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold)
 
     # Measure distance
-    _, _, _, img_mes_gb = measuretop(img_warp, img_thr_gb)
-    _, _, _, img_mes_bf = measuretop(img_warp, img_thr_bf)
+    _, img_mes_gb = measuretop(img_warp, img_thr_gb)
+    _, img_mes_bf = measuretop(img_warp, img_thr_bf)
 
     # Plot result
     fig, axis = plt.subplots(2, 2,sharex=True, sharey=True)

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # Importing user-defined modules
 
 
-def plot(df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal):
+def plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal):
 
     # Get direction
     try:
@@ -121,13 +121,17 @@ def plot(df, layout, basis, diameter, height, diameter_vertical, diameter_horizo
     axis[1, 1].set_aspect('equal', 'box')
     axis[1, 1].legend()
 
+    plt.savefig(f'{data_path}test.pdf')
     plt.show()
-
+    
     return
 
 if __name__ == "__main__":
     # Import measured parameters
     df = pd.read_csv('H:/data/tests/sony_hs/f_r8_d113_h40.csv')
+
+    # Define path with data to be analysed
+    data_path = 'H:/data/tests/sony_hs/'
 
     # Define video name
     vid = 'f_r8-pa_d113_h40'
@@ -142,4 +146,4 @@ if __name__ == "__main__":
     diameter_vertical = 2078
     diameter_horizontal = 1853
 
-    plot(df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
+    plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
