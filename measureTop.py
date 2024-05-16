@@ -11,14 +11,12 @@ from detectMarkers import detect
 from warpPerspective import warp
 from filterImage import threshold
 
-def measuretop(image, image_thr):
+def measuretop(image, image_thr, search_width):
 #    print('start time: ', datetime.now())
 
     # Define search window
     horizontal_y = 3000
-    horizontal_width = 200
     vertical_x = 3000
-    vertical_width = 200
     vertical_top = 500
 
     # Define pre-search thresholds
@@ -26,7 +24,7 @@ def measuretop(image, image_thr):
 
     # Draw search windows
     image_windows = image.copy()
-    cv2.rectangle(image_windows, (int(vertical_x-vertical_width/2), int(vertical_top)), (int(vertical_x + vertical_width/2), int(horizontal_y-horizontal_width/2)), (0, 0, 255), 20)
+    cv2.rectangle(image_windows, (int(vertical_x-search_width/2), int(vertical_top)), (int(vertical_x + search_width/2), int(horizontal_y-search_width/2)), (0, 0, 255), 20)
 
     # Draw search direction
     cv2.arrowedLine(image_windows, (int(vertical_x), int(vertical_top)), (int(vertical_x), int(vertical_top+500)), (255, 0, 0), 20)
@@ -39,14 +37,14 @@ def measuretop(image, image_thr):
         y_top += 1
 
     # Define top loop parameters
-    x_top = vertical_x - vertical_width/2
+    x_top = vertical_x - search_width/2
     y_top = y_top - pre_search_threshold
 
     # Search for edges from left top to right bottom
     while image_thr[int(y_top), int(x_top)] == 0:
         y_top += 1
-        x_top = vertical_x - vertical_width/2
-        while image_thr[int(y_top), int(x_top)] == 0 and x_top < vertical_x + vertical_width/2:
+        x_top = vertical_x - search_width/2
+        while image_thr[int(y_top), int(x_top)] == 0 and x_top < vertical_x + search_width/2:
             x_top += 1           
 
     """ print('top match value: ', image_thr[int(y_top), int(x_top)])
@@ -57,9 +55,9 @@ def measuretop(image, image_thr):
     count_top = 0
 
     # Look for mean of y_left and y_right
-    for i in range(vertical_width):
-        if image_thr[int(y_top), int(vertical_x - vertical_width/2 + i)] == 255:
-            x_top = x_top + vertical_x - vertical_width/2 + i
+    for i in range(search_width):
+        if image_thr[int(y_top), int(vertical_x - search_width/2 + i)] == 255:
+            x_top = x_top + vertical_x - search_width/2 + i
             count_top += 1        
 
     # Calculate mean for y_left and y_right
@@ -100,6 +98,9 @@ if __name__ == "__main__":
 
     # Define filter threshold
     filter_threshold = 90
+    
+    # Define ROI width for measurement
+    search_width = 200
 
     # Import calibration parameters
     K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
@@ -159,8 +160,8 @@ if __name__ == "__main__":
     img_thr_gb, img_thr_bf = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold)
 
     # Measure distance
-    _, img_mes_gb = measuretop(img_warp, img_thr_gb)
-    _, img_mes_bf = measuretop(img_warp, img_thr_bf)
+    _, img_mes_gb = measuretop(img_warp, img_thr_gb, search_width)
+    _, img_mes_bf = measuretop(img_warp, img_thr_bf, search_width)
 
     # Plot result
     fig, axis = plt.subplots(2, 2,sharex=True, sharey=True)

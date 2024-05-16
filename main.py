@@ -47,6 +47,9 @@ sigma_space = 35 # Filter sigma in the coordinate space. A larger value of the p
 # Define filter threshold (otsu)
 filter_threshold = 90 # Threshold value for binary thresholding
 
+# Define ROI width for measurement
+search_width = 200
+
 ############################################################################################################
 
 # Calibrate camera
@@ -168,7 +171,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.waitKey(0)
 
         # Measure distances
-        x_right, x_left, y_bottom, img_mes = measure(img_warp, img_thr)
+        x_right, x_left, y_bottom, img_mes = measure(img_warp, img_thr, search_width)
 #         cv2.imshow('image_mes', cv2.resize(img_mes, (1080, 1080)))
 #        cv2.waitKey(0)
 
@@ -203,7 +206,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
                 print('Directory end frame tiffs already exists but last frame saved as threshold.')
                 cv2.imwrite(f'{data_path}end frame tiffs/{vid}.tiff', img_thr)
                 
-            distance_top, img_mes_top = measuretop(img_warp, img_thr)
+            distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
 
     # Release video capture
     cap.release()

@@ -11,18 +11,16 @@ from detectMarkers import detect
 from warpPerspective import warp
 from filterImage import threshold
 
-def measure(image, image_thr):
+def measure(image, image_thr, search_width):
 #    print('start time: ', datetime.now())
     
     # Define horizontal search window
     horizontal_left = 300
     horizontal_right = 5700
     horizontal_y = 3000
-    horizontal_width = 200
 
     # Define vertical search window
     vertical_x = 3000
-    vertical_width = 200
     vertical_bottom = 5500
 
     # Define pre-search thresholds
@@ -30,8 +28,8 @@ def measure(image, image_thr):
 
     # Draw search windows
     image_windows = image.copy()
-    cv2.rectangle(image_windows, (int(horizontal_left), int(horizontal_y-horizontal_width/2)), (int(horizontal_right), int(horizontal_y + horizontal_width/2)), (0, 0, 255), 20)
-    cv2.rectangle(image_windows, (int(vertical_x-vertical_width/2), int(vertical_bottom)), (int(vertical_x + vertical_width/2), int(horizontal_y+horizontal_width/2)), (0, 0, 255), 20)
+    cv2.rectangle(image_windows, (int(horizontal_left), int(horizontal_y-search_width/2)), (int(horizontal_right), int(horizontal_y + search_width/2)), (0, 0, 255), 20)
+    cv2.rectangle(image_windows, (int(vertical_x-search_width/2), int(vertical_bottom)), (int(vertical_x + search_width/2), int(horizontal_y+search_width/2)), (0, 0, 255), 20)
 
     # Draw search direction
     cv2.arrowedLine(image_windows, (int(horizontal_left), int(horizontal_y)), (int(horizontal_left+500), int(horizontal_y)), (255, 0, 0), 20)
@@ -47,13 +45,13 @@ def measure(image, image_thr):
 
     # Define left loop parameters
     x_left = x_left - pre_search_threshold
-    y_left = horizontal_y - horizontal_width/2
+    y_left = horizontal_y - search_width/2
 
     # Search for edges from left top to right bottom
     while image_thr[int(y_left), int(x_left)] == 0:
         x_left += 1
-        y_left = horizontal_y - horizontal_width/2
-        while image_thr[int(y_left), int(x_left)] == 0 and y_left < horizontal_y + horizontal_width/2:
+        y_left = horizontal_y - search_width/2
+        while image_thr[int(y_left), int(x_left)] == 0 and y_left < horizontal_y + search_width/2:
             y_left += 1
             
     """ print('left match value: ', image_thr[int(y_left),int(x_left)])
@@ -68,13 +66,13 @@ def measure(image, image_thr):
 
     # Define right loop parameters
     x_right = x_right + pre_search_threshold
-    y_right = horizontal_y - horizontal_width/2  
+    y_right = horizontal_y - search_width/2  
 
     # Search for edges from right top to left bottom
     while image_thr[int(y_right), int(x_right)] == 0:
         x_right -= 1
-        y_right = horizontal_y - horizontal_width/2
-        while image_thr[int(y_right), int(x_right)] == 0 and y_right < horizontal_y + horizontal_width/2:
+        y_right = horizontal_y - search_width/2
+        while image_thr[int(y_right), int(x_right)] == 0 and y_right < horizontal_y + search_width/2:
             y_right += 1           
 
     """ print('right match value: ', image_thr[int(y_right), int(x_right)])
@@ -88,14 +86,14 @@ def measure(image, image_thr):
         y_bottom -= 1
 
     # Define bottom loop parameters
-    x_bottom = vertical_x - vertical_width/2
+    x_bottom = vertical_x - search_width/2
     y_bottom = y_bottom + pre_search_threshold
 
     # Search for edges from left bottom to right top
     while image_thr[int(y_bottom), int(x_bottom)] == 0:
         y_bottom -= 1
-        x_bottom = vertical_x - vertical_width/2
-        while image_thr[int(y_bottom), int(x_bottom)] == 0 and x_bottom < vertical_x + vertical_width/2:
+        x_bottom = vertical_x - search_width/2
+        while image_thr[int(y_bottom), int(x_bottom)] == 0 and x_bottom < vertical_x + search_width/2:
             x_bottom += 1           
 
     """ print('bottom match value: ', image_thr[int(y_bottom), int(x_bottom)])
@@ -110,19 +108,19 @@ def measure(image, image_thr):
     count_bottom = 0
 
     # Look for mean of y_left and y_right
-    for i in range(horizontal_width):
-        if image_thr[int(horizontal_y - horizontal_width/2 + i), int(x_left)] == 255:
-            y_left = y_left + horizontal_y - horizontal_width/2 + i
+    for i in range(search_width):
+        if image_thr[int(horizontal_y - search_width/2 + i), int(x_left)] == 255:
+            y_left = y_left + horizontal_y - search_width/2 + i
             count_left += 1
             
-    for i in range(horizontal_width):        
-        if image_thr[int(horizontal_y - horizontal_width/2 + i), int(x_right)] == 255:
-            y_right = y_right + horizontal_y - horizontal_width/2 + i
+    for i in range(search_width):        
+        if image_thr[int(horizontal_y - search_width/2 + i), int(x_right)] == 255:
+            y_right = y_right + horizontal_y - search_width/2 + i
             count_right += 1
 
-    for i in range(vertical_width):
-        if image_thr[int(y_bottom), int(vertical_x - vertical_width/2 + i)] == 255:
-            x_bottom = x_bottom + vertical_x - vertical_width/2 + i
+    for i in range(search_width):
+        if image_thr[int(y_bottom), int(vertical_x - search_width/2 + i)] == 255:
+            x_bottom = x_bottom + vertical_x - search_width/2 + i
             count_bottom += 1        
 
     # Calculate mean for y_left and y_right
@@ -160,6 +158,19 @@ if __name__ == "__main__":
     
     # Define used camera
     camera = "sony" # "sony", "sony_hs", "gopro1", "gopro2
+    
+    # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter
+    kernel_size = 25 # must be positive and odd
+
+    # Define bilateral filter
+    sigma_color = 15
+    sigma_space = 35
+
+    # Define filter threshold
+    filter_threshold = 90
+    
+    # Define ROI width for measurement
+    search_width = 200
 
     # Import calibration parameters
     K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
@@ -216,11 +227,11 @@ if __name__ == "__main__":
             print('marker', marker+1, ' diff', corner+1, ': ', linalg.norm([corners_warp[marker*4+corner+1][0] - corners_warp[marker*4+corner][0], corners_warp[marker*4+corner+1][1] - corners_warp[marker*4+corner][1]])-linalg.norm([pattern[marker*4+corner+1][0] - pattern[marker*4+corner][0], pattern[marker*4+corner+1][1] - pattern[marker*4+corner][1]]))
 
     # Threshold image
-    img_thr_gb, img_thr_bf = threshold(img_warp)
+    img_thr_gb, img_thr_bf = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold)
 
     # Measure distance
-    _, _, _, img_mes_gb = measure(img_warp, img_thr_gb)
-    _, _, _, img_mes_bf = measure(img_warp, img_thr_bf)
+    _, _, _, img_mes_gb = measure(img_warp, img_thr_gb, search_width)
+    _, _, _, img_mes_bf = measure(img_warp, img_thr_bf, search_width)
 
     # Plot result
     fig, axis = plt.subplots(2, 2,sharex=True, sharey=True)
