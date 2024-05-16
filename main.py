@@ -1,5 +1,4 @@
 # IMPORT PACKAGES AND MODULES
-import sys
 import os
 import cv2
 import glob
@@ -8,11 +7,9 @@ import pandas as pd
 from termcolor import colored
 
 # IMPORT USER-DEFINED MODULES
-from videostoframes import extract
 from calibrateCamera import calibrate
 from undistortImage import undistort
 from detectMarkers import detect
-from locateCamera import locate
 from warpPerspective import warp
 from filterImage import threshold
 from measureDistance import measure
@@ -34,9 +31,6 @@ data_path = 'H:/data/tests/sony_hs/'
 # Define images for output
 img_out = '' # None, _undst', '_det', '_warp', '_thr', '_mes'
 
-# Define used marker
-marker = 'DICT_4X4_1000'
-
 # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
 kernel_size = 35 # must be positive and odd
 
@@ -53,16 +47,17 @@ search_width = 200
 ############################################################################################################
 
 # Calibrate camera
-if os.path.isfile('calibration/' + camera + '/K.txt'):
-    print(colored(f'Camera calibrated. Loading calibration parameters from {calib_path}.', 'green'))
-    K = np.loadtxt('calibration/' + camera + '/K.txt')  # calibration matrix[3x3]
-    d = np.loadtxt('calibration/' + camera + '/d.txt')  # distortion coefficients[5x1]
+if os.path.isfile(f'{data_path}calibration/K.txt'):
+    print(colored(f'Camera calibrated. Loading calibration parameters from {data_path}calibration/.', 'green'))
+    K = np.loadtxt(f'{data_path}calibration/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt(f'{data_path}calibration/d.txt')  # distortion coefficients[5x1]
+elif os.path.isfile(f'{data_path}calibration.mp4'):
+    print(colored(f'Camera not calibrated. Calibrating with {data_path}calibration.mp4.', 'orange'))
+    rep, K, d, rvec, tvec, X_W = calibrate(camera, data_path)
 else:
-    print(colored('Calibrating camera...', 'yellow'))
-    rep, K, d, rvec, tvec, X_W = calibrate(camera, calib_path)
-
-''' # Extract frames from all videos
-extract(data_path, '*.MP4') '''
+    print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from H:/data/calibration/{camera}/', 'red'))
+    K = np.loadtxt(f'H:/data/calibration/{camera}/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt(f'H:/data/calibration/{camera}/d.txt')  # distortion coefficients[5x1]
 
 # Loop through all videos in data path
 for vid_path in glob.glob(data_path + '*.MP4'):
@@ -154,6 +149,9 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         img_undst = undistort(K, d, image)
 #        cv2.imshow('image_undist', cv2.resize(img_undst, (1920, 1080)))
 #        cv2.waitKey(0)
+
+        #Define used marker type
+        marker = 'DICT_4X4_1000'
 
         # Detect markers
         img_det, corners, ids = detect(img_undst, marker)

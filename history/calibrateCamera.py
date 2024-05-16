@@ -137,7 +137,7 @@ def calibrate(camera, data_path):
     
     plot_calibration(rvec, tvec, objp)
 
-    return rpe, K, d, rvec, tvec, objp
+    # Print to console our success
 
 def plot_calibration(rvec, tvec, X_W):
     # plotCamera() config
@@ -194,6 +194,6 @@ if __name__ == "__main__":
     camera = "sony_hs" # "sony", "sony_hs" "gopro1", "gopro2
 
     # Define data path
-    data_path = 'H:/data/tests/sony_hs/'
+    data_path = "H:/data/calibration/" + camera
 
-    rep, K, d, rvec, tvec, X_W = calibrate(camera, data_path)
+    calibrate(camera, data_path)
