@@ -2,11 +2,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 # Importing user-defined modules
 
 
-def plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal):
+def plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal):
 
     # Get direction
     try:
@@ -76,8 +77,10 @@ def plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diam
             vertical_diameter = 'Perpendicular diameter'
 
     # Define subplots
-    fig, axis = plt.subplots(2, 2, sharex = False, figsize = (1000, 1000))
-    fig.suptitle(f'{layout} mount with {basis} roughness basis, {diameter} cylinder and {height} sand height \n \n Final {horizontal_diameter}: {0.1 * diameter_horizontal} mm \n Final {vertical_diameter}: {0.1 * diameter_vertical} mm', fontsize=16)
+    fig, axis = plt.subplots(2, 2, sharex = False, figsize = (10, 10))
+    fig.suptitle(f'\n {layout} mount with {basis} roughness basis, {diameter} cylinder and {height} sand height', fontsize=16)
+    fig.text(0.5, -0.01, f'Final {horizontal_diameter}: {round(0.1 * diameter_horizontal, 1)} mm \n Final {vertical_diameter}: {round(0.1 * diameter_vertical, 1)} mm \n', ha='center')
+    plt.rc('legend',fontsize=5) # using a size in points
 
     # Plot radius parameters at top left
     axis[0, 0].set_title('Distance')
@@ -121,8 +124,17 @@ def plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diam
     axis[1, 1].set_aspect('equal', 'box')
     axis[1, 1].legend()
 
-    plt.savefig(f'{data_path}test.pdf')
-    plt.show()
+    # Make directory for graphs and save plot
+    try:
+        os.mkdir(f'{data_path}graphs/')
+        print('Directory graphs created and plot saved as pdf.')
+        plt.savefig(f'{data_path}{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+    except FileExistsError:
+        print('Directory graphs already exists but plot saved as pdf.')
+        plt.savefig(f'{data_path}graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+    
+    # Show plot
+#    plt.show()
     
     return
 
@@ -146,4 +158,4 @@ if __name__ == "__main__":
     diameter_vertical = 2078
     diameter_horizontal = 1853
 
-    plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
+    plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)

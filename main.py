@@ -9,7 +9,7 @@ from termcolor import colored
 
 # IMPORT USER-DEFINED MODULES
 from videostoframes import extract
-import calibrateCamera
+from calibrateCamera import calibrate
 from undistortImage import undistort
 from detectMarkers import detect
 from locateCamera import locate
@@ -59,7 +59,7 @@ if os.path.isfile('calibration/' + camera + '/K.txt'):
     d = np.loadtxt('calibration/' + camera + '/d.txt')  # distortion coefficients[5x1]
 else:
     print(colored('Calibrating camera...', 'yellow'))
-    rep, K, d, rvec, tvec, X_W = calibrateCamera.calibrate(camera, view=True, check=True)
+    rep, K, d, rvec, tvec, X_W = calibrate(camera, calib_path)
 
 ''' # Extract frames from all videos
 extract(data_path, '*.MP4') '''
@@ -83,7 +83,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     diameter = vid.split('_')[2]
     height = vid.split('_')[3]
 
-    print(f'Processing frames: {vid} with layout: {layout}, basis: {basis}, diameter: {diameter}, height: {height}')
+#    print(f'Processing frames: {vid} with layout: {layout}, basis: {basis}, diameter: {diameter}, height: {height}')
     # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
     match basis:
         case 'r0-pa':
@@ -212,8 +212,8 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     cap.release()
 
     # Get final diameter
-    diameter_vertical = round(distance_bottom[-1] - distance_top, 1)
-    diameter_horizontal = round(distance_right[-1] - distance_left[-1], 1)
+    diameter_vertical = distance_bottom[-1] - distance_top
+    diameter_horizontal = distance_right[-1] - distance_left[-1]
 
     # Get initial distance
     distance_right_cor = min(distance_right)
@@ -242,7 +242,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     df = pd.DataFrame(dict)
  
     # Plot measured parameters
-    plot(data_path, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
+    plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
 
     # Save parameters to csv file
     df.to_csv(f'{data_path}{vid}.csv')
