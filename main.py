@@ -7,7 +7,7 @@ import pandas as pd
 from termcolor import colored
 
 # IMPORT USER-DEFINED MODULES
-from calibrateCamera import calibrate
+from calibrateCameravideo import calibratevideo
 from undistortImage import undistort
 from detectMarkers import detect
 from warpPerspective import warp
@@ -29,13 +29,13 @@ calib_path = 'H:/data/calibration/' + camera + '/'
 data_path = 'H:/data/tests/sony_hs/'
 
 # Define images for output
-img_out = '' # None, _undst', '_det', '_warp', '_thr', '_mes'
+img_out = '_warp' # None, _undst', '_det', '_warp', '_thr', '_mes'
 
 # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
 kernel_size = 35 # must be positive and odd
 
 # Define bilateral filter parameters (200, 25)
-sigma_color = 50 # Filter sigma in the color space. A larger value of the parameter means that farther colors within the pixel neighborhood (see sigmaSpace) will be mixed together, resulting in larger areas of semi-equal color.
+sigma_color = 80 # Filter sigma in the color space. A larger value of the parameter means that farther colors within the pixel neighborhood (see sigmaSpace) will be mixed together, resulting in larger areas of semi-equal color.
 sigma_space = 35 # Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
 # Define filter threshold (otsu)
@@ -53,7 +53,7 @@ if os.path.isfile(f'{data_path}calibration/K.txt'):
     d = np.loadtxt(f'{data_path}calibration/d.txt')  # distortion coefficients[5x1]
 elif os.path.isfile(f'{data_path}calibration.mp4'):
     print(colored(f'Camera not calibrated. Calibrating with {data_path}calibration.mp4.', 'orange'))
-    rep, K, d, rvec, tvec, X_W = calibrate(camera, data_path)
+    rep, K, d, rvec, tvec, X_W = calibratevideo(camera, data_path)
 else:
     print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from H:/data/calibration/{camera}/', 'red'))
     K = np.loadtxt(f'H:/data/calibration/{camera}/K.txt')  # calibration matrix[3x3]
@@ -61,9 +61,16 @@ else:
 
 # Loop through all videos in data path
 for vid_path in glob.glob(data_path + '*.MP4'):
+    # Print processed video
+    print(colored(f'Processing video: {vid_path}', 'blue'))
+
+    # Check if video is already processed and skip if so
+    if vid_path.split('\\')[-1] == 'calibration.MP4':
+        print('Calibration video - skip processing.')
+        continue    
+
     # Load video in video capture
     cap = cv2.VideoCapture(vid_path)
-    print(colored(f'Processing video: {vid_path}', 'blue'))
 
     # Get needed video information
     fps = cap.get(cv2.CAP_PROP_FPS) # [frames/s]
@@ -176,7 +183,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         # If needed save images to folder
         if img_out:
             print(f'Saving img{img_out}')
-            cv2.imwrite(f'{output_folder}{frame+100}{img_out}.jpg', locals().get(f'img{img_out}'))
+            cv2.imwrite(f'{output_folder}{frame+100}{img_out}.png', locals().get(f'img{img_out}'))
 
         # Append measured parameters to lists
         distance_right.append(x_right)
