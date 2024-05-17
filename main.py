@@ -22,27 +22,27 @@ from measureTop import measuretop
 # Define used camera
 camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
 
-# Define path with calibration parameters
-calib_path = 'H:/data/calibration/' + camera + '/'
-
 # Define path with data to be analysed
 data_path = 'H:/data/tests/sony_hs/'
 
-# Define images for output
-img_out = '_warp' # None, _undst', '_det', '_warp', '_thr', '_mes'
+# Define images for optional output of respective images
+img_out = '' # '', _undst', '_det', '_warp', '_thr', '_mes'
+
+# Define exp_out for optional output of all respective experiment images
+exp_out = '' # '', 'f_r8_d113_h40', 
 
 # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
-kernel_size = 35 # must be positive and odd
+kernel_size = 35 # [px] must be positive and odd
 
 # Define bilateral filter parameters (200, 25)
-sigma_color = 80 # Filter sigma in the color space. A larger value of the parameter means that farther colors within the pixel neighborhood (see sigmaSpace) will be mixed together, resulting in larger areas of semi-equal color.
-sigma_space = 35 # Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
+sigma_color = 80 # [px] Filter sigma in the color space. A larger value of the parameter means that farther colors within the pixel neighborhood (see sigmaSpace) will be mixed together, resulting in larger areas of semi-equal color.
+sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
-# Define filter threshold (otsu)
-filter_threshold = 90 # Threshold value for binary thresholding
+# Define filter threshold for binary thresholding (90)
+filter_threshold = 90 # [px] Threshold value for binary thresholding
 
 # Define ROI width for measurement
-search_width = 200
+search_width = 300 # [px] Width of the ROI for distance measurement
 
 ############################################################################################################
 
@@ -126,14 +126,12 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 
     # Make directory for output images
     if img_out:
-        output_folder = f'{data_path}{vid}{img_out}/'
+        output_folder = f'{data_path}{vid}/'
         try: 
             os.mkdir(output_folder)
             print('Directory ', output_folder, ' created.')
         except FileExistsError:
             print('Directory ', output_folder, ' already exists - images saved again.')
-    else:
-        print('No images saved to output folder.')
 
     # Initialize lists for measured distances
     distance_right = []
@@ -212,6 +210,26 @@ for vid_path in glob.glob(data_path + '*.MP4'):
                 cv2.imwrite(f'{data_path}end frame tiffs/{vid}.tiff', img_thr)
                 
             distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
+            
+        # Save all images of wanted experiment in folder
+        if vid == exp_out:
+            try:
+                os.mkdir(f'{data_path}{exp_out}')
+                print(f'Directory {exp_out} created. All images of this experiment saved there.')
+            except FileExistsError:
+                pass
+            print(f'Saving {frame+100}_orig')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_orig.png', image)
+            print(f'Saving {frame+100}_undst')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_undst.png', img_undst)
+            print(f'Saving {frame+100}_det')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_det.png', img_det)
+            print(f'Saving {frame+100}_warp')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_warp.png', img_warp)
+            print(f'Saving {frame+100}_thr')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_thr.png', img_thr)
+            print(f'Saving {frame+100}_mes')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_mes.png', img_mes)
 
     # Release video capture
     cap.release()
@@ -250,4 +268,4 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
 
     # Save parameters to csv file
-    df.to_csv(f'{data_path}{vid}.csv')
+    df.to_csv(f'{data_path}{vid}/{vid}_raw.csv')

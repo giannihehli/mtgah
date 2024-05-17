@@ -128,7 +128,7 @@ def plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical,
     try:
         os.mkdir(f'{data_path}graphs/')
         print('Directory graphs created and plot saved as pdf.')
-        plt.savefig(f'{data_path}{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+        plt.savefig(f'{data_path}graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
     except FileExistsError:
         print('Directory graphs already exists but plot saved as pdf.')
         plt.savefig(f'{data_path}graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')

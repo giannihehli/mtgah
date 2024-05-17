@@ -14,7 +14,7 @@ from termcolor import colored
 def calibratevideo(camera, data_path):
 
     # Input factor for skipping frames
-    skip_frames = 30
+    skip_frames = 10
 
     # Chessboard variables for how many corners and size
     rows = 12
@@ -148,34 +148,35 @@ def calibratevideo(camera, data_path):
     np.savetxt(f'{data_path}calibration/d.txt', d)
     print('Saved Distortion parameters d = (k1, k2, p1, p2, k3) = ', d)
     
-    plot_calibration(rvec, tvec, objp)
+    plot_calibration(rvec, tvec, objp, data_path, rpe)
 
     return rpe, K, d, rvec, tvec, objp
 
-def plot_calibration(rvec, tvec, X_W):
+def plot_calibration(rvec, tvec, X_W, data_path, rpe):
     # plotCamera() config
     plot_mode   = 0    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
-    plot_range  = 0.5 # target volume [-plot_range:plot_range]
+    plot_range  = 0.4 # target volume [-plot_range:plot_range]
     camera_size = 0.03  # size of the camera in plot
 
     # 3D PLOT
-    fig_in = plt.figure()
-    fig_in.show()
-    ax_in = Axes3D(fig_in, auto_add_to_figure=False)
-    fig_in.add_axes(ax_in)
+    fig = plt.figure()
+    fig.suptitle(f'Camera calibration from {data_path}calibration.mp4\nRPE: {rpe:.5f}')
+    fig.show()
+    ax = Axes3D(fig, auto_add_to_figure=False)
+    fig.add_axes(ax)
     
-    ax_in.set_xlim(-plot_range, plot_range)
-    ax_in.set_ylim(-plot_range, plot_range)
-    ax_in.set_zlim(-plot_range, plot_range)
+    ax.set_xlim(-plot_range, plot_range)
+    ax.set_ylim(-plot_range, plot_range)
+    ax.set_zlim(0, 2*plot_range)
 
-    ax_in.set_xlabel('X')
-    ax_in.set_ylabel('Y')
-    ax_in.set_zlabel('Z')
-    ax_in.set_title('Camera Position and chessboards in 3D space')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_title('Camera Position and chessboards in 3D space')
 
     if plot_mode == 0: # fixed camera = plot in CCS
         
-        plotCamera(ax_in, np.eye(3), np.zeros((1,3)), color='b', scale=camera_size) # camera is at (0,0,0)
+        plotCamera(ax, np.eye(3), np.zeros((1,3)), color='b', scale=camera_size) # camera is at (0,0,0)
         plt.subplots_adjust(top=0.88, bottom=0.11, left=0.125, right=0.9, hspace=0.2, wspace=0.2)
 
         for i_ex in range(len(rvec)):
@@ -185,7 +186,7 @@ def plot_calibration(rvec, tvec, X_W):
                 t_w2c = tvec[i_ex].reshape(3)
                 X_C[i_x,:] = R_w2c.dot(X_W[i_x,:]) + t_w2c # Transform chess corners in WCS to CCS
                     
-            ax_in.plot(X_C[:,0], X_C[:,1], X_C[:,2], '.') # plot chess corners in CCS
+            ax.plot(X_C[:,0], X_C[:,1], X_C[:,2], '.') # plot chess corners in CCS
 
     elif plot_mode == 1: # fixed chessboard = plot in WCS
         plt.subplots_adjust(top=0.88, bottom=0.11, left=0.125, right=0.9, hspace=0.2, wspace=0.2)
@@ -193,12 +194,12 @@ def plot_calibration(rvec, tvec, X_W):
             R_c2w = np.linalg.inv(cv2.Rodrigues(rvec[i_ex])[0]) # Camera orientation in world coordinate system
             t_c2w = -R_c2w.dot(tvec[i_ex]).reshape((1,3)) # Camera position in world coordinate system
             
-            plotCamera(ax_in, R_c2w, t_c2w, color='b', scale=camera_size)
+            plotCamera(ax, R_c2w, t_c2w, color='b', scale=camera_size)
             print('Plot camera', i_ex, 'at', t_c2w)
 
-        ax_in.plot(X_W[:,0], X_W[:,1], X_W[:,2], '.')
+        ax.plot(X_W[:,0], X_W[:,1], X_W[:,2], '.')
 
-    plt.subplots_adjust(top=0.88, bottom=0.11, left=0.125, right=0.9, hspace=0.2, wspace=0.2)
+    ax.view_init(azim=45, elev=-160, roll=0)
     plt.savefig(f'{data_path}calibration/result.pdf')
     plt.show()
     cv2.waitKey(0)
