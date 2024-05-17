@@ -148,11 +148,12 @@ def calibratevideo(camera, data_path):
     np.savetxt(f'{data_path}calibration/d.txt', d)
     print('Saved Distortion parameters d = (k1, k2, p1, p2, k3) = ', d)
     
+    # Plot calibration
     plot_calibration(rvec, tvec, objp, data_path, rpe)
 
     return rpe, K, d, rvec, tvec, objp
 
-def plot_calibration(rvec, tvec, X_W, data_path, rpe):
+def plot_calibration(rvec, tvec, objp, data_path, rpe):
     # plotCamera() config
     plot_mode   = 0    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
     plot_range  = 0.4 # target volume [-plot_range:plot_range]
@@ -180,11 +181,11 @@ def plot_calibration(rvec, tvec, X_W, data_path, rpe):
         plt.subplots_adjust(top=0.88, bottom=0.11, left=0.125, right=0.9, hspace=0.2, wspace=0.2)
 
         for i_ex in range(len(rvec)):
-            X_C = np.zeros((X_W.shape))
-            for i_x in range(X_W.shape[0]):
+            X_C = np.zeros((objp.shape))
+            for i_x in range(objp.shape[0]):
                 R_w2c = cv2.Rodrigues(rvec[i_ex])[0] # convert to the rotation matrix
                 t_w2c = tvec[i_ex].reshape(3)
-                X_C[i_x,:] = R_w2c.dot(X_W[i_x,:]) + t_w2c # Transform chess corners in WCS to CCS
+                X_C[i_x,:] = R_w2c.dot(objp[i_x,:]) + t_w2c # Transform chess corners in WCS to CCS
                     
             ax.plot(X_C[:,0], X_C[:,1], X_C[:,2], '.') # plot chess corners in CCS
 
@@ -197,7 +198,7 @@ def plot_calibration(rvec, tvec, X_W, data_path, rpe):
             plotCamera(ax, R_c2w, t_c2w, color='b', scale=camera_size)
             print('Plot camera', i_ex, 'at', t_c2w)
 
-        ax.plot(X_W[:,0], X_W[:,1], X_W[:,2], '.')
+        ax.plot(objp[:,0], objp[:,1], objp[:,2], '.')
 
     ax.view_init(azim=45, elev=-160, roll=0)
     plt.savefig(f'{data_path}calibration/result.pdf')
@@ -211,4 +212,4 @@ if __name__ == '__main__':
     # Define data path
     data_path = 'H:/data/tests/sony_hs/'
 
-    rep, K, d, rvec, tvec, X_W = calibratevideo(camera, data_path)
+    rep, K, d, rvec, tvec, objp = calibratevideo(camera, data_path)
