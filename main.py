@@ -23,13 +23,13 @@ from measureTop import measuretop
 camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
 
 # Define path with data to be analysed
-data_path = 'H:/data/tests/sony_hs/'
+data_path = 'H:/data/camera/20240523/'
 
 # Define images for optional output of respective images
 img_out = '' # '', _undst', '_det', '_warp', '_thr', '_mes'
 
 # Define exp_out for optional output of all respective experiment images
-exp_out = '' # '', 'f_r8_d113_h40', 
+exp_out = 'f_r4-pe_d113_h105_1' # '', 'f_r8_d113_h40', 
 
 # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
 kernel_size = 35 # [px] must be positive and odd
@@ -39,7 +39,7 @@ sigma_color = 80 # [px] Filter sigma in the color space. A larger value of the p
 sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
 # Define filter threshold for binary thresholding (90)
-filter_threshold = 90 # [px] Threshold value for binary thresholding
+filter_threshold = 90 # [px] Threshold value for binary thresholding - 90 for 250fps and 120 for 500fps
 
 # Define ROI width for measurement
 search_width = 300 # [px] Width of the ROI for distance measurement
@@ -55,9 +55,9 @@ elif os.path.isfile(f'{data_path}calibration.mp4'):
     print(colored(f'Camera not calibrated. Calibrating with {data_path}calibration.mp4.', 'orange'))
     rep, K, d, rvec, tvec, X_W = calibratevideo(camera, data_path)
 else:
-    print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from H:/data/calibration/{camera}/', 'red'))
-    K = np.loadtxt(f'H:/data/calibration/{camera}/K.txt')  # calibration matrix[3x3]
-    d = np.loadtxt(f'H:/data/calibration/{camera}/d.txt')  # distortion coefficients[5x1]
+    print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from H:/data/camera/calibration/{camera}/', 'red'))
+    K = np.loadtxt(f'H:/data/camera/calibration/{camera}/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt(f'H:/data/camera/calibration/{camera}/d.txt')  # distortion coefficients[5x1]
 
 # Loop through all videos in data path
 for vid_path in glob.glob(data_path + '*.MP4'):
@@ -84,6 +84,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     basis = vid.split('_')[1]
     diameter = vid.split('_')[2]
     height = vid.split('_')[3]
+    attempt = vid.split('_')[4]
 
 #    print(f'Processing frames: {vid} with layout: {layout}, basis: {basis}, diameter: {diameter}, height: {height}')
     # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
@@ -147,13 +148,29 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         print(colored(f'Analyse frame {frame}', 'blue'))
         ret, image = cap.read()
 
+        # Stop video analysis if no frame is loaded anymore
         if ret == False:
             break
+
+        # If needed save images to folder
+        if vid == exp_out:
+            try:
+                os.mkdir(f'{data_path}{exp_out}')
+                print(f'Directory {exp_out} created. All images of this experiment saved there.')
+            except FileExistsError:
+                pass
+            print(f'Saving {frame+100}_orig')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_orig.png', image)
 
         # Undistort images
         img_undst = undistort(K, d, image)
 #        cv2.imshow('image_undist', cv2.resize(img_undst, (1920, 1080)))
 #        cv2.waitKey(0)
+
+        # Save image of wanted experiment in folder
+        if vid == exp_out:
+            print(f'Saving {frame+100}_undst')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_undst.png', img_undst)
 
         #Define used marker type
         marker = 'DICT_4X4_1000'
@@ -163,20 +180,40 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.imshow('image_det', cv2.resize(img_det, (1920, 1080)))
 #        cv2.waitKey(0)
 
+        # Save image of wanted experiment in folder
+        if vid == exp_out:
+            print(f'Saving {frame+100}_det')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_det.png', img_det)
+
         # Warp perspective
         img_warp, M = warp(corners, pattern, img_undst)
 #        cv2.imshow('image_warp', cv2.resize(img_warp, (1080, 1080)))
 #        cv2.waitKey(0)
+
+        # Save image of wanted experiment in folder
+        if vid == exp_out:
+            print(f'Saving {frame+100}_warp')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_warp.png', img_warp)
 
         # Threshold image
         _ , img_thr = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold) # img_thr_gb, img_thr_bf
 #        cv2.imshow('image_thr', cv2.resize(img_thr, (1080, 1080)))
 #        cv2.waitKey(0)
 
+        # Save image of wanted experiment in folder
+        if vid == exp_out:
+            print(f'Saving {frame+100}_thr')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_thr.png', img_thr)
+
         # Measure distances
         x_right, x_left, y_bottom, img_mes = measure(img_warp, img_thr, search_width)
 #         cv2.imshow('image_mes', cv2.resize(img_mes, (1080, 1080)))
 #        cv2.waitKey(0)
+
+        # Save image of wanted experiment in folder
+        if vid == exp_out:
+            print(f'Saving {frame+100}_mes')
+            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_mes.png', img_mes)
 
         # If needed save images to folder
         if img_out:
@@ -210,26 +247,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
                 cv2.imwrite(f'{data_path}end frame tiffs/{vid}.tiff', img_thr)
                 
             distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
-            
-        # Save all images of wanted experiment in folder
-        if vid == exp_out:
-            try:
-                os.mkdir(f'{data_path}{exp_out}')
-                print(f'Directory {exp_out} created. All images of this experiment saved there.')
-            except FileExistsError:
-                pass
-            print(f'Saving {frame+100}_orig')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_orig.png', image)
-            print(f'Saving {frame+100}_undst')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_undst.png', img_undst)
-            print(f'Saving {frame+100}_det')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_det.png', img_det)
-            print(f'Saving {frame+100}_warp')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_warp.png', img_warp)
-            print(f'Saving {frame+100}_thr')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_thr.png', img_thr)
-            print(f'Saving {frame+100}_mes')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_mes.png', img_mes)
+
 
     # Release video capture
     cap.release()
@@ -267,5 +285,12 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     # Plot measured parameters
     plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
 
-    # Save parameters to csv file
-    df.to_csv(f'{data_path}{vid}/{vid}_raw.csv')
+    # Make folder for raw data
+    try:
+        os.mkdir(f'{data_path}raw_data')
+        print(f'Directory raw_data created. All images of this experiment saved there.')
+    except FileExistsError:
+        pass
+
+    # Save raw parameters to csv file
+    df.to_csv(f'{data_path}raw_data/{vid}_raw.csv')

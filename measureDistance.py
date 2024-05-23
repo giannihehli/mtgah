@@ -36,7 +36,7 @@ def measure(image, image_thr, search_width):
     cv2.arrowedLine(image_windows, (int(horizontal_right), int(horizontal_y)), (int(horizontal_right-500), int(horizontal_y)), (255, 0, 0), 20)
     cv2.arrowedLine(image_windows, (int(vertical_x), int(vertical_bottom)), (int(vertical_x), int(vertical_bottom-500)), (255, 0, 0), 20)
 
-    # Define pre-search parameter
+    # Define pre-search parameter to go through the middle of the image for speeding up the search
     x_left = horizontal_left
 
     # Pre-search for edges in middle of left search region
@@ -57,7 +57,7 @@ def measure(image, image_thr, search_width):
     """ print('left match value: ', image_thr[int(y_left),int(x_left)])
     print('left match coordinates: ', x_left, y_left)  """  
 
-    # Define pre-search parameter
+    # Define pre-search parameter to go through the middle of the image for speeding up the search
     x_right = horizontal_right
 
     # Pre-search for edges in middle of right search region
@@ -78,7 +78,7 @@ def measure(image, image_thr, search_width):
     """ print('right match value: ', image_thr[int(y_right), int(x_right)])
     print('right match coordinates: ', x_right, y_right) """
   
-    # Define pre-search parameter
+    # Define pre-search parameter to go through the middle of the image for speeding up the search
     y_bottom = vertical_bottom
 
     # Pre-search for edges in middle of bottom search region
@@ -99,7 +99,7 @@ def measure(image, image_thr, search_width):
     """ print('bottom match value: ', image_thr[int(y_bottom), int(x_bottom)])
     print('bottom match coordinates: ', x_bottom, y_bottom) """
   
-    # Post-process results
+    # Post-process results to get y or x mean of detected edges
     y_left = 0
     count_left = 0    
     y_right = 0
@@ -122,6 +122,9 @@ def measure(image, image_thr, search_width):
         if image_thr[int(y_bottom), int(vertical_x - search_width/2 + i)] == 255:
             x_bottom = x_bottom + vertical_x - search_width/2 + i
             count_bottom += 1        
+
+#    cv2.rectangle(image_windows, (int(vertical_x - search_width/2), int(y_bottom-5)), (int(vertical_x + search_width/2), int(y_bottom+5)), (255, 0, 0), 2)
+
 
     # Calculate mean for y_left and y_right
     y_left = y_left / count_left
