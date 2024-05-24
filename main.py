@@ -29,7 +29,7 @@ data_path = 'H:/data/camera/20240523/'
 img_out = '' # '', _undst', '_det', '_warp', '_thr', '_mes'
 
 # Define exp_out for optional output of all respective experiment images
-exp_out = 'f_r4-pe_d113_h105_1' # '', 'f_r8_d113_h40', 
+exp_out = '' # '', 'f_r8_d113_h40', 
 
 # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
 kernel_size = 35 # [px] must be positive and odd
@@ -90,26 +90,31 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
     match basis:
         case 'r0-pa':
+            roughness = 0
             pattern = 100 * np.array([[0.9, 0.84, 0], [8.96, 0.82, 0], [8.95, 8.92, 0], [0.87, 8.93, 0],
                                      [50.87, 0.82, 0], [58.95, 0.82, 0], [58.9, 8.91, 0], [50.83, 8.9, 0],
                                      [50.74, 51.07, 0], [58.83, 51.02, 0], [58.88, 59.1, 0], [50.8, 59.14, 0],
                                      [0.86, 51.02, 0], [8.94, 51.07, 0], [8.88, 59.17, 0], [0.79, 59.11, 0]])
         case 'r0-pe':
+            roughness = 0
             pattern = 100 * np.array([[59.07, 0.87, 0], [59.18, 8.96, 0], [51.07, 8.95, 0], [50.98, 0.86, 0],
                                      [59.18, 50.87, 0], [59.13, 58.93, 0], [51.06, 58.9, 0], [51.09, 50.82, 0],
                                      [8.91, 50.74, 0], [8.96, 58.83, 0], [0.88, 58.88, 0], [0.85, 50.8, 0],
                                      [8.89, 0.86, 0], [8.92, 8.94, 0], [0.82, 8.88, 0], [0.81, 0.8, 0]])
         case 'r8':
+            roughness = 8
             pattern = 10 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
                                 [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
                                 [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
                                 [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], [12.6, 587.3, 0]])
         case 'r4-pa':
+            roughness = 4
             pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], [9.12, 8.92, 0], [1.05, 8.92, 0],
                                      [50.7, 0.91, 0], [58.77, 0.94, 0], [58.75, 9.04, 0], [50.66, 9, 0],
                                      [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], [50.66, 59.14, 0],
                                      [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], [1.04, 59.11, 0]])
         case 'r4-pe':
+            roughness = 4
             pattern = 100 * np.array([[59.1, 1.06, 0], [59.12, 9.15, 0], [51.02, 9.12, 0], [51, 1.05, 0],
                                      [59.04, 50.7, 0], [58.99, 58.77, 0], [58.88, 58.75, 0], [50.96, 50.66, 0],
                                      [8.87, 50.57, 0], [8.91, 58.63, 0], [0.85, 58.73, 0], [0.81, 50.66, 0],
@@ -124,6 +129,18 @@ for vid_path in glob.glob(data_path + '*.MP4'):
        #                              [, , 0], [, , 0], [, , 0], [, , 0],
         #                             [, , 0], [, , 0], [, , 0], [, , 0],
          #                            [, , 0], [, , 0], [, , 0], [, , 0]])
+
+    # Define initial radius according to diameter         
+    match diameter:
+        case 'd113':
+            r_initial = 56.5
+
+    # Define initial height according to height
+    match height:
+        case 'h40':
+            h_initial = 40
+            
+
 
     # Make directory for output images
     if img_out:
