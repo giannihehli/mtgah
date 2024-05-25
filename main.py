@@ -329,7 +329,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     basis_tot.append(basis)
     roughness_tot.append(roughness)
     direction_tot.append(direction)
-    diameter_tot.append(int(diameter[1:]))
+    diameter_tot.append(int(diameter[1:])/2)
     height_tot.append(int(height[1:]))
     attempt_tot.append(attempt)
     d_vertical_tot.append(diameter_vertical)
