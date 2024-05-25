@@ -11,10 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from pycalib.plot import plotCamera
 from termcolor import colored
 
-def calibratevideo(camera, data_path):
-
-    # Input factor for skipping frames
-    skip_frames = 10
+def calibratevideo(data_path, skip_frames):
 
     # Chessboard variables for how many corners and size
     rows = 12
@@ -212,4 +209,7 @@ if __name__ == '__main__':
     # Define data path
     data_path = 'H:/data/tests/sony_hs/'
 
-    rep, K, d, rvec, tvec, objp = calibratevideo(camera, data_path)
+    # Input factor for skipping frames in calibration video
+    skip_frames = 10    
+
+    rep, K, d, rvec, tvec, objp = calibratevideo(data_path, skip_frames)

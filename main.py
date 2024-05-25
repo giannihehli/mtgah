@@ -13,7 +13,8 @@ from detectMarkers import detect
 from warpPerspective import warp
 from filterImage import threshold
 from measureDistance import measure
-from plotParameters import plot
+from plotParameters import plotparams
+from plotExperiments import plottotal
 from measureTop import measuretop
 
 ############################################################################################################
@@ -23,7 +24,10 @@ from measureTop import measuretop
 camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
 
 # Define path with data to be analysed
-data_path = 'H:/data/camera/20240523/'
+data_path = 'H:/data/tests/sony_hs/'
+
+# Input factor for skipping frames in calibration video
+skip_frames = 10  
 
 # Define images for optional output of respective images
 img_out = '' # '', _undst', '_det', '_warp', '_thr', '_mes'
@@ -39,7 +43,7 @@ sigma_color = 80 # [px] Filter sigma in the color space. A larger value of the p
 sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
 # Define filter threshold for binary thresholding (90)
-filter_threshold = 90 # [px] Threshold value for binary thresholding - 90 for 250fps and 120 for 500fps
+filter_threshold = 90 # [px] Threshold value for binary thresholding - 90 for 250fps and 110 for 500fps
 
 # Define ROI width for measurement
 search_width = 300 # [px] Width of the ROI for distance measurement
@@ -53,11 +57,22 @@ if os.path.isfile(f'{data_path}calibration/K.txt'):
     d = np.loadtxt(f'{data_path}calibration/d.txt')  # distortion coefficients[5x1]
 elif os.path.isfile(f'{data_path}calibration.mp4'):
     print(colored(f'Camera not calibrated. Calibrating with {data_path}calibration.mp4.', 'orange'))
-    rep, K, d, rvec, tvec, X_W = calibratevideo(camera, data_path)
+    rep, K, d, rvec, tvec, X_W = calibratevideo(data_path, skip_frames)
 else:
     print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from H:/data/camera/calibration/{camera}/', 'red'))
     K = np.loadtxt(f'H:/data/camera/calibration/{camera}/K.txt')  # calibration matrix[3x3]
     d = np.loadtxt(f'H:/data/camera/calibration/{camera}/d.txt')  # distortion coefficients[5x1]
+
+# Initialize lists for measured distances in every experiment
+layout_tot = []
+basis_tot = []
+roughness_tot = []
+direction_tot = []
+diameter_tot = []
+height_tot = []
+attempt_tot = []
+d_vertical_tot = []
+d_horizontal_tot = []    
 
 # Loop through all videos in data path
 for vid_path in glob.glob(data_path + '*.MP4'):
@@ -82,6 +97,8 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     # Define used parameters according to video name
     layout = vid.split('_')[0]
     basis = vid.split('_')[1]
+    roughness = basis[1]
+    direction = basis.split('-')[1]
     diameter = vid.split('_')[2]
     height = vid.split('_')[3]
     attempt = vid.split('_')[4]
@@ -90,31 +107,26 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
     match basis:
         case 'r0-pa':
-            roughness = 0
             pattern = 100 * np.array([[0.9, 0.84, 0], [8.96, 0.82, 0], [8.95, 8.92, 0], [0.87, 8.93, 0],
                                      [50.87, 0.82, 0], [58.95, 0.82, 0], [58.9, 8.91, 0], [50.83, 8.9, 0],
                                      [50.74, 51.07, 0], [58.83, 51.02, 0], [58.88, 59.1, 0], [50.8, 59.14, 0],
                                      [0.86, 51.02, 0], [8.94, 51.07, 0], [8.88, 59.17, 0], [0.79, 59.11, 0]])
         case 'r0-pe':
-            roughness = 0
             pattern = 100 * np.array([[59.07, 0.87, 0], [59.18, 8.96, 0], [51.07, 8.95, 0], [50.98, 0.86, 0],
                                      [59.18, 50.87, 0], [59.13, 58.93, 0], [51.06, 58.9, 0], [51.09, 50.82, 0],
                                      [8.91, 50.74, 0], [8.96, 58.83, 0], [0.88, 58.88, 0], [0.85, 50.8, 0],
                                      [8.89, 0.86, 0], [8.92, 8.94, 0], [0.82, 8.88, 0], [0.81, 0.8, 0]])
         case 'r8':
-            roughness = 8
             pattern = 10 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
                                 [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
                                 [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
                                 [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], [12.6, 587.3, 0]])
         case 'r4-pa':
-            roughness = 4
             pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], [9.12, 8.92, 0], [1.05, 8.92, 0],
                                      [50.7, 0.91, 0], [58.77, 0.94, 0], [58.75, 9.04, 0], [50.66, 9, 0],
                                      [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], [50.66, 59.14, 0],
                                      [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], [1.04, 59.11, 0]])
         case 'r4-pe':
-            roughness = 4
             pattern = 100 * np.array([[59.1, 1.06, 0], [59.12, 9.15, 0], [51.02, 9.12, 0], [51, 1.05, 0],
                                      [59.04, 50.7, 0], [58.99, 58.77, 0], [58.88, 58.75, 0], [50.96, 50.66, 0],
                                      [8.87, 50.57, 0], [8.91, 58.63, 0], [0.85, 58.73, 0], [0.81, 50.66, 0],
@@ -151,7 +163,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         except FileExistsError:
             print('Directory ', output_folder, ' already exists - images saved again.')
 
-    # Initialize lists for measured distances
+    # Initialize lists for measured distances per experiment
     distance_right = []
     distance_left = []
     distance_bottom = []
@@ -300,7 +312,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     df = pd.DataFrame(dict)
  
     # Plot measured parameters
-    plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
+    plotparams(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal, direction)
 
     # Make folder for raw data
     try:
@@ -311,3 +323,25 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 
     # Save raw parameters to csv file
     df.to_csv(f'{data_path}raw_data/{vid}_raw.csv')
+
+    # Append measured parameters to total list
+    layout_tot.append(layout)
+    basis_tot.append(basis)
+    roughness_tot.append(roughness)
+    direction_tot.append(direction)
+    diameter_tot.append(int(diameter[1:]))
+    height_tot.append(int(height[1:]))
+    attempt_tot.append(attempt)
+    d_vertical_tot.append(diameter_vertical)
+    d_horizontal_tot.append(diameter_horizontal)
+
+# Save total measured parameters to dataframe
+dict_tot = {'layout': layout_tot, 'basis': basis_tot, 'roughness': roughness_tot, 'direction': direction_tot, 'diameter': diameter_tot, 
+            'height': height_tot, 'attempt': attempt_tot, 'd_vertical': d_vertical_tot, 'd_horizontal': d_horizontal_tot}
+df_tot = pd.DataFrame(dict_tot)
+
+# Plot total measured parameters
+plottotal(data_path, df_tot)
+
+# Save total measured parameters to csv file
+df_tot.to_csv(f'{data_path}raw_data/total_raw.csv')

@@ -7,14 +7,8 @@ import os
 # Importing user-defined modules
 
 
-def plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal):
+def plotparams(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal, direction):
 
-    # Get direction
-    try:
-        direction = basis.split('-')[1]
-        basis = basis.split('-')[0]
-    except IndexError:
-        direction = 'pa'
     basis = basis.split('-')[0]
 
     # Define experiment layout
@@ -151,11 +145,14 @@ if __name__ == "__main__":
     # Define used parameters according to video name
     layout = vid.split('_')[0]
     basis = vid.split('_')[1]
+    roughness = basis[1]
+    direction = basis.split('-')[1]
     diameter = vid.split('_')[2]
     height = vid.split('_')[3]
+    attempt = vid.split('_')[4]
 
     # Define diameter of final deposit
     diameter_vertical = 2078
     diameter_horizontal = 1853
 
-    plot(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal)
+    plotparams(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal, direction)
