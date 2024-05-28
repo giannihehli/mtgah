@@ -123,7 +123,7 @@ if __name__ == "__main__":
     d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
 
     marker = "DICT_4X4_50"
-    image = cv2.imread("data/DSC00532.JPG")
+    image = cv2.imread("data/f_r8_d113_h40_170.JPG")
     img_det, corners, ids = detect(image, marker)
     cv2.imshow("image", cv2.resize(img_det, (1920, 1080)))
     cv2.waitKey(0)
