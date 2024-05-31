@@ -155,7 +155,7 @@ def export(max_z, x_edges, y_edges, raster_size, output_path):
     flat_max_z = np.where(np.isnan(rotated_max_z), -9999, rotated_max_z).flatten()
 
     # Write the header and the flattened array to the ASC file
-    with open(f'{output_path}sand_minus_r_{raster_size}.asc', 'w') as f:
+    with open(output_path, 'w') as f:
         f.write(header)
         np.savetxt(f, flat_max_z, fmt='%1.2f')
 
@@ -187,8 +187,13 @@ if __name__ == '__main__':
     # Save the image with detected markers
     cv2.imwrite('H:/data/cloudcompare/test/imagefrompointcloud_det.jpg', ptc_det)
 
+    print(ptc_corners)
+
+    print(ptc_corners[:16])
+    print(np.zeros((16, 1)))
+
     # Define corners in 3D as source points
-    source = np.hstack((ptc_corners, np.zeros((ptc_corners.shape[0], 1), dtype=ptc_corners.dtype)))
+    source = np.hstack((ptc_corners[0:16], np.zeros((16, 1), dtype=ptc_corners.dtype)))
 
     # Convert the target points to the correct unit [mm]
     target = 0.1 * pattern
@@ -244,7 +249,7 @@ if __name__ == '__main__':
     print(f'y max: {cloud_corr.points['y'].max()}')
 
     # Define raster size in m
-    raster_size = 0.004
+    raster_size = 0.003
 
     # Define raster min and max values in m
     raster_min = 0
@@ -254,7 +259,7 @@ if __name__ == '__main__':
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min, raster_max, raster_min, raster_max)
 
     # Define the output path
-    output_path = 'H:/data/cloudcompare/test/'
+    output_path = f'H:/data/cloudcompare/test/sand_minus_r_{raster_size}.asc'
 
     # Export data as ascii file
     export(max_z, x_edges, y_edges, raster_size, output_path)

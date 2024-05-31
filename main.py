@@ -28,7 +28,7 @@ from alignPointcloud import export
 
 # Define path with data to be analysed
 #data_path = 'H:/data/tests/sony_hs/'
-data_path = 'H:/data/20240531/'
+data_path = 'G:/experiments/20240531/'
 
 #######################################
 # CAMERA OPTIONS
@@ -36,13 +36,13 @@ data_path = 'H:/data/20240531/'
 camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
 
 # Input factor for skipping frames in calibration video
-skip_frames = 10  
+skip_frames = 10  # [] Number of frames to skip in calibration video
 
 # Define images for optional output of respective images
-img_out = '' # '', _undst', '_det', '_warp', '_thr', '_mes'
+img_out = '' # Options: '', _undst', '_det', '_warp', '_thr', '_mes'
 
 # Define exp_out for optional output of all respective experiment images
-exp_out = '' # '', 'f_r8_d113_h40', 
+exp_out = '' # Options: '', 'f_r8_d113_h40', 
 
 # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
 kernel_size = 35 # [px] must be positive and odd
@@ -54,17 +54,18 @@ sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of 
 # Define filter threshold for binary thresholding (90)
 filter_threshold = 90 # [px] Threshold value for binary thresholding - 90 for 250fps and 110 for 500fps
 
+# Define ROI width for measurement
+search_width = 600 # [px] Width of the ROI for distance measurement
+
 #######################################
 # SCANNER OPTIONS
-# Define ROI width for measurement
-search_width = 300 # [px] Width of the ROI for distance measurement
 
-# Define raster size in [m] for rasterization of scanned pointcloud
-raster_size = 0.003
+# Define raster size in m for rasterization of scanned pointcloud
+raster_size = 0.001 # [m] Size of one bin in the raster in x and y direction
 
 # Define raster min and max values in m
-raster_min = 0
-raster_max = 0.6
+raster_min = 0 # [m] Minimum value of the raster in x and y direction
+raster_max = 0.6 # [m] Maximum value of the raster in x and y direction
 
 ############################################################################################################
 
@@ -90,27 +91,27 @@ diameter_tot = []
 height_tot = []
 attempt_tot = []
 d_vertical_tot = []
-d_horizontal_tot = []    
+d_horizontal_tot = []
 
 # Loop through all videos in data path
 for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
-    # Print processed video
-    print(colored(f'Processing video: {vid_path}', 'blue'))
-
-    # Check if video is already processed and skip if so
+        # Check if video is already processed and skip if so
     if vid_path.split('\\')[-1] == 'calibration.MP4':
         print('Calibration video - skip processing.')
         continue    
 
     # Load video in video capture
     cap = cv2.VideoCapture(vid_path)
+    
+    # Get experiment name
+    exp = os.path.splitext(os.path.basename(vid_path))[0]
+    
+    # Print processed experiment
+    print(f'Processing experiment: {exp}')
 
     # Get needed video information
     fps = cap.get(cv2.CAP_PROP_FPS) # [frames/s]
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # [frames]
-    
-    # Get experiment name
-    exp = os.path.splitext(os.path.basename(vid_path))[0]
 
     # Define used parameters according to experiment name
     layout = exp.split('_')[0]
@@ -120,6 +121,12 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     diameter = exp.split('_')[2]
     height = exp.split('_')[3]
     attempt = exp.split('_')[4]
+
+    # Define experiment layout
+    if layout == 'f':
+            layout = 'flat'
+    elif layout == 'i':
+            layout = 'inclined'
 
 #    print(f'Processing frames: {exp} with layout: {layout}, basis: {basis}, diameter: {diameter}, height: {height}')
     # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
@@ -134,17 +141,17 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
                                      [59.18, 50.87, 0], [59.13, 58.93, 0], [51.06, 58.9, 0], [51.09, 50.82, 0],
                                      [8.91, 50.74, 0], [8.96, 58.83, 0], [0.88, 58.88, 0], [0.85, 50.8, 0],
                                      [8.89, 0.86, 0], [8.92, 8.94, 0], [0.82, 8.88, 0], [0.81, 0.8, 0]])
-        case 'r8-pa': # originally 'r8' so new 48-pa needs to be measured
+        case 'r4-pa': # originally 'r8' so new 48-pa needs to be measured
             pattern = 10 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
                                 [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
                                 [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
                                 [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], [12.6, 587.3, 0]])
-        case 'r4-pa':
+        case 'r2-pa':
             pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], [9.12, 8.92, 0], [1.05, 8.92, 0],
                                      [50.7, 0.91, 0], [58.77, 0.94, 0], [58.75, 9.04, 0], [50.66, 9, 0],
                                      [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], [50.66, 59.14, 0],
                                      [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], [1.04, 59.11, 0]])
-        case 'r4-pe':
+        case 'r2-pe':
             pattern = 100 * np.array([[59.1, 1.06, 0], [59.12, 9.15, 0], [51.02, 9.12, 0], [51, 1.05, 0],
                                      [59.04, 50.7, 0], [58.99, 58.77, 0], [58.88, 58.75, 0], [50.96, 50.66, 0],
                                      [8.87, 50.57, 0], [8.91, 58.63, 0], [0.85, 58.73, 0], [0.81, 50.66, 0],
@@ -161,14 +168,10 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
          #                            [, , 0], [, , 0], [, , 0], [, , 0]])
 
     # Define initial radius according to diameter         
-    match diameter:
-        case 'd113':
-            r_initial = 56.5
+    r_initial = int(diameter[1:])/2
 
     # Define initial height according to height
-    match height:
-        case 'h40':
-            h_initial = 40
+    h_initial = int(height[1:])
             
     #Define used marker type
     marker = 'DICT_4X4_1000'
@@ -328,17 +331,17 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     df = pd.DataFrame(dict)
  
     # Plot measured parameters
-    plotparams(data_path, exp, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal, direction)
+    plotparams(data_path, exp, df, layout, basis, direction, r_initial, h_initial, diameter_vertical, diameter_horizontal)
 
     # Make folder for raw data
     try:
-        os.mkdir(f'{data_path}camera_raw_data')
-        print(f'Directory camera_raw_data created. All measurements of this experiment saved there.')
+        os.mkdir(f'{data_path}camera/raw_data')
+        print(f'Directory camera/raw_data created. All measurements of this experiment saved there.')
     except FileExistsError:
         pass
 
     # Save raw parameters to csv file
-    df.to_csv(f'{data_path}camera_raw_data/{exp}_raw.csv')
+    df.to_csv(f'{data_path}camera/raw_data/{exp}_raw.csv')
 
     # Append measured parameters to total list
     layout_tot.append(layout)
@@ -352,23 +355,30 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     d_horizontal_tot.append(diameter_horizontal)
 
     # Load the .ply file of the processed experiment
-    cloud = PyntCloud.from_file('H:/data/cloudcompare/test/sand_minus.ply')
+    cloud = PyntCloud.from_file(f'{data_path}scanner/{exp}.ply')
 
     # Get the image and indices
     img_ptc, indices = getimage(cloud)
 
+    # Show the pointcloud image
+    cv2.imshow('img_ptc', img_ptc)
+    cv2.waitKey(0)
+
+    # Save the pointcloud image
+    cv2.imwrite(f'{data_path}scanner/{exp}_ptc.jpg', img_ptc)
+
     # Detect ArUco markers on pointcloud image
-    ptc_det, ptc_corners, ptc_ids = detect(image, marker)
+    ptc_det, ptc_corners, ptc_ids = detect(img_ptc, marker)
 
     # Show the image with detected markers
-#    cv2.imshow('ptc_det', ptc_det)
-#    cv2.waitKey(0)
+    cv2.imshow('ptc_det', ptc_det)
+    cv2.waitKey(0)
 
     # Save the image with detected markers
-#    cv2.imwrite(f'{data_path}scanner/{exp}_det.jpg', ptc_det)
+    cv2.imwrite(f'{data_path}scanner/{exp}_det.jpg', ptc_det)
 
     # Define corners in 3D as source points
-    source_ptc = np.hstack((ptc_corners, np.zeros((ptc_corners.shape[0], 1), dtype=ptc_corners.dtype)))
+    source_ptc = np.hstack((ptc_corners[:16], np.zeros((16, 1), dtype=ptc_corners.dtype)))
 
     # Convert the target points to the correct unit [mm]
     target_ptc = 0.1 * pattern
@@ -383,7 +393,14 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min, raster_max, raster_min, raster_max)
 
     # Define the output path
-    output_path = 'H:/data/cloudcompare/test/'
+    output_path = f'{data_path}rasters/{exp}_raster.asc'
+
+    # Try making the directory for rasters
+    try:
+        os.mkdir(f'{data_path}rasters')
+        print(f'Directory rasters created. All rasters saved there.')
+    except FileExistsError:
+        pass
 
     # Export data as ascii file
     export(max_z, x_edges, y_edges, raster_size, output_path)
@@ -397,4 +414,4 @@ df_tot = pd.DataFrame(dict_tot)
 plottotal(data_path, df_tot)
 
 # Save total measured parameters to csv file
-df_tot.to_csv(f'{data_path}camera_raw_data/total_raw.csv')
+df_tot.to_csv(f'{data_path}camera/raw_data/total_raw.csv')

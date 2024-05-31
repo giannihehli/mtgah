@@ -7,23 +7,11 @@ import os
 # Importing user-defined modules
 
 
-def plotparams(data_path, vid, df, layout, basis, direction, diameter, height, diameter_vertical, diameter_horizontal):
+def plotparams(data_path, exp, df, layout, basis, direction, radius, height, diameter_vertical, diameter_horizontal):
 
-    # Define experiment layout
-    if layout == 'f':
-            layout = 'flat'
-    elif layout == 'i':
-            layout = 'inclined'
-    
     # Define roughness basis
     basis = basis[1]
-            
-    # Define cylinder diameter
-    diameter = diameter[1:]       
-
-    # Define sand height
-    height = height[1:]
-
+    
     # Define plot labels according to direction
     match direction:
         case 'pa':
@@ -59,7 +47,7 @@ def plotparams(data_path, vid, df, layout, basis, direction, diameter, height, d
 
     # Define subplots
     fig, axis = plt.subplots(2, 2, sharex = False, figsize = (10, 10))
-    fig.suptitle(f'\n {layout} mount with {basis} mm roughness basis, {diameter} mm cylinder and {height} mm sand height', fontsize=16)
+    fig.suptitle(f'\n {layout} mount with {basis} mm roughness basis, {2*radius} mm cylinder and {height} mm sand height', fontsize=16)
     fig.text(0.5, -0.01, f'Final {horizontal_diameter}: {round(0.1 * diameter_horizontal, 1)} mm \n Final {vertical_diameter}: {round(0.1 * diameter_vertical, 1)} mm \n', ha='center')
     plt.rc('legend',fontsize=5) # using a size in points
 
@@ -107,39 +95,56 @@ def plotparams(data_path, vid, df, layout, basis, direction, diameter, height, d
 
     # Make directory for graphs and save plot
     try:
-        os.mkdir(f'{data_path}camera/graphs/')
+        os.mkdir(f'{data_path}graphs/')
         print('Directory graphs created and plot saved as pdf.')
-        plt.savefig(f'{data_path}camera/graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+        plt.savefig(f'{data_path}graphs/{exp}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
     except FileExistsError:
         print('Directory graphs already exists but plot saved as pdf.')
-        plt.savefig(f'{data_path}camera/graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+        plt.savefig(f'{data_path}graphs/{exp}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
     
     # Show plot
-    plt.show()
+#    plt.show()
     
     return
 
 if __name__ == "__main__":
     # Import measured parameters
-    df = pd.read_csv('H:/data/tests/sony_hs/raw_data/f_r8-pa_d113_h40_1_raw.csv')
+    df = pd.read_csv('H:/data/tests/sony_hs/camera/raw_data/f_r8-pa_d113_h40_1_raw.csv')
 
     # Define path with data to be analysed
     data_path = 'H:/data/tests/sony_hs/'
 
     # Define video name
-    vid = 'f_r8-pa_d113_h40_1'
+    exp = 'f_r8-pa_d113_h40_1'
 
     # Define used parameters according to video name
-    layout = vid.split('_')[0]
-    basis = vid.split('_')[1]
+    layout = exp.split('_')[0]
+    basis = exp.split('_')[1]
     roughness = basis[1]
     direction = basis.split('-')[1]
-    diameter = vid.split('_')[2]
-    height = vid.split('_')[3]
-    attempt = vid.split('_')[4]
+    diameter = exp.split('_')[2]
+    height = exp.split('_')[3]
+    attempt = exp.split('_')[4]
 
     # Define diameter of final deposit
     diameter_vertical = 2078
     diameter_horizontal = 1853
 
-    plotparams(data_path, vid, df, layout, basis, direction, diameter, height, diameter_vertical, diameter_horizontal)
+    # Define initial radius according to diameter         
+    r_initial = int(diameter[1:])/2
+
+    # Define initial height according to height
+    h_initial = int(height[1:])
+    
+    print(f'data_path: {data_path}')
+    print(f'exp: {exp}')
+    print(f'df: {df}')
+    print(f'layout: {layout}')
+    print(f'basis: {basis}')
+    print(f'direction: {direction}')
+    print(f'radius: {r_initial}')
+    print(f'height: {h_initial}')
+    print(f'diameter_vertical: {diameter_vertical}')
+    print(f'diameter_horizontal: {diameter_horizontal}')
+
+    plotparams(data_path, exp, df, layout, basis, direction, r_initial, h_initial, diameter_vertical, diameter_horizontal)
