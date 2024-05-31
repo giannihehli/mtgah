@@ -11,10 +11,10 @@ from scipy import stats
 # IMPORT USER-DEFINED MODULES
 from detectMarkers import detect
 
-def rasterize(cloud, raster_size):
+def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
     # Compute the number of bins for the x and y axes
-    x_bins = np.arange(0, 6000, raster_size)
-    y_bins = np.arange(0, 6000, raster_size)
+    x_bins = np.arange(x_min, x_max, raster_size)
+    y_bins = np.arange(y_min, y_max, raster_size)
 
     # Compute the maximum z-coordinate in each bin
     max_z, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
@@ -176,4 +176,4 @@ if __name__ == "__main__":
     raster_size = 1
 
     # Rasterise the corrected point cloud
-    max_z = rasterize(cloud_corr, raster_size)
+    max_z = rasterize(cloud_corr, raster_size, 0, 6000, 0, 6000)
