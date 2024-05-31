@@ -24,12 +24,29 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
         statistic='max', 
         bins=[x_bins, y_bins])
     
-    print(max_z.shape)
-    print(max_z[3000][3000])
-    print(x_edges)
-    print(y_edges)
+    """ # Compute the mean of the RGB values in each bin
+    mean_red, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
+        cloud.points['x'], 
+        cloud.points['y'], 
+        cloud.points['red'], 
+        statistic='max', 
+        bins=[x_bins, y_bins])
+    
+    mean_green, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
+        cloud.points['x'], 
+        cloud.points['y'], 
+        cloud.points['green'], 
+        statistic='max', 
+        bins=[x_bins, y_bins])
 
-    return max_z
+    mean_blue, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
+        cloud.points['x'], 
+        cloud.points['y'], 
+        cloud.points['blue'], 
+        statistic='max', 
+        bins=[x_bins, y_bins]) """
+
+    return max_z, x_edges, y_edges
 
 def transform(cloud, M):
     # Create an empty DataFrame with the same columns as the original point cloud's points
@@ -122,7 +139,7 @@ def calculate_transformation(points_3d_source, points_3d_target):
     return transformation_matrix
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # Define pattern as 3D coordinates in 0.1mm
     pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], [9.12, 8.92, 0], [1.05, 8.92, 0],
@@ -147,21 +164,47 @@ if __name__ == "__main__":
     # Save the image with detected markers
     cv2.imwrite('H:/data/cloudcompare/test/imagefrompointcloud_det.jpg', ptc_det)
 
-    # Define corners_3d array
-    corners_3d = np.hstack((ptc_corners, np.zeros((ptc_corners.shape[0], 1), dtype=ptc_corners.dtype)))
+    # Define corners in 3D as source points
+    source = np.hstack((ptc_corners, np.zeros((ptc_corners.shape[0], 1), dtype=ptc_corners.dtype)))
+
+    # Convert the target points to the correct unit [mm]
+    target = 0.1 * pattern
 
     # Calculate the transformation matrix from the detected corners and the measured pattern
-    M = calculate_transformation(corners_3d, pattern)
+    M = calculate_transformation(source, target)
+
+    print(M)
 
     # Transform the pointcloud to correct origin
     cloud_corr = transform(cloud, M)
+    
+    """ # Plot the corrected point cloud
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    #ax.view_init(elev=0, azim=0, roll=0) # Set the view to y-z plane
+    #ax.view_init(elev=0, azim=-90, roll=0) # Set the view to x-z plane
+    ax.view_init(elev=90, azim=-90, roll=0) # Set the view to x-y plane
+    ax.scatter(
+        cloud.points['x'], 
+        cloud.points['y'], 
+        cloud.points['z'], 
+        c=cloud.points[['red', 'green', 'blue']] / 255.0)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    plt.show() """
+
+    print(f'x min: {cloud.points['x'].min()}')
+    print(f'x max: {cloud.points['x'].max()}')
+    print(f'y min: {cloud.points['y'].min()}')
+    print(f'y max: {cloud.points['y'].max()}')
 
     """ # Plot the corrected point cloud
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     #ax.view_init(elev=0, azim=0, roll=0) # Set the view to y-z plane
-    ax.view_init(elev=0, azim=-90, roll=0) # Set the view to x-z plane
-    #ax.view_init(elev=90, azim=-90, roll=0) # Set the view to x-y plane
+    #ax.view_init(elev=0, azim=-90, roll=0) # Set the view to x-z plane
+    ax.view_init(elev=90, azim=-90, roll=0) # Set the view to x-y plane
     ax.scatter(
         cloud_corr.points['x'], 
         cloud_corr.points['y'], 
@@ -172,8 +215,31 @@ if __name__ == "__main__":
     ax.set_zlabel('Z')
     plt.show() """
 
+    print(f'x min: {cloud_corr.points['x'].min()}')
+    print(f'x max: {cloud_corr.points['x'].max()}')
+    print(f'y min: {cloud_corr.points['y'].min()}')
+    print(f'y max: {cloud_corr.points['y'].max()}')
+
     # Define raster size in 0.1mm
-    raster_size = 1
+    raster_size = 20
 
     # Rasterise the corrected point cloud
-    max_z = rasterize(cloud_corr, raster_size, 0, 6000, 0, 6000)
+    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, 0, 6000, 0, 6000)
+
+    print()
+    # Define the header of the output data
+    header = f'# Units: mm\n'
+    header = f'ncols {max_z.shape[1]}\n'
+    header += f'nrows {max_z.shape[0]}\n'
+    header += f'xllcorner {min(x_edges)}\n'
+    header += f'yllcorner {min(y_edges)}\n'
+    header += f'cellsize {raster_size}\n'
+    header += f'NODATA_value -9999\n'
+
+    # Flatten the 2D array and replace NaN values with the NODATA value
+    flat_max_z = np.where(np.isnan(max_z), -9999, max_z).flatten()
+
+    # Write the header and the flattened array to the ASC file
+    with open(f'H:/data/cloudcompare/test/sand_minus_{raster_size}.asc', 'w') as f:
+        f.write(header)
+        np.savetxt(f, flat_max_z, fmt='%1.2f')
