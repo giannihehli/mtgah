@@ -11,6 +11,96 @@ from scipy import stats
 # IMPORT USER-DEFINED MODULES
 from detectMarkers import detect
 
+def calculate_transformation(points_3d_source, points_3d_target):
+    # Calculate centroids
+    centroid_source = np.mean(points_3d_source, axis=0)
+    centroid_target = np.mean(points_3d_target, axis=0)
+
+    # Center the points
+    centered_source = points_3d_source - centroid_source
+    centered_target = points_3d_target - centroid_target
+
+    # Compute the cross-covariance matrix
+    H = np.dot(centered_source.T, centered_target)
+
+    # Compute the singular value decomposition of H
+    U, S, Vt = np.linalg.svd(H)
+
+    # Compute the rotation matrix
+    R = np.dot(Vt.T, U.T)
+
+    # Correct for reflection case
+    if np.linalg.det(R) < 0:
+       Vt[-1,:] *= -1
+       R = np.dot(Vt.T, U.T)
+
+    # Compute the translation vector
+    t = centroid_target - np.dot(centroid_source, R.T)
+
+    # Create transformation matrix
+    transformation_matrix = np.eye(4)
+    transformation_matrix[:3, :3] = R
+    transformation_matrix[:3, 3] = t
+
+    return transformation_matrix
+
+def getimage(cloud):
+
+    # Translate the point cloud so all 'x' and 'y' values are positive
+    min_x = cloud.points['x'].min()
+    min_y = cloud.points['y'].min()
+    cloud.points['x'] -= min_x
+    cloud.points['y'] -= min_y
+
+    # Create an empty list to store the indices - note that x and y axis are flipped to get the
+    # correct image
+    indices = np.empty((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1), dtype=object)
+
+    # Now create the image and store the indices - note that x and y axis are flipped to get the
+    # correct image
+    image = np.zeros((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1, 3), dtype=np.uint8)
+
+    # Loop through the points, save the color values and store the indices
+    for index, point in cloud.points.iterrows():
+        img_x, img_y = int(point['x']), int(point['y'])
+        image[img_y, img_x] = [point['blue'], point['green'], point['red']]
+        indices[img_y, img_x] = index
+ 
+    """ # Show the image
+    cv2.imshow('Point cloud', cv2.resize(image, (1080, 1080)))
+    cv2.waitKey(0)  """
+
+    # Save the image
+    cv2.imwrite('H:/data/cloudcompare/test/imagefrompointcloud.jpg', image)
+
+    return image, indices
+
+def transform(cloud, M):
+    # Create an empty DataFrame with the same columns as the original point cloud's points
+    df_new = pd.DataFrame(columns=cloud.points.columns)
+
+    # Apply the transformation matrix to the point cloud
+    x, y, z, _ = np.dot(M, np.array([cloud.points['x'], cloud.points['y'], cloud.points['z'], np.ones(cloud.points.shape[0])]))
+
+    # Mirror the y-coordinates
+    y = 600 - y
+
+    # Inverse the z-coordinates
+    z = -z
+
+    # Fill the new point cloud with the transformed coordinates in higher resolution (0.1mm)
+    df_new['x'] = 10*x
+    df_new['y'] = 10*y
+    df_new['z'] = 10*z
+    df_new['red'] = cloud.points['red']
+    df_new['green'] = cloud.points['green']
+    df_new['blue'] = cloud.points['blue']
+
+    # Create a new point cloud with the new DataFrame
+    cloud_corr = PyntCloud(df_new)
+
+    return cloud_corr
+
 def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
     # Compute the number of bins for the x and y axes
     x_bins = np.arange(x_min, x_max, raster_size)
@@ -48,95 +138,28 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
 
     return max_z, x_edges, y_edges
 
-def transform(cloud, M):
-    # Create an empty DataFrame with the same columns as the original point cloud's points
-    df_new = pd.DataFrame(columns=cloud.points.columns)
+def export(max_z, x_edges, y_edges, raster_size, ):
+    # Define the header of the output data
+    header = f'# Units: 0.1mm\n'
+    header = f'ncols {max_z.shape[1]}\n'
+    header += f'nrows {max_z.shape[0]}\n'
+    header += f'xllcorner {min(x_edges)}\n'
+    header += f'yllcorner {min(y_edges)}\n'
+    header += f'cellsize {raster_size}\n'
+    header += f'NODATA_value -9999\n'
 
-    # Apply the transformation matrix to the point cloud
-    x, y, z, _ = np.dot(M, np.array([cloud.points['x'], cloud.points['y'], cloud.points['z'], np.ones(cloud.points.shape[0])]))
+    # Rotate the 2D array 90 degrees counterclockwise to match the orientation after exporting
+    rotated_max_z = np.rot90(max_z, 1)
 
-    # Mirror the y-coordinates
-    y = 600 - y
+    # Flatten the rotated 2D array and replace NaN values with the NODATA value
+    flat_max_z = np.where(np.isnan(rotated_max_z), -9999, rotated_max_z).flatten()
 
-    # Inverse the z-coordinates
-    z = -z
+    # Write the header and the flattened array to the ASC file
+    with open(f'H:/data/cloudcompare/test/sand_minus_r_{raster_size}.asc', 'w') as f:
+        f.write(header)
+        np.savetxt(f, flat_max_z, fmt='%1.2f')
 
-    # Fill the new point cloud with the transformed coordinates in higher resolution (0.1mm)
-    df_new['x'] = 10*x
-    df_new['y'] = 10*y
-    df_new['z'] = 10*z
-    df_new['red'] = cloud.points['red']
-    df_new['green'] = cloud.points['green']
-    df_new['blue'] = cloud.points['blue']
-
-    # Create a new point cloud with the new DataFrame
-    cloud_corr = PyntCloud(df_new)
-
-    return cloud_corr
-
-def getimage(cloud):
-
-    # Translate the point cloud so all 'x' and 'y' values are positive
-    min_x = cloud.points['x'].min()
-    min_y = cloud.points['y'].min()
-    cloud.points['x'] -= min_x
-    cloud.points['y'] -= min_y
-
-    # Create an empty list to store the indices - note that x and y axis are flipped to get the
-    # correct image
-    indices = np.empty((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1), dtype=object)
-
-    # Now create the image and store the indices - note that x and y axis are flipped to get the
-    # correct image
-    image = np.zeros((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1, 3), dtype=np.uint8)
-
-    # Loop through the points, save the color values and store the indices
-    for index, point in cloud.points.iterrows():
-        img_x, img_y = int(point['x']), int(point['y'])
-        image[img_y, img_x] = [point['blue'], point['green'], point['red']]
-        indices[img_y, img_x] = index
- 
-    """ # Show the image
-    cv2.imshow('Point cloud', cv2.resize(image, (1080, 1080)))
-    cv2.waitKey(0)  """
-
-    # Save the image
-    cv2.imwrite('H:/data/cloudcompare/test/imagefrompointcloud.jpg', image)
-
-    return image, indices
-
-def calculate_transformation(points_3d_source, points_3d_target):
-    # Calculate centroids
-    centroid_source = np.mean(points_3d_source, axis=0)
-    centroid_target = np.mean(points_3d_target, axis=0)
-
-    # Center the points
-    centered_source = points_3d_source - centroid_source
-    centered_target = points_3d_target - centroid_target
-
-    # Compute the cross-covariance matrix
-    H = np.dot(centered_source.T, centered_target)
-
-    # Compute the singular value decomposition of H
-    U, S, Vt = np.linalg.svd(H)
-
-    # Compute the rotation matrix
-    R = np.dot(Vt.T, U.T)
-
-    # Correct for reflection case
-    if np.linalg.det(R) < 0:
-       Vt[-1,:] *= -1
-       R = np.dot(Vt.T, U.T)
-
-    # Compute the translation vector
-    t = centroid_target - np.dot(centroid_source, R.T)
-
-    # Create transformation matrix
-    transformation_matrix = np.eye(4)
-    transformation_matrix[:3, :3] = R
-    transformation_matrix[:3, 3] = t
-
-    return transformation_matrix
+    return
 
 
 if __name__ == '__main__':
@@ -221,25 +244,10 @@ if __name__ == '__main__':
     print(f'y max: {cloud_corr.points['y'].max()}')
 
     # Define raster size in 0.1mm
-    raster_size = 20
+    raster_size = 30
 
     # Rasterise the corrected point cloud
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, 0, 6000, 0, 6000)
 
-    print()
-    # Define the header of the output data
-    header = f'# Units: mm\n'
-    header = f'ncols {max_z.shape[1]}\n'
-    header += f'nrows {max_z.shape[0]}\n'
-    header += f'xllcorner {min(x_edges)}\n'
-    header += f'yllcorner {min(y_edges)}\n'
-    header += f'cellsize {raster_size}\n'
-    header += f'NODATA_value -9999\n'
-
-    # Flatten the 2D array and replace NaN values with the NODATA value
-    flat_max_z = np.where(np.isnan(max_z), -9999, max_z).flatten()
-
-    # Write the header and the flattened array to the ASC file
-    with open(f'H:/data/cloudcompare/test/sand_minus_{raster_size}.asc', 'w') as f:
-        f.write(header)
-        np.savetxt(f, flat_max_z, fmt='%1.2f')
+    # Export data as ascii file
+    export(max_z, x_edges, y_edges, raster_size, 'H:/data/cloudcompare/test/sand_minus.asc')

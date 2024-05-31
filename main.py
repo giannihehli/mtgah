@@ -91,19 +91,19 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     fps = cap.get(cv2.CAP_PROP_FPS) # [frames/s]
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # [frames]
     
-    # Get video name
-    vid = os.path.splitext(os.path.basename(vid_path))[0]
+    # Get experiment name
+    exp = os.path.splitext(os.path.basename(vid_path))[0]
 
-    # Define used parameters according to video name
-    layout = vid.split('_')[0]
-    basis = vid.split('_')[1]
+    # Define used parameters according to experiment name
+    layout = exp.split('_')[0]
+    basis = exp.split('_')[1]
     roughness = basis[1]
     direction = basis.split('-')[1]
-    diameter = vid.split('_')[2]
-    height = vid.split('_')[3]
-    attempt = vid.split('_')[4]
+    diameter = exp.split('_')[2]
+    height = exp.split('_')[3]
+    attempt = exp.split('_')[4]
 
-#    print(f'Processing frames: {vid} with layout: {layout}, basis: {basis}, diameter: {diameter}, height: {height}')
+#    print(f'Processing frames: {exp} with layout: {layout}, basis: {basis}, diameter: {diameter}, height: {height}')
     # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
     match basis:
         case 'r0-pa':
@@ -156,7 +156,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 
     # Make directory for output images
     if img_out:
-        output_folder = f'{data_path}{vid}/'
+        output_folder = f'{data_path}{exp}/'
         try: 
             os.mkdir(output_folder)
             print('Directory ', output_folder, ' created.')
@@ -182,7 +182,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
             break
 
         # If needed save images to folder
-        if vid == exp_out:
+        if exp == exp_out:
             try:
                 os.mkdir(f'{data_path}{exp_out}')
                 print(f'Directory {exp_out} created. All images of this experiment saved there.')
@@ -197,7 +197,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.waitKey(0)
 
         # Save image of wanted experiment in folder
-        if vid == exp_out:
+        if exp == exp_out:
             print(f'Saving {frame+100}_undst')
             cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_undst.png', img_undst)
 
@@ -210,7 +210,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.waitKey(0)
 
         # Save image of wanted experiment in folder
-        if vid == exp_out:
+        if exp == exp_out:
             print(f'Saving {frame+100}_det')
             cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_det.png', img_det)
 
@@ -220,7 +220,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.waitKey(0)
 
         # Save image of wanted experiment in folder
-        if vid == exp_out:
+        if exp == exp_out:
             print(f'Saving {frame+100}_warp')
             cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_warp.png', img_warp)
 
@@ -230,7 +230,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.waitKey(0)
 
         # Save image of wanted experiment in folder
-        if vid == exp_out:
+        if exp == exp_out:
             print(f'Saving {frame+100}_thr')
             cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_thr.png', img_thr)
 
@@ -240,7 +240,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 #        cv2.waitKey(0)
 
         # Save image of wanted experiment in folder
-        if vid == exp_out:
+        if exp == exp_out:
             print(f'Saving {frame+100}_mes')
             cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_mes.png', img_mes)
 
@@ -270,10 +270,10 @@ for vid_path in glob.glob(data_path + '*.MP4'):
             try: 
                 os.mkdir(f'{data_path}end frame tiffs')
                 print('Directory end frame tiffs created and last frame saved as threshold.')
-                cv2.imwrite(f'{data_path}end frame tiffs/{vid}.tiff', img_thr)
+                cv2.imwrite(f'{data_path}end frame tiffs/{exp}.tiff', img_thr)
             except FileExistsError:
                 print('Directory end frame tiffs already exists but last frame saved as threshold.')
-                cv2.imwrite(f'{data_path}end frame tiffs/{vid}.tiff', img_thr)
+                cv2.imwrite(f'{data_path}end frame tiffs/{exp}.tiff', img_thr)
                 
             distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
 
@@ -312,7 +312,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     df = pd.DataFrame(dict)
  
     # Plot measured parameters
-    plotparams(data_path, vid, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal, direction)
+    plotparams(data_path, exp, df, layout, basis, diameter, height, diameter_vertical, diameter_horizontal, direction)
 
     # Make folder for raw data
     try:
@@ -322,7 +322,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         pass
 
     # Save raw parameters to csv file
-    df.to_csv(f'{data_path}raw_data/{vid}_raw.csv')
+    df.to_csv(f'{data_path}raw_data/{exp}_raw.csv')
 
     # Append measured parameters to total list
     layout_tot.append(layout)
