@@ -107,12 +107,12 @@ def plotparams(data_path, vid, df, layout, basis, direction, diameter, height, d
 
     # Make directory for graphs and save plot
     try:
-        os.mkdir(f'{data_path}graphs/')
+        os.mkdir(f'{data_path}camera/graphs/')
         print('Directory graphs created and plot saved as pdf.')
-        plt.savefig(f'{data_path}graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+        plt.savefig(f'{data_path}camera/graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
     except FileExistsError:
         print('Directory graphs already exists but plot saved as pdf.')
-        plt.savefig(f'{data_path}graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+        plt.savefig(f'{data_path}camera/graphs/{vid}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
     
     # Show plot
     plt.show()

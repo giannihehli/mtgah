@@ -103,8 +103,8 @@ def transform(cloud, M):
 
 def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
     # Compute the number of bins for the x and y axes
-    x_bins = np.arange(x_min, x_max, raster_size)
-    y_bins = np.arange(y_min, y_max, raster_size)
+    x_bins = np.arange(10000*x_min, 10000*x_max, 10000*raster_size)
+    y_bins = np.arange(10000*y_min, 10000*y_max, 10000*raster_size)
 
     # Compute the maximum z-coordinate in each bin
     max_z, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
@@ -138,7 +138,7 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
 
     return max_z, x_edges, y_edges
 
-def export(max_z, x_edges, y_edges, raster_size, ):
+def export(max_z, x_edges, y_edges, raster_size, output_path):
     # Define the header of the output data
     header = f'# Units: 0.1mm\n'
     header = f'ncols {max_z.shape[1]}\n'
@@ -155,7 +155,7 @@ def export(max_z, x_edges, y_edges, raster_size, ):
     flat_max_z = np.where(np.isnan(rotated_max_z), -9999, rotated_max_z).flatten()
 
     # Write the header and the flattened array to the ASC file
-    with open(f'H:/data/cloudcompare/test/sand_minus_r_{raster_size}.asc', 'w') as f:
+    with open(f'{output_path}sand_minus_r_{raster_size}.asc', 'w') as f:
         f.write(header)
         np.savetxt(f, flat_max_z, fmt='%1.2f')
 
@@ -243,11 +243,18 @@ if __name__ == '__main__':
     print(f'y min: {cloud_corr.points['y'].min()}')
     print(f'y max: {cloud_corr.points['y'].max()}')
 
-    # Define raster size in 0.1mm
-    raster_size = 30
+    # Define raster size in m
+    raster_size = 0.004
+
+    # Define raster min and max values in m
+    raster_min = 0
+    raster_max = 0.6
 
     # Rasterise the corrected point cloud
-    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, 0, 6000, 0, 6000)
+    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min, raster_max, raster_min, raster_max)
+
+    # Define the output path
+    output_path = 'H:/data/cloudcompare/test/'
 
     # Export data as ascii file
-    export(max_z, x_edges, y_edges, raster_size, 'H:/data/cloudcompare/test/sand_minus.asc')
+    export(max_z, x_edges, y_edges, raster_size, output_path)

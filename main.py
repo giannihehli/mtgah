@@ -5,6 +5,7 @@ import glob
 import numpy as np
 import pandas as pd
 from termcolor import colored
+from pyntcloud import PyntCloud
 
 # IMPORT USER-DEFINED MODULES
 from calibrateCameravideo import calibratevideo
@@ -16,15 +17,23 @@ from measureDistance import measure
 from plotParameters import plotparams
 from plotExperiments import plottotal
 from measureTop import measuretop
+from alignPointcloud import getimage
+from alignPointcloud import calculate_transformation
+from alignPointcloud import transform
+from alignPointcloud import rasterize
+from alignPointcloud import export
 
 ############################################################################################################
 # ONLY SECTION TO ADJUST PARAMETERS
 
+# Define path with data to be analysed
+#data_path = 'H:/data/tests/sony_hs/'
+data_path = 'H:/data/20240531/'
+
+#######################################
+# CAMERA OPTIONS
 # Define used camera
 camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
-
-# Define path with data to be analysed
-data_path = 'H:/data/tests/sony_hs/'
 
 # Input factor for skipping frames in calibration video
 skip_frames = 10  
@@ -45,19 +54,28 @@ sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of 
 # Define filter threshold for binary thresholding (90)
 filter_threshold = 90 # [px] Threshold value for binary thresholding - 90 for 250fps and 110 for 500fps
 
+#######################################
+# SCANNER OPTIONS
 # Define ROI width for measurement
 search_width = 300 # [px] Width of the ROI for distance measurement
+
+# Define raster size in [m] for rasterization of scanned pointcloud
+raster_size = 0.003
+
+# Define raster min and max values in m
+raster_min = 0
+raster_max = 0.6
 
 ############################################################################################################
 
 # Calibrate camera
-if os.path.isfile(f'{data_path}calibration/K.txt'):
-    print(colored(f'Camera calibrated. Loading calibration parameters from {data_path}calibration/.', 'green'))
-    K = np.loadtxt(f'{data_path}calibration/K.txt')  # calibration matrix[3x3]
-    d = np.loadtxt(f'{data_path}calibration/d.txt')  # distortion coefficients[5x1]
-elif os.path.isfile(f'{data_path}calibration.mp4'):
-    print(colored(f'Camera not calibrated. Calibrating with {data_path}calibration.mp4.', 'orange'))
-    rep, K, d, rvec, tvec, X_W = calibratevideo(data_path, skip_frames)
+if os.path.isfile(f'{data_path}camera/calibration/K.txt'):
+    print(colored(f'Camera calibrated. Loading calibration parameters from {data_path}camera/calibration/.', 'green'))
+    K = np.loadtxt(f'{data_path}camera/calibration/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt(f'{data_path}camera/calibration/d.txt')  # distortion coefficients[5x1]
+elif os.path.isfile(f'{data_path}camera/calibration.mp4'):
+    print(colored(f'Camera not calibrated. Calibrating with {data_path}camera/calibration.mp4.', 'orange'))
+    rep, K, d, rvec, tvec, X_W = calibratevideo(f'{data_path}camera/', skip_frames)
 else:
     print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from H:/data/camera/calibration/{camera}/', 'red'))
     K = np.loadtxt(f'H:/data/camera/calibration/{camera}/K.txt')  # calibration matrix[3x3]
@@ -75,7 +93,7 @@ d_vertical_tot = []
 d_horizontal_tot = []    
 
 # Loop through all videos in data path
-for vid_path in glob.glob(data_path + '*.MP4'):
+for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     # Print processed video
     print(colored(f'Processing video: {vid_path}', 'blue'))
 
@@ -152,11 +170,12 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         case 'h40':
             h_initial = 40
             
-
+    #Define used marker type
+    marker = 'DICT_4X4_1000'
 
     # Make directory for output images
     if img_out:
-        output_folder = f'{data_path}{exp}/'
+        output_folder = f'{data_path}camera/{exp}/'
         try: 
             os.mkdir(output_folder)
             print('Directory ', output_folder, ' created.')
@@ -184,12 +203,12 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         # If needed save images to folder
         if exp == exp_out:
             try:
-                os.mkdir(f'{data_path}{exp_out}')
+                os.mkdir(f'{data_path}camera/{exp_out}')
                 print(f'Directory {exp_out} created. All images of this experiment saved there.')
             except FileExistsError:
                 pass
             print(f'Saving {frame+100}_orig')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_orig.png', image)
+            cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_orig.png', image)
 
         # Undistort images
         img_undst = undistort(K, d, image)
@@ -199,10 +218,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         # Save image of wanted experiment in folder
         if exp == exp_out:
             print(f'Saving {frame+100}_undst')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_undst.png', img_undst)
-
-        #Define used marker type
-        marker = 'DICT_4X4_1000'
+            cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_undst.png', img_undst)
 
         # Detect markers
         img_det, corners, ids = detect(img_undst, marker)
@@ -212,7 +228,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         # Save image of wanted experiment in folder
         if exp == exp_out:
             print(f'Saving {frame+100}_det')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_det.png', img_det)
+            cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_det.png', img_det)
 
         # Warp perspective
         img_warp, M = warp(corners, pattern, img_undst)
@@ -222,7 +238,7 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         # Save image of wanted experiment in folder
         if exp == exp_out:
             print(f'Saving {frame+100}_warp')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_warp.png', img_warp)
+            cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_warp.png', img_warp)
 
         # Threshold image
         _ , img_thr = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold) # img_thr_gb, img_thr_bf
@@ -232,17 +248,17 @@ for vid_path in glob.glob(data_path + '*.MP4'):
         # Save image of wanted experiment in folder
         if exp == exp_out:
             print(f'Saving {frame+100}_thr')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_thr.png', img_thr)
+            cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_thr.png', img_thr)
 
         # Measure distances
         x_right, x_left, y_bottom, img_mes = measure(img_warp, img_thr, search_width)
-#         cv2.imshow('image_mes', cv2.resize(img_mes, (1080, 1080)))
+#        cv2.imshow('image_mes', cv2.resize(img_mes, (1080, 1080)))
 #        cv2.waitKey(0)
 
         # Save image of wanted experiment in folder
         if exp == exp_out:
             print(f'Saving {frame+100}_mes')
-            cv2.imwrite(f'{data_path}{exp_out}/{frame+100}_mes.png', img_mes)
+            cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_mes.png', img_mes)
 
         # If needed save images to folder
         if img_out:
@@ -316,13 +332,13 @@ for vid_path in glob.glob(data_path + '*.MP4'):
 
     # Make folder for raw data
     try:
-        os.mkdir(f'{data_path}raw_data')
-        print(f'Directory raw_data created. All images of this experiment saved there.')
+        os.mkdir(f'{data_path}camera_raw_data')
+        print(f'Directory camera_raw_data created. All measurements of this experiment saved there.')
     except FileExistsError:
         pass
 
     # Save raw parameters to csv file
-    df.to_csv(f'{data_path}raw_data/{exp}_raw.csv')
+    df.to_csv(f'{data_path}camera_raw_data/{exp}_raw.csv')
 
     # Append measured parameters to total list
     layout_tot.append(layout)
@@ -335,6 +351,43 @@ for vid_path in glob.glob(data_path + '*.MP4'):
     d_vertical_tot.append(diameter_vertical)
     d_horizontal_tot.append(diameter_horizontal)
 
+    # Load the .ply file of the processed experiment
+    cloud = PyntCloud.from_file('H:/data/cloudcompare/test/sand_minus.ply')
+
+    # Get the image and indices
+    img_ptc, indices = getimage(cloud)
+
+    # Detect ArUco markers on pointcloud image
+    ptc_det, ptc_corners, ptc_ids = detect(image, marker)
+
+    # Show the image with detected markers
+#    cv2.imshow('ptc_det', ptc_det)
+#    cv2.waitKey(0)
+
+    # Save the image with detected markers
+#    cv2.imwrite(f'{data_path}scanner/{exp}_det.jpg', ptc_det)
+
+    # Define corners in 3D as source points
+    source_ptc = np.hstack((ptc_corners, np.zeros((ptc_corners.shape[0], 1), dtype=ptc_corners.dtype)))
+
+    # Convert the target points to the correct unit [mm]
+    target_ptc = 0.1 * pattern
+
+    # Calculate the transformation matrix from the detected corners and the measured pattern
+    M = calculate_transformation(source_ptc, target_ptc)
+
+    # Transform the pointcloud to correct origin
+    cloud_corr = transform(cloud, M)
+
+    # Rasterise the corrected point cloud
+    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min, raster_max, raster_min, raster_max)
+
+    # Define the output path
+    output_path = 'H:/data/cloudcompare/test/'
+
+    # Export data as ascii file
+    export(max_z, x_edges, y_edges, raster_size, output_path)
+
 # Save total measured parameters to dataframe
 dict_tot = {'layout': layout_tot, 'basis': basis_tot, 'roughness': roughness_tot, 'direction': direction_tot, 'diameter': diameter_tot, 
             'height': height_tot, 'attempt': attempt_tot, 'd_vertical': d_vertical_tot, 'd_horizontal': d_horizontal_tot}
@@ -344,4 +397,4 @@ df_tot = pd.DataFrame(dict_tot)
 plottotal(data_path, df_tot)
 
 # Save total measured parameters to csv file
-df_tot.to_csv(f'{data_path}raw_data/total_raw.csv')
+df_tot.to_csv(f'{data_path}camera_raw_data/total_raw.csv')

@@ -54,7 +54,7 @@ def plottotal(data_path, df_tot):
     axis[1, 1].legend()
 
     # Save the figure before showing it
-    plt.savefig(f'{data_path}graphs/total.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
+    plt.savefig(f'{data_path}camera/graphs/total.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
 
     # Then display the figure
     plt.show()
