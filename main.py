@@ -17,6 +17,7 @@ from measureDistance import measure
 from plotParameters import plotparams
 from plotExperiments import plottotal
 from measureTop import measuretop
+from measureTop import convert
 from alignPointcloud import getimage
 from alignPointcloud import sortpoints
 from alignPointcloud import calculate_transformation
@@ -29,7 +30,7 @@ from alignPointcloud import export
 
 # Define path with data to be analysed
 #data_path = 'H:/data/tests/sony_hs/'
-data_path = 'G:/experiments/20240531/'
+data_path = 'G:/data/pipeline_tests/'
 
 #######################################
 # CAMERA OPTIONS
@@ -282,15 +283,26 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
 #            cv2.imshow(str(frame), cv2.resize(img_thr, (1080, 1080)))
 #            cv2.waitKey(0)
 
-            try: 
-                os.mkdir(f'{data_path}end frame tiffs')
-                print('Directory end frame tiffs created and last frame saved as threshold.')
-                cv2.imwrite(f'{data_path}end frame tiffs/{exp}.tiff', img_thr)
-            except FileExistsError:
-                print('Directory end frame tiffs already exists but last frame saved as threshold.')
-                cv2.imwrite(f'{data_path}end frame tiffs/{exp}.tiff', img_thr)
-                
+            # Measure the top distance in last frame    
             distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
+
+            # Define output path for last frame
+            frame_output = f'{data_path}end frames/'
+
+            try: 
+                os.mkdir(frame_output)
+                print('Directory end frames created and last frame saved as threshold.')
+            except FileExistsError:
+                print('Directory end frames already exists but last frame saved as threshold.')
+                
+            # Save last frame as .tiff file
+            cv2.imwrite(f'{frame_output}{exp}.tiff', img_thr)
+
+            # Convert last frame to needed data structure for asc export
+            img_z, img_x, img_y = convert(img_thr)
+
+            # Export last frame as ascii file
+            export(img_z, img_x, img_y, 0.001, f'{frame_output}{exp}_endframe.asc')           
 
 
     # Release video capture
@@ -393,7 +405,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
 
     # Define the output path
-    output_path = f'{data_path}rasters/{exp}_raster.asc'
+    ptc_output = f'{data_path}rasters/{exp}_raster.asc'
 
     # Try making the directory for rasters
     try:
@@ -403,7 +415,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
         pass
 
     # Export data as ascii file
-    export(max_z, x_edges, y_edges, raster_size, output_path)
+    export(max_z, x_edges, y_edges, raster_size, ptc_output)
 
 # Save total measured parameters to dataframe
 dict_tot = {'layout': layout_tot, 'basis': basis_tot, 'roughness': roughness_tot, 'direction': direction_tot, 'diameter': diameter_tot, 

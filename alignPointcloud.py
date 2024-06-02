@@ -256,7 +256,7 @@ if __name__ == '__main__':
     print(f'y max: {cloud_corr.points['y'].max()}')
 
     # Define raster size in m
-    raster_size = 0.003
+    raster_size = 0.001
 
     # Define raster min and max values in m
     raster_min_x = 0
@@ -269,6 +269,14 @@ if __name__ == '__main__':
 
     # Define the output path
     output_path = f'H:/data/cloudcompare/test/{exp}_{raster_size}.asc'
+
+    print(f'max_z shape: {max_z.shape}')
+    print(f'x_edges shape: {x_edges.shape}')
+    print(f'y_edges shape: {y_edges.shape}')
+
+    print(f'max_z: {max_z}')
+    print(f'x_edges: {x_edges}')
+    print(f'y_edges: {y_edges}')
 
     # Export data as ascii file
     export(max_z, x_edges, y_edges, raster_size, output_path)

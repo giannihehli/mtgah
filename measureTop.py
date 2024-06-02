@@ -10,6 +10,7 @@ from undistortImage import undistort
 from detectMarkers import detect
 from warpPerspective import warp
 from filterImage import threshold
+from alignPointcloud import export
 
 def measuretop(image, image_thr, search_width):
 #    print('start time: ', datetime.now())
@@ -60,6 +61,9 @@ def measuretop(image, image_thr, search_width):
             x_top = x_top + vertical_x - search_width/2 + i
             count_top += 1        
 
+    if count_top == 0:
+        count_top = 1
+
     # Calculate mean for y_left and y_right
     x_top = x_top / count_top
     
@@ -81,13 +85,27 @@ def measuretop(image, image_thr, search_width):
 
     return y_top, image_windows
 
+def convert(img_thr):
+    print(f'img_thr.shape: {img_thr.shape}')
+    
+    # Rotate the 2D array 90 degrees clockwise
+    rotated_img_thr = np.rot90(img_thr, -1)
+
+    img_z = np.where(rotated_img_thr == 0, np.nan, 0)
+
+    # Define x and y edges of raster by adjustng to raster size
+    img_x = np.linspace(0, 5999, num = 6000)
+    img_y = np.linspace(0, 5999, num = 6000)
+
+    return img_z, img_x, img_y
+
 if __name__ == "__main__":
        
     # Define used camera
-    camera = "sony" # "sony", "sony_hs", "gopro1", "gopro2
+    camera = "sony_hs" # "sony", "sony_hs", "gopro1", "gopro2
 
     # Define used marker
-    marker = 'DICT_4X4_50'
+    marker = 'DICT_4X4_1000'
 
     # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter
     kernel_size = 25 # must be positive and odd
@@ -103,29 +121,17 @@ if __name__ == "__main__":
     search_width = 200
 
     # Import calibration parameters
-    K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
-    d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
+    K = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/d.txt')  # distortion coefficients[2x1]
     
-    # Define used basis
-    basis =  "rough" # "rough", "smooth"
-
-    # Load image and define reference pattern in clockwise order in world frame (3D) in [mm]
-    match basis:
-        case "smooth":
-            pattern = 10 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], [98.6, 95, 0], [11.5, 93.2, 0],
-                                [498.8, 8.2, 0], [586, 8.2, 0], [586.5, 95.4, 0], [499.2, 95, 0],
-                                [499.5, 503, 0], [586.7, 503.9, 0], [585.4, 591.2, 0], [498, 590.3, 0],
-                                [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], [15.6, 590.5, 0]]
-                                )
-        case "rough":
-            pattern = 10 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
-                                [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
-                                [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
-                                [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], [12.6, 587.3, 0]]
-                                )
+    # Define pattern as 3D coordinates in 0.1mm
+    pattern = 100 * np.array([[0.9, 0.84, 0], [8.96, 0.82, 0], [8.95, 8.92, 0], [0.87, 8.93, 0],
+                                     [50.87, 0.82, 0], [58.95, 0.82, 0], [58.9, 8.91, 0], [50.83, 8.9, 0],
+                                     [50.74, 51.07, 0], [58.83, 51.02, 0], [58.88, 59.1, 0], [50.8, 59.14, 0],
+                                     [0.86, 51.02, 0], [8.94, 51.07, 0], [8.88, 59.17, 0], [0.79, 59.11, 0]])
 
     # Import image
-    image = cv2.imread("data/f_r8_d113_h40_160.JPG")
+    image = cv2.imread("G:/data/pipeline_tests/camera/100_orig.PNG")
 
     # Undistort image
     img_undst = undistort(K, d, image)
@@ -173,4 +179,15 @@ if __name__ == "__main__":
     axis[1, 0].imshow(img_mes_gb)
     axis[0, 0].set_title('bilateral Filter Measurement')
     axis[1, 1].imshow(img_mes_bf)
-    plt.show()
+#    plt.show()
+
+#    np.savetxt('G:/data/pipeline_tests/end frames/test_endframe_svtxt.asc', img_thr_bf, fmt='%d')
+
+    # Define raster size []
+    raster_size_img = 0.001
+
+    # Convert last frame to needed data structure for asc export
+    img_z, img_x, img_y = convert(img_thr_bf)
+
+    # Export last frame as ascii file
+    export(img_z, img_x, img_y, raster_size_img, 'G:/data/pipeline_tests/end frames/test_endframe.asc')  

@@ -57,16 +57,18 @@ def plottotal(data_path, df_tot):
     plt.savefig(f'{data_path}graphs/total.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
 
     # Then display the figure
-#    plt.show()
+    plt.show()
     
     return
 
 if __name__ == "__main__":
 
-    # Define path with data to be analysed
-    data_path = 'H:/data/tests/sony_hs/'
+    # Define path with data to be analysed with artificial data
+    data_path = 'G:/data/tests/sony_hs/camera/'
+    df_tot = pd.read_csv('G:/data/tests/sony_hs/camera/raw_data/total_raw - Kopie.csv')
 
-    # Import measured parameters
-    df_tot = pd.read_csv('H:/data/tests/sony_hs/raw_data/total_raw - Kopie.csv')
+    # Define path with data to be analysed with real data
+    data_path = 'G:/experiments/20240531/camera/'
+    df_tot = pd.read_csv(f'{data_path}raw_data/total_raw.csv')
 
     plottotal(data_path, df_tot)
