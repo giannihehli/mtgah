@@ -101,7 +101,7 @@ def measure(image, image_thr, search_width):
   
     # Post-process results to get y or x mean of detected edges
     y_left = 0
-    count_left = 0    
+    count_left = 0   
     y_right = 0
     count_right = 0
     x_bottom = 0
@@ -124,7 +124,14 @@ def measure(image, image_thr, search_width):
             count_bottom += 1        
 
 #    cv2.rectangle(image_windows, (int(vertical_x - search_width/2), int(y_bottom-5)), (int(vertical_x + search_width/2), int(y_bottom+5)), (255, 0, 0), 2)
-
+    
+    # If no measurement is found set counts to one to avoid division by zero
+    if count_left == 0:
+        count_left = 1
+    if count_right == 0:
+        count_right = 1
+    if count_bottom == 0:
+        count_bottom = 1
 
     # Calculate mean for y_left and y_right
     y_left = y_left / count_left

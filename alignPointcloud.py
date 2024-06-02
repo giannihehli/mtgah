@@ -180,16 +180,16 @@ if __name__ == '__main__':
                             [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], [1.04, 59.11, 0]])
 
     # Define experiment to be analysed
-    exp = 'f_r2-pa_d114_h35_2'
+    exp = 'f_r0-pa_d114_h35_5'
 
     # Load the .ply file
-    cloud = PyntCloud.from_file(f'H:/data/cloudcompare/test/{exp}.ply')
+    cloud = PyntCloud.from_file(f'G:/data/pipeline_tests/scanner/{exp}.ply')
 
     # Get the image and indices
     image, indices = getimage(cloud)
     
     # Save the image
-    cv2.imwrite(f'H:/data/cloudcompare/test/{exp}.jpg', image)
+    cv2.imwrite(f'G:/data/pipeline_tests/scanner/images/{exp}_ptc.jpg', image)
 
     # Detect ArUco markers
     marker = 'DICT_4X4_1000'
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     cv2.waitKey(0)
 
     # Save the image with detected markers
-    cv2.imwrite(f'H:/data/cloudcompare/test/{exp}_det.jpg', ptc_det)
+    cv2.imwrite(f'G:/data/pipeline_tests/scanner/images/{exp}_det.jpg', ptc_det)
 
     # Sort the detected corners and target points
     source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern)    
@@ -259,11 +259,13 @@ if __name__ == '__main__':
     raster_size = 0.003
 
     # Define raster min and max values in m
-    raster_min = 0
-    raster_max = 0.6
+    raster_min_x = 0
+    raster_max_x = 0.6
+    raster_min_y = 0
+    raster_max_y = 0.6
 
     # Rasterise the corrected point cloud
-    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min, raster_max, raster_min, raster_max)
+    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
 
     # Define the output path
     output_path = f'H:/data/cloudcompare/test/{exp}_{raster_size}.asc'

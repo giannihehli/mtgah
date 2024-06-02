@@ -63,7 +63,7 @@ def calibratevideo(data_path, skip_frames):
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame*skip_frames)
 
         # Load image
-        print(colored(f'Analyse frame {skip_frames*frame}', 'blue'))
+        print(f'Analyse frame {skip_frames*frame}')
         ret, img = cap.read()
 
         if ret == False:
@@ -71,6 +71,11 @@ def calibratevideo(data_path, skip_frames):
 
         # Grayscale of the image
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # If our image size is unknown, set it now
+        if not imageSize:
+            imageSize = (gray.shape[1], gray.shape[0])
+            print('Image size: ', imageSize)
 
         # Find chessboard in the image, setting PatternSize(2nd arg) to a tuple of (#rows, #columns)
         ret, corners = cv2.findChessboardCorners(gray, (rows,cols), None)
@@ -93,12 +98,7 @@ def calibratevideo(data_path, skip_frames):
             
             # Add the accurate points in 2D that we just discovered
             imgpoints.append(corners_acc)
-
-            # If our image size is unknown, set it now
-            if not imageSize:
-                imageSize = (gray.shape[1], gray.shape[0])
-                print('Image size: ', imageSize)
-        
+            
             # Draw the corners to a new image to show whoever is performing the calibration
             # that the board was properly detected
             img = cv2.drawChessboardCorners(img, (rows, cols), corners_acc, ret)

@@ -33,8 +33,6 @@ data_path = 'G:/experiments/20240531/'
 
 #######################################
 # CAMERA OPTIONS
-# Define used camera
-camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
 
 # Input factor for skipping frames in calibration video
 skip_frames = 10  # [] Number of frames to skip in calibration video
@@ -43,7 +41,7 @@ skip_frames = 10  # [] Number of frames to skip in calibration video
 img_out = '' # Options: '', _undst', '_det', '_warp', '_thr', '_mes'
 
 # Define exp_out for optional output of all respective experiment images
-exp_out = '' # Options: '', 'f_r8_d113_h40', 
+exp_out = '' # Options: '', 'f_r8_d113_h40', 'f_r0-pa_d114_h35_5'
 
 # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
 kernel_size = 35 # [px] must be positive and odd
@@ -53,7 +51,7 @@ sigma_color = 80 # [px] Filter sigma in the color space. A larger value of the p
 sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
 # Define filter threshold for binary thresholding (90)
-filter_threshold = 90 # [px] Threshold value for binary thresholding - 90 for 250fps and 110 for 500fps
+filter_threshold = 110 # [px] Threshold value for binary thresholding - the lower the number the less points will be black
 
 # Define ROI width for measurement
 search_width = 600 # [px] Width of the ROI for distance measurement
@@ -64,9 +62,11 @@ search_width = 600 # [px] Width of the ROI for distance measurement
 # Define raster size in m for rasterization of scanned pointcloud
 raster_size = 0.001 # [m] Size of one bin in the raster in x and y direction
 
-# Define raster min and max values in m
-raster_min = 0 # [m] Minimum value of the raster in x and y direction
-raster_max = 0.6 # [m] Maximum value of the raster in x and y direction
+# Define raster min and max values in [m] for x and y direction
+raster_min_x = 0 # [m] Minimum value of the raster in x direction
+raster_max_x = 0.6 # [m] Maximum value of the raster in x direction
+raster_min_y = 0 # [m] Minimum value of the raster in y direction
+raster_max_y = 0.6 # [m] Maximum value of the raster in y direction
 
 ############################################################################################################
 
@@ -79,9 +79,9 @@ elif os.path.isfile(f'{data_path}camera/calibration.mp4'):
     print(colored(f'Camera not calibrated. Calibrating with {data_path}camera/calibration.mp4.', 'orange'))
     rep, K, d, rvec, tvec, X_W = calibratevideo(f'{data_path}camera/', skip_frames)
 else:
-    print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from H:/data/camera/calibration/{camera}/', 'red'))
-    K = np.loadtxt(f'H:/data/camera/calibration/{camera}/K.txt')  # calibration matrix[3x3]
-    d = np.loadtxt(f'H:/data/camera/calibration/{camera}/d.txt')  # distortion coefficients[5x1]
+    print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from G:/data/pipeline_tests/camera/calibration/', 'red'))
+    K = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/d.txt')  # distortion coefficients[5x1]
 
 # Initialize lists for measured distances in every experiment
 layout_tot = []
@@ -360,8 +360,15 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
 #    cv2.imshow('img_ptc', img_ptc)
 #    cv2.waitKey(0)
 
+    # Try making the directory for the pointcloud images
+    try:
+        os.mkdir(f'{data_path}scanner/images')
+        print(f'Directory scanner/images created. All pointcloud images saved there.')
+    except FileExistsError:
+        pass
+
     # Save the pointcloud image
-    cv2.imwrite(f'{data_path}scanner/{exp}_ptc.jpg', img_ptc)
+    cv2.imwrite(f'{data_path}scanner/images/{exp}_ptc.jpg', img_ptc)
 
     # Detect ArUco markers on pointcloud image
     ptc_det, ptc_corners, ptc_ids = detect(img_ptc, marker)
@@ -371,7 +378,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
 #    cv2.waitKey(0)
 
     # Save the image with detected markers
-    cv2.imwrite(f'{data_path}scanner/{exp}_det.jpg', ptc_det)
+    cv2.imwrite(f'{data_path}scanner/images/{exp}_det.jpg', ptc_det)
     
     # Sort the detected corners and target points
     source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern)   
@@ -383,7 +390,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     cloud_corr = transform(cloud, M)
 
     # Rasterise the corrected point cloud
-    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min, raster_max, raster_min, raster_max)
+    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
 
     # Define the output path
     output_path = f'{data_path}rasters/{exp}_raster.asc'
