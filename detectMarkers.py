@@ -9,22 +9,22 @@ def detect(image, marker):
 
     # define names of each possible ArUco tag OpenCV supports
     ARUCO_DICT = {
-        "DICT_4X4_50": cv2.aruco.DICT_4X4_50,
-        "DICT_4X4_100": cv2.aruco.DICT_4X4_100,
-        "DICT_4X4_250": cv2.aruco.DICT_4X4_250,
-        "DICT_4X4_1000": cv2.aruco.DICT_4X4_1000,
-        "DICT_5X5_50": cv2.aruco.DICT_5X5_50,
-        "DICT_5X5_100": cv2.aruco.DICT_5X5_100,
-        "DICT_5X5_250": cv2.aruco.DICT_5X5_250,
-        "DICT_5X5_1000": cv2.aruco.DICT_5X5_1000,
-        "DICT_6X6_50": cv2.aruco.DICT_6X6_50,
-        "DICT_6X6_100": cv2.aruco.DICT_6X6_100,
-        "DICT_6X6_250": cv2.aruco.DICT_6X6_250,
-        "DICT_6X6_1000": cv2.aruco.DICT_6X6_1000,
-        "DICT_7X7_50": cv2.aruco.DICT_7X7_50,
-        "DICT_7X7_100": cv2.aruco.DICT_7X7_100,
-        "DICT_7X7_250": cv2.aruco.DICT_7X7_250,
-        "DICT_7X7_1000": cv2.aruco.DICT_7X7_1000
+        'DICT_4X4_50': cv2.aruco.DICT_4X4_50,
+        'DICT_4X4_100': cv2.aruco.DICT_4X4_100,
+        'DICT_4X4_250': cv2.aruco.DICT_4X4_250,
+        'DICT_4X4_1000': cv2.aruco.DICT_4X4_1000,
+        'DICT_5X5_50': cv2.aruco.DICT_5X5_50,
+        'DICT_5X5_100': cv2.aruco.DICT_5X5_100,
+        'DICT_5X5_250': cv2.aruco.DICT_5X5_250,
+        'DICT_5X5_1000': cv2.aruco.DICT_5X5_1000,
+        'DICT_6X6_50': cv2.aruco.DICT_6X6_50,
+        'DICT_6X6_100': cv2.aruco.DICT_6X6_100,
+        'DICT_6X6_250': cv2.aruco.DICT_6X6_250,
+        'DICT_6X6_1000': cv2.aruco.DICT_6X6_1000,
+        'DICT_7X7_50': cv2.aruco.DICT_7X7_50,
+        'DICT_7X7_100': cv2.aruco.DICT_7X7_100,
+        'DICT_7X7_250': cv2.aruco.DICT_7X7_250,
+        'DICT_7X7_1000': cv2.aruco.DICT_7X7_1000
         }
 
     # verify that the supplied ArUCo tag exists and is supported by
@@ -53,8 +53,8 @@ def detect(image, marker):
         refined_corner = cv2.cornerSubPix(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), np.float32(corner), (5,5), (-1,-1), term)
         corners_sub.append(refined_corner)
         
-#    print("corners detect = ", corners)
-#    print("corners_sub detect = ", corners_sub)
+#    print('corners detect = ', corners)
+#    print('corners_sub detect = ', corners_sub)
 
     ## Display detection result
     # Draw a square around the markers
@@ -97,33 +97,35 @@ def detect(image, marker):
                 5, (0, 255, 0), 10)
 
     # show the output frame
-    """ cv2.imshow("frame", cv2.resize(frame, (1080, 1080)))
-    cv2.waitKey(0)
+#    cv2.imshow('frame', cv2.resize(frame, (1080, 1080)))
+#    cv2.waitKey(0)
 
-    print("ids = ", ids)
-    print("corners = ", corners_sub) """
+#    print('ids = ', ids)
+#    print('corners = ', corners_sub)
 
     ## Arange corners and ids in clockwise order
     # Initialize corner_sort array with needed array dimension
-    corners_sort = np.ones((len(ids)*4, 2))
+    corners_sort = -9999 * np.ones((4*4, 2))
 
-    # Sort corners and ids in clockwise order
-    for i in range(4):
+    # Sort corners and ids in clockwise order and only if the id is below 4
+    for i in range(len(ids)):
+        if ids[i] >= 4:
+            continue
         corners_sort[ids[i]*4:ids[i]*4+4] = corners_sub[i]
 
-#    print("corners_sort = ", corners_sort)
+#    print('corners_sort = ', corners_sort)
 
     return frame, corners_sort, ids
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
-    camera = "sony" # "sony", "gopro1", "gopro2
+    camera = 'sony' # 'sony', 'gopro1', 'gopro2
     # Import calibration parameters
-    K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
-    d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
+    K = np.loadtxt('calibration/' + camera + '/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt('calibration/' + camera + '/d.txt')  # distortion coefficients[2x1]
 
-    marker = "DICT_4X4_50"
-    image = cv2.imread("data/f_r8_d113_h40_170.JPG")
+    marker = 'DICT_4X4_1000'
+    image = cv2.imread('G:/experiments/20240531/scanner/f_r2-pa_d114_h35_2_ptc.JPG')
     img_det, corners, ids = detect(image, marker)
-    cv2.imshow("image", cv2.resize(img_det, (1920, 1080)))
+    cv2.imshow('image', img_det)
     cv2.waitKey(0)

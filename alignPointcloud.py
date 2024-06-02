@@ -11,6 +11,46 @@ from scipy import stats
 # IMPORT USER-DEFINED MODULES
 from detectMarkers import detect
 
+def getimage(cloud):
+
+    # Translate the point cloud so all 'x' and 'y' values are positive
+    min_x = cloud.points['x'].min()
+    min_y = cloud.points['y'].min()
+    cloud.points['x'] -= min_x
+    cloud.points['y'] -= min_y
+
+    # Create an empty list to store the indices - note that x and y axis are flipped to get the
+    # correct image
+    indices = np.empty((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1), dtype=object)
+
+    # Now create the image and store the indices - note that x and y axis are flipped to get the
+    # correct image
+    image = np.zeros((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1, 3), dtype=np.uint8)
+
+    # Loop through the points, save the color values and store the indices
+    for index, point in cloud.points.iterrows():
+        img_x, img_y = int(point['x']), int(point['y'])
+        image[img_y, img_x] = [point['blue'], point['green'], point['red']]
+        indices[img_y, img_x] = index
+
+    return image, indices
+
+
+def sortpoints(ptc_corners, ptc_ids, pattern):
+    # Define source and target points structure
+    ptc_corners_det = np.ones((len(ptc_ids)*4, 2))
+    target_ptc = np.ones((len(ptc_ids)*4, 3))
+
+    # Sort detected corners and target points according to detected marker IDs
+    for i in range(len(ptc_ids)):
+        ptc_corners_det[i*4:i*4+4] = ptc_corners[ptc_ids[i]*4:ptc_ids[i]*4+4]
+        target_ptc[i*4:i*4+4] = 0.1 * pattern[ptc_ids[i]*4:ptc_ids[i]*4+4]
+
+    # Define corners in 3D as source points
+    source_ptc = np.hstack((ptc_corners_det, np.zeros((len(ptc_ids) * 4, 1), dtype=ptc_corners.dtype)))
+
+    return source_ptc, target_ptc
+
 def calculate_transformation(points_3d_source, points_3d_target):
     # Calculate centroids
     centroid_source = np.mean(points_3d_source, axis=0)
@@ -43,37 +83,6 @@ def calculate_transformation(points_3d_source, points_3d_target):
     transformation_matrix[:3, 3] = t
 
     return transformation_matrix
-
-def getimage(cloud):
-
-    # Translate the point cloud so all 'x' and 'y' values are positive
-    min_x = cloud.points['x'].min()
-    min_y = cloud.points['y'].min()
-    cloud.points['x'] -= min_x
-    cloud.points['y'] -= min_y
-
-    # Create an empty list to store the indices - note that x and y axis are flipped to get the
-    # correct image
-    indices = np.empty((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1), dtype=object)
-
-    # Now create the image and store the indices - note that x and y axis are flipped to get the
-    # correct image
-    image = np.zeros((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1, 3), dtype=np.uint8)
-
-    # Loop through the points, save the color values and store the indices
-    for index, point in cloud.points.iterrows():
-        img_x, img_y = int(point['x']), int(point['y'])
-        image[img_y, img_x] = [point['blue'], point['green'], point['red']]
-        indices[img_y, img_x] = index
- 
-    """ # Show the image
-    cv2.imshow('Point cloud', cv2.resize(image, (1080, 1080)))
-    cv2.waitKey(0)  """
-
-    # Save the image
-    cv2.imwrite('H:/data/cloudcompare/test/imagefrompointcloud.jpg', image)
-
-    return image, indices
 
 def transform(cloud, M):
     # Create an empty DataFrame with the same columns as the original point cloud's points
@@ -170,36 +179,34 @@ if __name__ == '__main__':
                             [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], [50.66, 59.14, 0],
                             [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], [1.04, 59.11, 0]])
 
+    # Define experiment to be analysed
+    exp = 'f_r2-pa_d114_h35_2'
+
     # Load the .ply file
-    cloud = PyntCloud.from_file('H:/data/cloudcompare/test/sand_minus.ply')
+    cloud = PyntCloud.from_file(f'H:/data/cloudcompare/test/{exp}.ply')
 
     # Get the image and indices
     image, indices = getimage(cloud)
+    
+    # Save the image
+    cv2.imwrite(f'H:/data/cloudcompare/test/{exp}.jpg', image)
 
     # Detect ArUco markers
-    marker = 'DICT_4X4_50'
+    marker = 'DICT_4X4_1000'
     ptc_det, ptc_corners, ptc_ids = detect(image, marker)
 
-    """ # Show the image with detected markers
+    # Show the image with detected markers
     cv2.imshow('image', ptc_det)
-    cv2.waitKey(0) """
+    cv2.waitKey(0)
 
     # Save the image with detected markers
-    cv2.imwrite('H:/data/cloudcompare/test/imagefrompointcloud_det.jpg', ptc_det)
+    cv2.imwrite(f'H:/data/cloudcompare/test/{exp}_det.jpg', ptc_det)
 
-    print(ptc_corners)
-
-    print(ptc_corners[:16])
-    print(np.zeros((16, 1)))
-
-    # Define corners in 3D as source points
-    source = np.hstack((ptc_corners[0:16], np.zeros((16, 1), dtype=ptc_corners.dtype)))
-
-    # Convert the target points to the correct unit [mm]
-    target = 0.1 * pattern
+    # Sort the detected corners and target points
+    source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern)    
 
     # Calculate the transformation matrix from the detected corners and the measured pattern
-    M = calculate_transformation(source, target)
+    M = calculate_transformation(source_ptc, target_ptc)
 
     print(M)
 
@@ -259,7 +266,7 @@ if __name__ == '__main__':
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min, raster_max, raster_min, raster_max)
 
     # Define the output path
-    output_path = f'H:/data/cloudcompare/test/sand_minus_r_{raster_size}.asc'
+    output_path = f'H:/data/cloudcompare/test/{exp}_{raster_size}.asc'
 
     # Export data as ascii file
     export(max_z, x_edges, y_edges, raster_size, output_path)

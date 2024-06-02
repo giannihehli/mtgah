@@ -18,6 +18,7 @@ from plotParameters import plotparams
 from plotExperiments import plottotal
 from measureTop import measuretop
 from alignPointcloud import getimage
+from alignPointcloud import sortpoints
 from alignPointcloud import calculate_transformation
 from alignPointcloud import transform
 from alignPointcloud import rasterize
@@ -356,8 +357,8 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     img_ptc, indices = getimage(cloud)
 
     # Show the pointcloud image
-    cv2.imshow('img_ptc', img_ptc)
-    cv2.waitKey(0)
+#    cv2.imshow('img_ptc', img_ptc)
+#    cv2.waitKey(0)
 
     # Save the pointcloud image
     cv2.imwrite(f'{data_path}scanner/{exp}_ptc.jpg', img_ptc)
@@ -366,17 +367,14 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     ptc_det, ptc_corners, ptc_ids = detect(img_ptc, marker)
 
     # Show the image with detected markers
-    cv2.imshow('ptc_det', ptc_det)
-    cv2.waitKey(0)
+#    cv2.imshow('ptc_det', ptc_det)
+#    cv2.waitKey(0)
 
     # Save the image with detected markers
     cv2.imwrite(f'{data_path}scanner/{exp}_det.jpg', ptc_det)
-
-    # Define corners in 3D as source points
-    source_ptc = np.hstack((ptc_corners[:16], np.zeros((16, 1), dtype=ptc_corners.dtype)))
-
-    # Convert the target points to the correct unit [mm]
-    target_ptc = 0.1 * pattern
+    
+    # Sort the detected corners and target points
+    source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern)   
 
     # Calculate the transformation matrix from the detected corners and the measured pattern
     M = calculate_transformation(source_ptc, target_ptc)
