@@ -41,9 +41,9 @@ def sortpoints(ptc_corners, ptc_ids, pattern):
     target_ptc = np.ones((len(ptc_ids)*4, 3))
 
     # Sort detected corners and target points according to detected marker IDs
-    for i in range(len(ptc_ids)):
-        ptc_corners_det[i*4:i*4+4] = ptc_corners[ptc_ids[i]*4:ptc_ids[i]*4+4]
-        target_ptc[i*4:i*4+4] = 0.1 * pattern[ptc_ids[i]*4:ptc_ids[i]*4+4]
+    for i, id in enumerate(ptc_ids):
+        ptc_corners_det[i*4:i*4+4] = ptc_corners[id*4:id*4+4]
+        target_ptc[i*4:i*4+4] = 0.1 * pattern[id*4:id*4+4]
 
     # Define corners in 3D as source points
     source_ptc = np.hstack((ptc_corners_det, np.zeros((len(ptc_ids) * 4, 1), dtype=ptc_corners.dtype)))
@@ -121,36 +121,14 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
         cloud.points['z'], 
         statistic='max', 
         bins=[x_bins, y_bins])
-    
-    """ # Compute the mean of the RGB values in each bin
-    mean_red, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
-        cloud.points['x'], 
-        cloud.points['y'], 
-        cloud.points['red'], 
-        statistic='max', 
-        bins=[x_bins, y_bins])
-    
-    mean_green, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
-        cloud.points['x'], 
-        cloud.points['y'], 
-        cloud.points['green'], 
-        statistic='max', 
-        bins=[x_bins, y_bins])
-
-    mean_blue, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
-        cloud.points['x'], 
-        cloud.points['y'], 
-        cloud.points['blue'], 
-        statistic='max', 
-        bins=[x_bins, y_bins]) """
 
     return max_z, x_edges, y_edges
 
 def export(max_z, x_edges, y_edges, raster_size, output_path):
     # Define the header of the output data
     header = f'# Units: 0.1mm\n'
-    header = f'ncols {max_z.shape[1]}\n'
-    header += f'nrows {max_z.shape[0]}\n'
+    header = f'ncols {max_z.shape[0]}\n'
+    header += f'nrows {max_z.shape[1]}\n'
     header += f'xllcorner {min(x_edges)}\n'
     header += f'yllcorner {min(y_edges)}\n'
     header += f'cellsize {raster_size}\n'
@@ -189,7 +167,9 @@ if __name__ == '__main__':
 
     # Get the image and indices
     image, indices = getimage(cloud)
-    
+    cv2.imshow('image', image)
+    cv2.waitKey(0)
+
     # Save the image
     cv2.imwrite(f'G:/data/pipeline_tests/scanner/images/{exp}_ptc.jpg', image)
 
@@ -198,7 +178,7 @@ if __name__ == '__main__':
     ptc_det, ptc_corners, ptc_ids = detect(image, marker)
 
     # Show the image with detected markers
-    cv2.imshow('image', ptc_det)
+    cv2.imshow('image detected', ptc_det)
     cv2.waitKey(0)
 
     # Save the image with detected markers
@@ -229,14 +209,14 @@ if __name__ == '__main__':
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    plt.show() """
+    plt.show()
 
     print(f'x min: {cloud.points['x'].min()}')
     print(f'x max: {cloud.points['x'].max()}')
     print(f'y min: {cloud.points['y'].min()}')
     print(f'y max: {cloud.points['y'].max()}')
 
-    """ # Plot the corrected point cloud
+    # Plot the corrected point cloud
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     #ax.view_init(elev=0, azim=0, roll=0) # Set the view to y-z plane
@@ -250,12 +230,12 @@ if __name__ == '__main__':
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    plt.show() """
+    plt.show()
 
     print(f'x min: {cloud_corr.points['x'].min()}')
     print(f'x max: {cloud_corr.points['x'].max()}')
     print(f'y min: {cloud_corr.points['y'].min()}')
-    print(f'y max: {cloud_corr.points['y'].max()}')
+    print(f'y max: {cloud_corr.points['y'].max()}') """
 
     # Define raster size in m
     raster_size = 0.001
@@ -264,13 +244,13 @@ if __name__ == '__main__':
     raster_min_x = 0
     raster_max_x = 0.6
     raster_min_y = 0
-    raster_max_y = 0.3
+    raster_max_y = 0.6
 
     # Rasterise the corrected point cloud
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
 
     # Define the output path
-    output_path = f'G:/data/pipeline_tests/rasters/{exp}_{raster_size}.asc'
+    output_path = f'G:/data/pipeline_tests/rasters/{exp}_ynew.asc'
 
     print(f'max_z shape: {max_z.shape}')
     print(f'x_edges shape: {x_edges.shape}')

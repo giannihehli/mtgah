@@ -187,5 +187,10 @@ if __name__ == "__main__":
     # Convert last frame to needed data structure for asc export
     img_z, img_x, img_y = convert(img_thr_bf)
 
+    print('image threshold shape: ', img_thr_bf.shape)
+    print('image shape: ', img_z.shape)
+    print('x shape: ', img_x.shape)
+    print('y shape: ', img_y.shape)
+
     # Export last frame as ascii file
     export(img_z, img_x, img_y, raster_size_img, 'G:/data/pipeline_tests/end frames/test_endframe.asc')  
