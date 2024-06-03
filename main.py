@@ -31,8 +31,8 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define path with data to be analysed
-#    data_path = 'G:/data/pipeline_tests/'
-    data_path = 'G:/experiments/20240531/'
+    data_path = 'G:/data/pipeline_tests/'
+#    data_path = 'G:/experiments/20240531/'
 
     #######################################
     # CAMERA OPTIONS
@@ -66,10 +66,10 @@ if __name__ == '__main__':
     raster_size = 0.001 # [m] Size of one bin in the raster in x and y direction
 
     # Define raster min and max values in [m] for x and y direction
-    raster_min_x = 0 # [m] Minimum value of the raster in x direction
-    raster_max_x = 0.6 # [m] Maximum value of the raster in x direction
-    raster_min_y = 0 # [m] Minimum value of the raster in y direction
-    raster_max_y = 0.6 # [m] Maximum value of the raster in y direction
+    raster_min_x = 0.1 # [m] Minimum value of the raster in x direction
+    raster_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    raster_min_y = 0.1 # [m] Minimum value of the raster in y direction
+    raster_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
     ############################################################################################################
 
