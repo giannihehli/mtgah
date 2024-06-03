@@ -162,10 +162,13 @@ def export(max_z, x_edges, y_edges, raster_size, output_path):
     # Flatten the rotated 2D array and replace NaN values with the NODATA value
     flat_max_z = np.where(np.isnan(rotated_max_z), -9999, rotated_max_z).flatten()
 
+    # Convert all z-values to [m]
+    flat_max_z = flat_max_z / 10000
+
     # Write the header and the flattened array to the ASC file
     with open(output_path, 'w') as f:
         f.write(header)
-        np.savetxt(f, flat_max_z, fmt='%1.2f')
+        np.savetxt(f, flat_max_z, fmt='%1.4f')
 
     return
 
@@ -261,13 +264,13 @@ if __name__ == '__main__':
     raster_min_x = 0
     raster_max_x = 0.6
     raster_min_y = 0
-    raster_max_y = 0.6
+    raster_max_y = 0.3
 
     # Rasterise the corrected point cloud
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
 
     # Define the output path
-    output_path = f'H:/data/cloudcompare/test/{exp}_{raster_size}.asc'
+    output_path = f'G:/data/pipeline_tests/rasters/{exp}_{raster_size}.asc'
 
     print(f'max_z shape: {max_z.shape}')
     print(f'x_edges shape: {x_edges.shape}')

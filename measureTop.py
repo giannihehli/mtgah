@@ -182,7 +182,7 @@ if __name__ == "__main__":
 #    np.savetxt('G:/data/pipeline_tests/end frames/test_endframe_svtxt.asc', img_thr_bf, fmt='%d')
 
     # Define raster size []
-    raster_size_img = 0.001
+    raster_size_img = 0.0001
 
     # Convert last frame to needed data structure for asc export
     img_z, img_x, img_y = convert(img_thr_bf)
