@@ -3,7 +3,6 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 from numpy import linalg
-from datetime import datetime
 
 # Importing user-defined modules
 from undistortImage import undistort
@@ -86,7 +85,6 @@ def measuretop(image, image_thr, search_width):
     return y_top, image_windows
 
 def convert(img_thr):
-    print(f'img_thr.shape: {img_thr.shape}')
     
     # Rotate the 2D array 90 degrees clockwise
     rotated_img_thr = np.rot90(img_thr, -1)

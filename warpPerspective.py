@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 # Importing user-defined modules
 from undistortImage import undistort
-from locateCamera import locate
 from detectMarkers import detect
 
 

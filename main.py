@@ -2,10 +2,11 @@
 import os
 import cv2
 import glob
+import time
 import numpy as np
 import pandas as pd
-from termcolor import colored
 from pyntcloud import PyntCloud
+import matplotlib.pyplot as plt
 
 # IMPORT USER-DEFINED MODULES
 from calibrateCameravideo import calibratevideo
@@ -30,7 +31,7 @@ from alignPointcloud import export
 
 # Define path with data to be analysed
 #data_path = 'H:/data/tests/sony_hs/'
-data_path = 'G:/data/pipeline_tests/'
+data_path = 'G:/experiments/20240531/'
 
 #######################################
 # CAMERA OPTIONS
@@ -73,14 +74,14 @@ raster_max_y = 0.6 # [m] Maximum value of the raster in y direction
 
 # Calibrate camera
 if os.path.isfile(f'{data_path}camera/calibration/K.txt'):
-    print(colored(f'Camera calibrated. Loading calibration parameters from {data_path}camera/calibration/.', 'green'))
+    print(f'Camera calibrated. Loading calibration parameters from {data_path}camera/calibration/.')
     K = np.loadtxt(f'{data_path}camera/calibration/K.txt')  # calibration matrix[3x3]
     d = np.loadtxt(f'{data_path}camera/calibration/d.txt')  # distortion coefficients[5x1]
 elif os.path.isfile(f'{data_path}camera/calibration.mp4'):
-    print(colored(f'Camera not calibrated. Calibrating with {data_path}camera/calibration.mp4.', 'orange'))
+    print(f'Camera not calibrated. Calibrating with {data_path}camera/calibration.mp4.')
     rep, K, d, rvec, tvec, X_W = calibratevideo(f'{data_path}camera/', skip_frames)
 else:
-    print(colored(f'Camera not calibrated and no calibration file found - approximated parameters used from G:/data/pipeline_tests/camera/calibration/', 'red'))
+    print(f'Camera not calibrated and no calibration file found - approximated parameters used from G:/data/pipeline_tests/camera/calibration/')
     K = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/K.txt')  # calibration matrix[3x3]
     d = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/d.txt')  # distortion coefficients[5x1]
 
@@ -118,7 +119,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     # Define used parameters according to experiment name
     layout = exp.split('_')[0]
     basis = exp.split('_')[1]
-    roughness = basis[1]
+    roughness = int(basis[1])
     direction = basis.split('-')[1]
     diameter = exp.split('_')[2]
     height = exp.split('_')[3]
@@ -189,11 +190,12 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     velocity_right = [0]
     velocity_left = [0]
     velocity_bottom = [0]
-    time = []
+    time_frame = []
 
     for frame in range(frame_count):
+        timestamp_start = time.time()
         # Load image
-        print(colored(f'Analyse frame {frame}', 'blue'))
+        print(f'Analyse frame {frame}')
         ret, image = cap.read()
 
         # Stop video analysis if no frame is loaded anymore
@@ -269,7 +271,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
         distance_right.append(x_right)
         distance_left.append(x_left)
         distance_bottom.append(y_bottom)
-        time.append(frame/fps)
+        time_frame.append(frame/fps)
 
         # Calculate velocity with conversion factor to [mm/s]
         if frame >= 1:
@@ -296,14 +298,17 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
                 print('Directory end frames already exists but last frame saved as threshold.')
                 
             # Save last frame as .tiff file
-            cv2.imwrite(f'{frame_output}{exp}.tiff', img_thr)
+            cv2.imwrite(f'{frame_output}{exp}_endframe.tiff', img_thr)
 
             # Convert last frame to needed data structure for asc export
             img_z, img_x, img_y = convert(img_thr)
 
             # Export last frame as ascii file
             export(img_z, img_x, img_y, 0.001, f'{frame_output}{exp}_endframe.asc')           
-
+        
+        timestamp_end = time.time()
+        time_per_frame = timestamp_end - timestamp_start
+        print(f'Time per frame: {time_per_frame} s')
 
     # Release video capture
     cap.release()
@@ -332,7 +337,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     velocity_horizontal = np.convolve(velocity_horizontal, np.ones(filter_size)/filter_size, mode='same')
    
     # Save measured parameters to dataframe
-    dict = {'time': time, 'distance_left': distance_left, 'distance_right': distance_right, 
+    dict = {'time': time_frame, 'distance_left': distance_left, 'distance_right': distance_right, 
             'velocity_left': velocity_left, 'velocity_right': velocity_right, 
             'radius_horizontal': radius_horizontal, 'velocity_horizontal': velocity_horizontal, 
             'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom}
@@ -356,7 +361,7 @@ for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
     basis_tot.append(basis)
     roughness_tot.append(roughness)
     direction_tot.append(direction)
-    diameter_tot.append(int(diameter[1:])/2)
+    diameter_tot.append(int(diameter[1:]))
     height_tot.append(int(height[1:]))
     attempt_tot.append(attempt)
     d_vertical_tot.append(diameter_vertical)
@@ -427,3 +432,6 @@ plottotal(data_path, df_tot)
 
 # Save total measured parameters to csv file
 df_tot.to_csv(f'{data_path}camera/raw_data/total_raw.csv')
+
+# Close all open windows
+plt.close('all')

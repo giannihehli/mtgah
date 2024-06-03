@@ -5,7 +5,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pyntcloud import PyntCloud
 from scipy.spatial.transform import Rotation as R
-from scipy.spatial import distance
 from scipy import stats
 
 # IMPORT USER-DEFINED MODULES

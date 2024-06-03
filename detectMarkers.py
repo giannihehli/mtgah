@@ -1,8 +1,6 @@
 # import the necessary packages
 import numpy as np
-import imutils
 import cv2
-import cv2.aruco as aruco
 import sys
 
 def detect(image, marker):

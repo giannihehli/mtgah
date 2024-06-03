@@ -2,8 +2,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
-import re
 
 # Importing user-defined modules
 
@@ -21,23 +19,25 @@ def plottotal(data_path, df_tot):
     for i, roughness in enumerate(unique_roughness):
         # Filter the DataFrame to only include rows with that roughness value
         df_filtered = df_tot[df_tot['roughness'] == roughness]
-    
-        # Filter data for 'pa' direction
-        df_pa = df_filtered[df_filtered['direction'] == 'pa']
-        axis[i//2, i%2].plot(df_pa['height']/(df_pa['diameter']/2), 
-                            0.1*df_pa['d_vertical']/df_pa['diameter'], 
+
+        """ color = 'bo' if roughness == 0 else 'ro' if roughness == 4 else 'go'
+        print('color: ', color, type(color))
+        print('roughness: ', roughness, type(roughness))
+        print("bools: ", roughness == 0, roughness == 2, roughness == 4) """
+
+        # Plot data roughness direction each
+        axis[i//2, i%2].plot(df_filtered['height']/(df_filtered['diameter']/2), 
+                            (0.1*df_filtered['d_vertical']-df_filtered['diameter'])/df_filtered['diameter'], 
                             'bo' if roughness == 0 else 'ro' if roughness == 4 else 'go', 
                             label='parallel to roughness',
                             fillstyle = 'none')
-
-        # Filter data for 'pe' direction
-        df_pe = df_filtered[df_filtered['direction'] == 'pe']
-        axis[i//2, i%2].plot(df_pe['height']/(df_pe['diameter']/2), 
-                            0.1*df_pe['d_horizontal']/df_pe['diameter'], 
-                            'bx' if roughness == 0 else 'rx' if roughness == 4 else 'gx', 
+        axis[i//2, i%2].plot(df_filtered['height']/(df_filtered['diameter']/2), 
+                            (0.1*df_filtered['d_horizontal']-df_filtered['diameter'])/df_filtered['diameter'], 
+                            'bs' if roughness == 0 else 'rs' if roughness == 4 else 'gs', 
                             label='perpendicular to roughness',
                             fillstyle = 'none')
         
+        # Plot the total diameter comparison
         axis[1, 1].plot(df_filtered['height']/(df_filtered['diameter']/2),
                         np.where(df_filtered['direction'] == 'pa', df_filtered['d_horizontal']/df_filtered['d_vertical'], df_filtered['d_vertical']/df_filtered['d_horizontal']),
                         'b^' if roughness == 0 else 'r^' if roughness == 4 else 'g^',	 
@@ -45,12 +45,12 @@ def plottotal(data_path, df_tot):
     
         axis[i//2, i%2].set_title(f'Roughness: {roughness} mm')
         axis[i//2, i%2].set_xlabel('aspect ratio = initial height / initial radius')
-        axis[i//2, i%2].set_ylabel('measured diameter / initial diameter')
+        axis[i//2, i%2].set_ylabel('measured radius - initial \nradius / initial radius')
         axis[i//2, i%2].legend()
     
     axis[1, 1].set_title(f'Roughness comparsion')
     axis[1, 1].set_xlabel('aspect ratio = initial height / initial radius')
-    axis[1, 1].set_ylabel('final diameter\northogonal to roughness / final diameter\nparallel to roughness')
+    axis[1, 1].set_ylabel('final radius\northogonal to roughness / final radius\nparallel to roughness')
     axis[1, 1].legend()
 
     # Save the figure before showing it

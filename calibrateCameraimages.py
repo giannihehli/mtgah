@@ -9,7 +9,6 @@ import os
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from pycalib.plot import plotCamera
-from termcolor import colored
 
 def calibrate(camera, data_path):
 
@@ -64,7 +63,7 @@ def calibrate(camera, data_path):
         # If a chessboard was found, let"s collect image/corner points
         if ret == True:
             count_found += 1
-            print(colored("Detection successful : ", "green"), os.path.basename(image_path))
+            print("Detection successful : ", os.path.basename(image_path))
             # Add the points in 3D that we just discovered
             objpoints.append(objp)
             
@@ -97,7 +96,7 @@ def calibrate(camera, data_path):
         
         else:     # if not found
             count_failed += 1
-            print(colored("Detection failed : ", "red"), os.path.basename(image_path))
+            print("Detection failed : ", os.path.basename(image_path))
             continue 
 
     # Destroy any open CV windows

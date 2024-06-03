@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import glob
 import os
 
 def undistort(K, d, image):
