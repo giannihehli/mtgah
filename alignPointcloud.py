@@ -110,7 +110,7 @@ def transform(cloud, M):
     return cloud_corr
 
 def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
-    # Compute the number of bins for the x and y axes
+    # Compute the number of bins for the x and y axes in [m]
     x_bins = np.arange(10000*x_min, 10000*x_max, 10000*raster_size)
     y_bins = np.arange(10000*y_min, 10000*y_max, 10000*raster_size)
 
@@ -129,19 +129,21 @@ def export(max_z, x_edges, y_edges, raster_size, output_path):
     header = f'# Units: 0.1mm\n'
     header = f'ncols {max_z.shape[0]}\n'
     header += f'nrows {max_z.shape[1]}\n'
-    header += f'xllcorner {min(x_edges)}\n'
-    header += f'yllcorner {min(y_edges)}\n'
+    header += f'xllcorner {min(x_edges/10000)}\n'
+    header += f'yllcorner {min(y_edges/10000)}\n'
     header += f'cellsize {raster_size}\n'
     header += f'NODATA_value -9999\n'
+
+    print(header)
 
     # Rotate the 2D array 90 degrees counterclockwise to match the orientation after exporting
     rotated_max_z = np.rot90(max_z, 1)
 
-    # Flatten the rotated 2D array and replace NaN values with the NODATA value
-    flat_max_z = np.where(np.isnan(rotated_max_z), -9999, rotated_max_z).flatten()
-
     # Convert all z-values to [m]
-    flat_max_z = flat_max_z / 10000
+    meters_max_z = rotated_max_z / 10000
+
+    # Flatten the rotated 2D array and replace NaN values with the NODATA value
+    flat_max_z = np.where(np.isnan(meters_max_z), -9999, rotated_max_z).flatten()
 
     # Write the header and the flattened array to the ASC file
     with open(output_path, 'w') as f:
@@ -241,16 +243,16 @@ if __name__ == '__main__':
     raster_size = 0.001
 
     # Define raster min and max values in m
-    raster_min_x = 0
-    raster_max_x = 0.6
-    raster_min_y = 0
-    raster_max_y = 0.6
+    raster_min_x = 0.1
+    raster_max_x = 0.5
+    raster_min_y = 0.1
+    raster_max_y = 0.5
 
     # Rasterise the corrected point cloud
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
 
     # Define the output path
-    output_path = f'G:/data/pipeline_tests/rasters/{exp}_ynew.asc'
+    output_path = f'G:/data/pipeline_tests/rasters/{exp}_smallnew.asc'
 
     print(f'max_z shape: {max_z.shape}')
     print(f'x_edges shape: {x_edges.shape}')

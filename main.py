@@ -31,8 +31,8 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define path with data to be analysed
-    data_path = 'G:/data/pipeline_tests/'
-#    data_path = 'G:/experiments/20240531/'
+#    data_path = 'G:/data/pipeline_tests/'
+    data_path = 'G:/experiments/20240604/'
 
     #######################################
     # CAMERA OPTIONS
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
     # Define filter threshold for binary thresholding (90)
-    filter_threshold = 110 # [px] Threshold value for binary thresholding - the lower the number the less points will be black
+    filter_threshold = 100 # [px] Threshold value for binary thresholding - the lower the number the less points will be black
 
     # Define ROI width for measurement
     search_width = 600 # [px] Width of the ROI for distance measurement
@@ -66,9 +66,9 @@ if __name__ == '__main__':
     raster_size = 0.001 # [m] Size of one bin in the raster in x and y direction
 
     # Define raster min and max values in [m] for x and y direction
-    raster_min_x = 0.1 # [m] Minimum value of the raster in x direction
-    raster_max_x = 0.5 # [m] Maximum value of the raster in x direction
-    raster_min_y = 0.1 # [m] Minimum value of the raster in y direction
+    raster_min_x = 0 # [m] Minimum value of the raster in x direction
+    raster_max_x = 0.6 # [m] Maximum value of the raster in x direction
+    raster_min_y = 0# [m] Minimum value of the raster in y direction
     raster_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
     ############################################################################################################
@@ -134,12 +134,12 @@ if __name__ == '__main__':
 
         # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
         match basis:
-            case 'r0-pa':
+            case 'r0-pe': # changed from earlier pa
                 pattern = 100 * np.array([[0.9, 0.84, 0], [8.96, 0.82, 0], [8.95, 8.92, 0], [0.87, 8.93, 0],
                                         [50.87, 0.82, 0], [58.95, 0.82, 0], [58.9, 8.91, 0], [50.83, 8.9, 0],
                                         [50.74, 51.07, 0], [58.83, 51.02, 0], [58.88, 59.1, 0], [50.8, 59.14, 0],
                                         [0.86, 51.02, 0], [8.94, 51.07, 0], [8.88, 59.17, 0], [0.79, 59.11, 0]])
-            case 'r0-pe':
+            case 'r0-pa': # changed from earlier pe
                 pattern = 100 * np.array([[59.07, 0.87, 0], [59.18, 8.96, 0], [51.07, 8.95, 0], [50.98, 0.86, 0],
                                         [59.18, 50.87, 0], [59.13, 58.93, 0], [51.06, 58.9, 0], [51.09, 50.82, 0],
                                         [8.91, 50.74, 0], [8.96, 58.83, 0], [0.88, 58.88, 0], [0.85, 50.8, 0],

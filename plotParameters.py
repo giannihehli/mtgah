@@ -45,7 +45,7 @@ def plotparams(data_path, exp, df, layout, basis, direction, radius, height, dia
             vertical_diameter = 'Perpendicular diameter'
 
     # Define subplots
-    fig, axis = plt.subplots(2, 2, sharex = False, figsize = (10, 10))
+    fig, axis = plt.subplots(2, 2, sharex = False, figsize = (20, 10))
     fig.suptitle(f'\n {layout} mount with {basis} mm roughness basis, {2*radius} mm cylinder and {height} mm sand height', fontsize=16)
     fig.text(0.5, -0.01, f'Final {horizontal_diameter}: {round(0.1 * diameter_horizontal, 1)} mm \n Final {vertical_diameter}: {round(0.1 * diameter_vertical, 1)} mm \n', ha='center')
     plt.rc('legend',fontsize=5) # using a size in points
