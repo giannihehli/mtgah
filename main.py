@@ -31,8 +31,8 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define path with data to be analysed
-#    data_path = 'G:/data/pipeline_tests/'
-    data_path = 'G:/experiments/20240604/'
+    data_path = 'G:/data/pipeline_tests/'
+#    data_path = 'G:/experiments/20240604/'
 
     #######################################
     # CAMERA OPTIONS
@@ -184,13 +184,13 @@ if __name__ == '__main__':
                 print('Directory ', output_folder, ' already exists - images saved again.')
 
         # Initialize lists for measured distances per experiment
-        distance_right = []
-        distance_left = []
-        distance_bottom = []
-        velocity_right = [0]
-        velocity_left = [0]
-        velocity_bottom = [0]
-        time_frame = []
+        points_right = np.empty(0)
+        points_left = np.empty(0)
+        points_bottom = np.empty(0)
+        velocity_right = np.array(0)
+        velocity_left = np.array(0)
+        velocity_bottom = np.array(0)
+        time_frame = np.empty(0)
 
         for frame in range(frame_count):
             # Start time measurement
@@ -260,16 +260,16 @@ if __name__ == '__main__':
                 cv2.imwrite(f'{output_folder}{frame+100}{img_out}.png', locals().get(f'img{img_out}'))
 
             # Append measured parameters to lists
-            distance_right.append(x_right)
-            distance_left.append(x_left)
-            distance_bottom.append(y_bottom)
-            time_frame.append(frame/fps)
+            points_right = np.append(points_right, x_right)
+            points_left = np.append(points_left, x_left)
+            points_bottom = np.append(points_bottom, y_bottom)
+            time_frame = np.append(time_frame, frame/fps)
 
             # Calculate velocity with conversion factor to [mm/s]
             if frame >= 1:
-                velocity_right.append((distance_right[frame]-distance_right[frame-1]) * 0.1 * fps)
-                velocity_left.append((distance_left[frame]-distance_left[frame-1]) * -0.1 * fps)
-                velocity_bottom.append((distance_bottom[frame] - distance_bottom[frame-1]) * 0.1 * fps)
+                velocity_right = np.append(velocity_right, (points_right[frame]-points_right[frame-1]) * 0.1 * fps)
+                velocity_left = np.append(velocity_left, (points_left[frame]-points_left[frame-1]) * -0.1 * fps)
+                velocity_bottom = np.append(velocity_bottom, (points_bottom[frame] - points_bottom[frame-1]) * 0.1 * fps)
 
             # Show and output last frame as .tiff file
             if frame == frame_count-1:
@@ -311,20 +311,27 @@ if __name__ == '__main__':
         cap.release()
 
         # Get final diameter
-        diameter_vertical = distance_bottom[-1] - distance_top
-        diameter_horizontal = distance_right[-1] - distance_left[-1]
+        diameter_vertical = 0.1 * (points_bottom[-1] - distance_top)
+        diameter_horizontal = 0.1 * (points_right[-1] - points_left[-1])
 
         # Get initial distance
-        distance_right_cor = min(distance_right)
-        distance_left_cor = max(distance_left)
-        distance_bottom_cor = min(distance_bottom)
+        points_right_cor = min(points_right)
+        points_left_cor = max(points_left)
+        points_bottom_cor = min(points_bottom)
 
         # Set initial distance to zero with conversion factor to [mm]
-        distance_right = [0.1 * (distance - distance_right_cor) for distance in distance_right]
-        distance_left = [-0.1 * (distance - distance_left_cor) for distance in distance_left]
-        distance_bottom = [0.1 * (distance - distance_bottom_cor) for distance in distance_bottom]
-        radius_horizontal = [0.5 * (distance_right[i] + distance_left[i]) for i in range(len(distance_right))]
-        velocity_horizontal = [0.5 * (velocity_right[i] + velocity_left[i]) for i in range(len(velocity_right))]
+        distance_right = 0.1 * (points_right - points_right_cor)
+        distance_left = -0.1 * (points_left - points_left_cor)
+        distance_bottom = 0.1 * (points_bottom - points_bottom_cor)
+        distance_horizontal = 0.5 * (distance_right + distance_left)
+        velocity_horizontal = 0.5 * (velocity_right + velocity_left)
+
+        # Calculate radius from ongoing measurement or from last frame for vertical data in [mm]
+        radius_horizontal = 0.1 * (points_right - points_left)/2
+        radius_vertical = (distance_bottom + (diameter_vertical/2 - max(distance_bottom)))
+
+        print(f'Mean difference between distance horizontal and radius horizontal: {np.mean(np.array(distance_horizontal) - np.array(radius_horizontal))}')
+        print(f'Mean difference between distance vertical and radius vertical: {np.mean(np.array(distance_bottom) - np.array(radius_vertical))}')
 
         # Filter velocity values with mean filter
         filter_size = 29
@@ -336,8 +343,9 @@ if __name__ == '__main__':
         # Save measured parameters to dataframe
         dict = {'time': time_frame, 'distance_left': distance_left, 'distance_right': distance_right, 
                 'velocity_left': velocity_left, 'velocity_right': velocity_right, 
-                'radius_horizontal': radius_horizontal, 'velocity_horizontal': velocity_horizontal, 
-                'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom}
+                'distance_horizontal': distance_horizontal, 'velocity_horizontal': velocity_horizontal, 
+                'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom,
+                'radius_horizontal': radius_horizontal, 'radius_vertical': radius_vertical}
         df = pd.DataFrame(dict)
     
         # Plot measured parameters
@@ -352,6 +360,8 @@ if __name__ == '__main__':
 
         # Save raw parameters to csv file
         df.to_csv(f'{data_path}camera/raw_data/{exp}_raw.csv')
+        
+        print(f'Saved camera measurements at {data_path}camera/raw_data/{exp}_raw.csv.')
 
         # Append measured parameters to total list
         layout_tot.append(layout)
@@ -410,6 +420,8 @@ if __name__ == '__main__':
 
         # Export pointcloud data as ascii file
         export(max_z, x_edges, y_edges, raster_size, ptc_output)
+
+        print(f'Saved pointcloud raster at {ptc_output}.')
 
     # Save total measured parameters to dataframe
     dict_tot = {'layout': layout_tot, 'basis': basis_tot, 'roughness': roughness_tot, 'direction': direction_tot, 'diameter': diameter_tot, 

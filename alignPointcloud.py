@@ -134,8 +134,6 @@ def export(max_z, x_edges, y_edges, raster_size, output_path):
     header += f'cellsize {raster_size}\n'
     header += f'NODATA_value -9999\n'
 
-    print(header)
-
     # Rotate the 2D array 90 degrees counterclockwise to match the orientation after exporting
     rotated_max_z = np.rot90(max_z, 1)
 

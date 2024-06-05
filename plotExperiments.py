@@ -73,7 +73,7 @@ def plottotal(data_path, df_tot):
         # Set plot title and labels
         axis[i//2, i%2].set_title(f'Roughness: {roughness} mm')
         axis[i//2, i%2].set_xlabel('aspect ratio = initial height / initial radius')
-        axis[i//2, i%2].set_ylabel('measured radius - initial \nradius / initial radius')
+        axis[i//2, i%2].set_ylabel('(final radius - initial \nradius) / initial radius')
         axis[i//2, i%2].legend()
 
     # Set plot title and labels
