@@ -130,7 +130,12 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
     return max_z, x_edges, y_edges
 
 def convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y):
-    
+    # Change the indeces from [m] to pixel coordinates [0.1mm]
+    img_min_x = int(10000*img_min_x)
+    img_max_x = int(10000*img_max_x)
+    img_min_y = int(10000*img_min_y)
+    img_max_y = int(10000*img_max_y)
+
     # Rotate the 2D array 90 degrees clockwise
     rotated_img_thr = np.rot90(img_thr, -1)
 
@@ -141,8 +146,8 @@ def convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y):
     img_z = np.where(cut_img_thr == 0, np.nan, 0)
 
     # Define x and y edges of raster by adjustng to raster size
-    img_x = np.linspace(10000*img_min_x, 10000*img_max_x-1, num = img_max_x - img_min_x)
-    img_y = np.linspace(10000*img_min_y, 10000*img_max_y-1, num = img_max_y - img_min_y)
+    img_x = np.linspace(img_min_x, img_max_x-1, num = img_max_x - img_min_x)
+    img_y = np.linspace(img_min_y, img_max_y-1, num = img_max_y - img_min_y)
 
     return img_z, img_x, img_y
 

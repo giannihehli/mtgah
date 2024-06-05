@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import glob
+import os
 
 # Importing user-defined modules
 
@@ -27,11 +29,11 @@ def plottotal(data_path, df_tot):
 
         # Plot data roughness direction each
         axis[i//2, i%2].plot(df_filtered['height']/(df_filtered['diameter']/2), 
-                            (0.1*df_filtered['d_vertical']-df_filtered['diameter'])/df_filtered['diameter'], 
+                            (df_filtered['d_vertical']-df_filtered['diameter'])/df_filtered['diameter'], 
                             'bo' if roughness == 0 else 'ro' if roughness == 4 else 'go', 
                             label='parallel to roughness')
         axis[i//2, i%2].plot(df_filtered['height']/(df_filtered['diameter']/2), 
-                            (0.1*df_filtered['d_horizontal']-df_filtered['diameter'])/df_filtered['diameter'], 
+                            (df_filtered['d_horizontal']-df_filtered['diameter'])/df_filtered['diameter'], 
                             'bs' if roughness == 0 else 'rs' if roughness == 4 else 'gs', 
                             label='perpendicular to roughness')
         
@@ -42,8 +44,8 @@ def plottotal(data_path, df_tot):
                         label=f'{roughness} mm roughness perpendicular')
         
         # Get the minimum and maximum x-values
-        x_min = df_filtered['height'].min() / (df_filtered['diameter'].min() / 2)
-        x_max = df_filtered['height'].max() / (df_filtered['diameter'].max() / 2)
+        x_min = min(df_filtered['height']/(df_filtered['diameter']/2))
+        x_max = max((df_filtered['height']/(df_filtered['diameter']/2)))
 
         # Create an array of x-values for the guide functions
         x_values_1 = np.linspace(x_min, 1.7, 100)
@@ -82,6 +84,13 @@ def plottotal(data_path, df_tot):
     axis[1, 1].set_ylabel('final radius\northogonal to roughness / final radius\nparallel to roughness')
     axis[1, 1].legend()
 
+    # Make directory for graphs and save plot
+    try:
+        os.mkdir(f'{data_path}graphs/')
+        print('Directory graphs created and plot saved as pdf.')
+    except FileExistsError:
+        print('Directory graphs already exists but plot saved as pdf.')
+
     # Save the figure before showing it
     plt.savefig(f'{data_path}graphs/total.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
 
@@ -96,8 +105,31 @@ if __name__ == "__main__":
 #    data_path = 'G:/data/tests/sony_hs/camera/'
 #    df_tot = pd.read_csv('G:/data/tests/sony_hs/camera/raw_data/total_raw - Kopie.csv')
 
-    # Define path with data to be analysed with real data
-    data_path = 'G:/experiments/20240531/camera/'
-    df_tot = pd.read_csv(f'{data_path}raw_data/total_raw.csv')
+    # Define path with data to be analysed with real data - from one test day with defined folder structure
+#    data_path = 'G:/experiments/combined/'
+#    df_tot = pd.read_csv(f'{data_path}camera/raw_data/total_raw.csv')
+
+    # Define the data path for analysing multiple test days from different csv files
+    data_path = 'G:/experiments/total/'
+
+    # Get a list of all CSV files in the directory
+    csv_files = glob.glob(f'{data_path}*.csv')
+
+    # Initialize an empty list to store the dataframes
+    dfs = []
+
+    # Loop through the list of CSV files
+    for i, csv_file in enumerate(csv_files):
+        # Load the CSV file into a DataFrame
+        df = pd.read_csv(csv_file, usecols=lambda x: x != 0)
+        # Append the DataFrame to the list
+        dfs.append(df)
+
+    print(f'dfs: {dfs}')
+
+    # Concatenate all the dataframes in the list into a single DataFrame
+    df_tot = pd.concat(dfs, ignore_index=True)
+
+    print('df_tot: ', df_tot)
 
     plottotal(data_path, df_tot)

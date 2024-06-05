@@ -32,8 +32,9 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define path with data to be analysed
-    data_path = 'G:/data/pipeline_tests/'
-#    data_path = 'G:/experiments/20240604/'
+#    data_path = 'G:/data/pipeline_tests/'
+    data_path = 'G:/experiments/20240604/'
+#    data_path = 'G:/experiments/combined/'
 
     #######################################
     # CAMERA OPTIONS
@@ -76,12 +77,23 @@ if __name__ == '__main__':
     raster_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
     # Define raster size in [m] for rasterization of last frame
-    img_min_x = 0.1 # [m] Minimum value of the raster in x direction
-    img_max_x = 0.5 # [m] Maximum value of the raster in x direction
-    img_min_y = 0.1 # [m] Minimum value of the raster in y direction
-    img_max_y = 0.5 # [m] Maximum value of the raster in y direction
+    img_min_x = 0 # [m] Minimum value of the raster in x direction
+    img_max_x = 0.6 # [m] Maximum value of the raster in x direction
+    img_min_y = 0 # [m] Minimum value of the raster in y direction
+    img_max_y = 0.6 # [m] Maximum value of the raster in y direction
 
     ############################################################################################################
+    
+    # Define time keepig variables
+    time_calibration = 0
+    time_measurement = 0
+    time_calculation = 0
+    time_plotting = 0
+    time_ptc_img = 0
+    time_ptc_scan = 0
+
+    # Get start time
+    ts_start = time.time()
 
     # Calibrate camera
     if os.path.isfile(f'{data_path}camera/calibration/K.txt'):
@@ -97,19 +109,24 @@ if __name__ == '__main__':
         d = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/d.txt')  # distortion coefficients[5x1]
 
     # Initialize lists for measured distances in every experiment
+    exp_ids = []
     layout_tot = []
     basis_tot = []
     roughness_tot = []
     direction_tot = []
     diameter_tot = []
     height_tot = []
-    attempt_tot = []
     d_vertical_tot = []
     d_horizontal_tot = []
 
+
+    # Get calibration timestamp
+    ts_calibration = time.time()
+    time_calibration = ts_calibration - ts_start
+
     # Loop through all videos in data path
     for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
-            # Check if video is already processed and skip if so
+        # Check if video is already processed and skip if so
         if vid_path.split('\\')[-1] == 'calibration.MP4':
             print('Calibration video - skip processing.')
             continue    
@@ -134,7 +151,7 @@ if __name__ == '__main__':
         direction = basis.split('-')[1]
         diameter = exp.split('_')[2]
         height = exp.split('_')[3]
-        attempt = exp.split('_')[4]
+        exp_id = exp.split('_')[4]
 
         # Define experiment layout
         if layout == 'f':
@@ -174,10 +191,7 @@ if __name__ == '__main__':
                                         [59.0, 50.39, 0], [58.93, 58.46, 0], [50.83, 58.41, 0], [50.92, 50.32, 0],
                                         [8.9, 50.33, 0], [8.92, 58.42, 0], [0.89, 58.48, 0], [0.83, 50.4, 0],
                                         [8.97, 1.23, 0], [8.98, 9.28, 0], [0.87, 9.29, 0], [0.89, 1.24, 0]])
-            
-        # Define initial radius according to diameter         
-        r_initial = int(diameter[1:])/2
-
+        
         # Define initial height according to height
         h_initial = int(height[1:])
                 
@@ -202,10 +216,11 @@ if __name__ == '__main__':
         velocity_bottom = np.array(0)
         time_frame = np.empty(0)
 
-        for frame in range(frame_count):
-            # Start time measurement
-            timestamp_start = time.time()
+        # Start time measurement
+        ts_measurement_start = time.time()
 
+        for frame in range(frame_count):
+            
             # Load image
             print(f'Analyse frame {frame}')
             ret, image = cap.read()
@@ -286,7 +301,9 @@ if __name__ == '__main__':
 
             # Show and output last frame as .tiff file
             if frame == frame_count-1:
-
+                # Stop time measurement
+                ts_measurement_end = time.time()
+                
                 # Measure the top distance in last frame    
                 distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
 
@@ -315,21 +332,26 @@ if __name__ == '__main__':
             timestamp_end = time.time()
 
             # Calculate needed time per frame
-            time_per_frame = timestamp_end - timestamp_start
+            time_per_frame = timestamp_end - ts_measurement_start
 
             # Print time per frame
 #            print(f'Time per frame: {time_per_frame} s')
+
+        # Stop time image pointcloud
+        ts_pointcloud_img = time.time()        
+        time_measurement += ts_measurement_end - ts_measurement_start
+        time_ptc_img += ts_pointcloud_img - ts_measurement_end
 
         # Release video capture
         cap.release()
 
         print('Released video - starting with data processing.')
 
-        # Get final diameter
+        # Get final diameter in [mm]
         diameter_vertical = 0.1 * (points_bottom[-1] - distance_top)
         diameter_horizontal = 0.1 * (points_right[-1] - points_left[-1])
 
-        # Get initial distance
+        # Get initial distance in [0.1mm]
         points_right_cor = min(points_right)
         points_left_cor = max(points_left)
         points_bottom_cor = min(points_bottom)
@@ -360,11 +382,16 @@ if __name__ == '__main__':
                 'velocity_left': velocity_left, 'velocity_right': velocity_right, 
                 'distance_horizontal': distance_horizontal, 'velocity_horizontal': velocity_horizontal, 
                 'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom,
-                'radius_horizontal': radius_horizontal, 'radius_vertical': radius_vertical}
+                'radius_horizontal': radius_horizontal, 'radius_vertical': radius_vertical,
+                'diameter_horizontal': diameter_horizontal, 'diameter_vertical': diameter_vertical}
         df = pd.DataFrame(dict)
-    
+
+        # Stop time calculation
+        ts_calculation = time.time()
+        time_calculation += ts_calculation - ts_measurement_end
+
         # Plot measured parameters
-        plotparams(data_path, exp, df, layout, basis, direction, r_initial, h_initial, diameter_vertical, diameter_horizontal)
+        plotparams(data_path, exp, df, layout, basis, direction, diameter[1:], h_initial, diameter_vertical, diameter_horizontal)
 
         # Make folder for raw data
         try:
@@ -377,17 +404,21 @@ if __name__ == '__main__':
         df.to_csv(f'{data_path}camera/raw_data/{exp}_raw.csv')
 
         # Append measured parameters to total list
+        exp_ids.append(exp_id)
         layout_tot.append(layout)
         basis_tot.append(basis)
         roughness_tot.append(roughness)
         direction_tot.append(direction)
         diameter_tot.append(int(diameter[1:]))
         height_tot.append(int(height[1:]))
-        attempt_tot.append(attempt)
         d_vertical_tot.append(diameter_vertical)
         d_horizontal_tot.append(diameter_horizontal)
 
         print(f'Saved camera measurements at {data_path}camera/raw_data/{exp}_raw.csv - starting with orientation of pointcloud.')
+
+        # Stop time plotting
+        ts_plotting = time.time()
+        time_plotting += ts_plotting - ts_calculation
 
         # Load the .ply file of the processed experiment
         cloud = PyntCloud.from_file(f'{data_path}scanner/{exp}.ply')
@@ -438,10 +469,17 @@ if __name__ == '__main__':
 
         print(f'Saved pointcloud raster at {ptc_output}.')
 
+        # Stop time pointcloud pointcloud
+        ts_pointcloud_ptc = time.time()
+        time_ptc_scan += ts_pointcloud_ptc - ts_plotting
+
     # Save total measured parameters to dataframe
-    dict_tot = {'layout': layout_tot, 'basis': basis_tot, 'roughness': roughness_tot, 'direction': direction_tot, 'diameter': diameter_tot, 
-                'height': height_tot, 'attempt': attempt_tot, 'd_vertical': d_vertical_tot, 'd_horizontal': d_horizontal_tot}
+    dict_tot = {'id': exp_ids, 'layout': layout_tot, 'basis': basis_tot, 'roughness': roughness_tot, 'direction': direction_tot, 'diameter': diameter_tot, 
+                'height': height_tot, 'd_vertical': d_vertical_tot, 'd_horizontal': d_horizontal_tot}
     df_tot = pd.DataFrame(dict_tot)
+
+    # Sort df_tot by 'roughness' in increasing order
+    df_tot = df_tot.sort_values(by=['roughness', 'diameter'])
 
     # Plot total measured parameters
     plottotal(data_path, df_tot)
@@ -449,5 +487,15 @@ if __name__ == '__main__':
     # Save total measured parameters to csv file
     df_tot.to_csv(f'{data_path}camera/raw_data/total_raw.csv')
 
-    # Close all open windows
-    plt.close('all')
+    # Get end time
+    ts_end = time.time()
+    time_plotting += ts_end - ts_pointcloud_ptc
+
+    # Print all times
+    print(f'Total time for calibration: {time_calibration} s')
+    print(f'Total time for measurement: {time_measurement} s')
+    print(f'Total time for calculation: {time_calculation} s')
+    print(f'Total time for plotting: {time_plotting} s')
+    print(f'Total time for pointcloud image: {time_ptc_img} s')
+    print(f'Total time for pointcloud scan: {time_ptc_scan} s')
+    print(f'Total time: {ts_end - ts_start} s')
