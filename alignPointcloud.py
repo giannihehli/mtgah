@@ -129,6 +129,12 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
 
     return max_z, x_edges, y_edges
 
+    # Define raster size in [m] for rasterization of last frame in raster frame
+    img_min_x = 0.3 # [m] Minimum value of the raster in x direction
+    img_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    img_min_y = 0.3 # [m] Minimum value of the raster in y direction
+    img_max_y = 0.6 # [m] Maximum value of the raster in y direction
+    
 def convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y):
     # Change the indeces from [m] to pixel coordinates [0.1mm]
     img_min_x = int(10000*img_min_x)
@@ -140,7 +146,7 @@ def convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y):
     rotated_img_thr = np.rot90(img_thr, -1)
 
     # Get the needed part of the image
-    cut_img_thr = rotated_img_thr[img_min_y:img_max_y, img_min_x:img_max_x]
+    cut_img_thr = rotated_img_thr[img_min_x:img_max_x, img_min_y:img_max_y]
 
     # Define the z-values of the image and set the background to NaN
     img_z = np.where(cut_img_thr == 0, np.nan, 0)
@@ -287,14 +293,14 @@ if __name__ == '__main__':
     # Define raster size in m
     raster_size = 0.001
 
-    # Define raster min and max values in m
-    raster_min_x = 0.1
-    raster_max_x = 0.5
-    raster_min_y = 0.1
-    raster_max_y = 0.5
+    # Define raster size in [m] for rasterization of last frame in raster frame
+    img_min_x = 0 # [m] Minimum value of the raster in x direction
+    img_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    img_min_y = 0 # [m] Minimum value of the raster in y direction
+    img_max_y = 0.3 # [m] Maximum value of the raster in y direction
 
     # Rasterise the corrected point cloud
-    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
+    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, img_min_x, img_max_x, img_min_y, img_max_y)
 
     # Define the output path
     output_path = f'G:/data/pipeline_tests/rasters/{exp}_raster.asc'

@@ -6,7 +6,7 @@ import time
 import numpy as np
 import pandas as pd
 from pyntcloud import PyntCloud
-import matplotlib.pyplot as plt
+
 
 # IMPORT USER-DEFINED MODULES
 from calibrateCameravideo import calibratevideo
@@ -32,11 +32,12 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define path with data to be analysed
-    data = 'G:/data/'
-#    data = 'G:/experiments/'
+#    data = 'G:/data/'
+    data = 'G:/experiments/'
 
     # Define day (or name) of experiments that should be analysed
-    day = 'pipeline_tests'
+#    day = 'pipeline_tests'
+    day = '20240531'
 #    day = '20240604'
 #    day = 'combined'
 
@@ -74,17 +75,17 @@ if __name__ == '__main__':
     # Define raster size in m for rasterization of scanned pointcloud
     raster_size = 0.001 # [m] Size of one bin in the raster in x and y direction
 
-    # Define raster min and max values in [m] for x and y direction
+    # Define raster min and max values in [m] for x and y direction in raster frame
     raster_min_x = 0.1 # [m] Minimum value of the raster in x direction
     raster_max_x = 0.5 # [m] Maximum value of the raster in x direction
     raster_min_y = 0.1 # [m] Minimum value of the raster in y direction
     raster_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
-    # Define raster size in [m] for rasterization of last frame
-    img_min_x = 0 # [m] Minimum value of the raster in x direction
+    # Define raster size in [m] for rasterization of last frame in raster frame
+    img_min_x = 0.1 # [m] Minimum value of the raster in x direction
     img_max_x = 0.5 # [m] Maximum value of the raster in x direction
-    img_min_y = 0.2 # [m] Minimum value of the raster in y direction
-    img_max_y = 0.3 # [m] Maximum value of the raster in y direction
+    img_min_y = 0.1 # [m] Minimum value of the raster in y direction
+    img_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
     ############################################################################################################
     
@@ -133,23 +134,31 @@ if __name__ == '__main__':
 
     # Loop through all videos in data path
     for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
-        # Check if video is already processed and skip if so
+        # Check if video is calibration and skip if so
         if vid_path.split('\\')[-1] == 'calibration.MP4':
             print('Calibration video - skip processing.')
-            continue    
+            continue
+
+        # Get experiment name
+        exp = os.path.splitext(os.path.basename(vid_path))[0]
 
         # Load video in video capture
         cap = cv2.VideoCapture(vid_path)
         
-        # Get experiment name
-        exp = os.path.splitext(os.path.basename(vid_path))[0]
-        
-        # Print processed experiment
-        print(f'Processing experiment: {exp}')
-
         # Get needed video information
         fps = cap.get(cv2.CAP_PROP_FPS) # [frames/s]
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) # [frames]
+
+        # Check if video is already processed
+        video_check = os.path.isfile(f'{data_path}camera/raw_data/{exp}_raw.csv')
+
+        # If video is already processed, jump to last frame
+        if video_check:
+            print(f'Experiment {exp} already processed - jump to last image.')
+            # Set the current position to the last frame
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count - 1)
+        else:
+            print(f'Processing experiment {exp}.')
 
         # Define used parameters according to experiment name
         layout = exp.split('_')[0]
@@ -227,7 +236,6 @@ if __name__ == '__main__':
         ts_measurement_start = time.time()
 
         for frame in range(frame_count):
-            
             # Load image
             print(f'Analyse frame {frame}')
             ret, image = cap.read()
@@ -294,6 +302,10 @@ if __name__ == '__main__':
                 print(f'Saving img{img_out}')
                 cv2.imwrite(f'{output_folder}{frame+100}{img_out}.png', locals().get(f'img{img_out}'))
 
+            # If video already processed, stop here
+            if video_check:
+                break
+
             # Append measured parameters to lists
             points_right = np.append(points_right, x_right)
             points_left = np.append(points_left, x_left)
@@ -305,104 +317,99 @@ if __name__ == '__main__':
                 velocity_right = np.append(velocity_right, (points_right[frame]-points_right[frame-1]) * 0.1 * fps)
                 velocity_left = np.append(velocity_left, (points_left[frame]-points_left[frame-1]) * -0.1 * fps)
                 velocity_bottom = np.append(velocity_bottom, (points_bottom[frame] - points_bottom[frame-1]) * 0.1 * fps)
+        
+        # Measure the top distance in last frame    
+        distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
 
-            # Show and output last frame as .tiff file
-            if frame == frame_count-1:
-                # Stop time measurement
-                ts_measurement_end = time.time()
-                
-                # Measure the top distance in last frame    
-                distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
+        # Define output path for last frame
+        frame_output = f'{data_path}end frames/'
 
-                # Define output path for last frame
-                frame_output = f'{data_path}end frames/'
+        try: 
+            os.mkdir(frame_output)
+            print('Directory end frames created and last frame saved as threshold.')
+        except FileExistsError:
+            print('Directory end frames already exists but last frame saved as threshold.')
 
-                try: 
-                    os.mkdir(frame_output)
-                    print('Directory end frames created and last frame saved as threshold.')
-                except FileExistsError:
-                    print('Directory end frames already exists but last frame saved as threshold.')
+        # Save last frame as .tiff file
+        cv2.imwrite(f'{frame_output}{exp}_endframe.tiff', img_thr)
 
-                # Try making the directory for rasters
-                try:
-                    os.mkdir(f'{data_path}rasters')
-                    print(f'Directory rasters created. All rasters saved there.')
-                except FileExistsError:
-                    pass
+        # Stop time measurement
+        ts_measurement_end = time.time()
 
-                # Save last frame as .tiff file
-                cv2.imwrite(f'{frame_output}{exp}_endframe.tiff', img_thr)
+        # Try making the directory for rasters
+        try:
+            os.mkdir(f'{data_path}rasters')
+            print(f'Directory rasters created. All rasters saved there.')
+        except FileExistsError:
+            pass
+        
+        # Convert last frame to needed data structure for asc export
+        img_z, img_x, img_y = convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y)
 
-                # Convert last frame to needed data structure for asc export
-                img_z, img_x, img_y = convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y)
+        # Define image raster size in [m]
+        raster_size_img = 0.0001 # [m] for image with 6000 pixels with the 0.6m basis
 
-                # Define image raster size in [m]
-                raster_size_img = 0.0001 # [m] for image with 6000 pixels with the 0.6m basis
+        # Export last frame as ascii file
+        export(img_z, img_x, img_y, raster_size_img, f'{data_path}rasters/{exp}_endframe.asc')           
 
-                # Export last frame as ascii file
-                export(img_z, img_x, img_y, raster_size_img, f'{data_path}raster/{exp}_endframe.asc')           
-            
-            # Stop time measurement
-            timestamp_end = time.time()
-
-            # Calculate needed time per frame
-            time_per_frame = timestamp_end - ts_measurement_start
-
-            # Print time per frame
-#            print(f'Time per frame: {time_per_frame} s')
+        # Release video capture
+        cap.release()
 
         # Stop time image pointcloud
         ts_pointcloud_img = time.time()        
         time_measurement += ts_measurement_end - ts_measurement_start
         time_ptc_img += ts_pointcloud_img - ts_measurement_end
 
-        # Release video capture
-        cap.release()
-
         print('Released video - starting with data processing.')
 
-        # Get final diameter in [mm]
-        diameter_vertical = 0.1 * (points_bottom[-1] - distance_top)
-        diameter_horizontal = 0.1 * (points_right[-1] - points_left[-1])
+        # If video already processed, load data from csv file
+        if video_check:
+            # Load raw data from already processed file
+            df = pd.read_csv(f'{data_path}camera/raw_data/{exp}_raw.csv')
+        else:            
+            # Get final diameter in [mm]
+            diameter_vertical = 0.1 * (points_bottom[-1] - distance_top)
+            diameter_horizontal = 0.1 * (points_right[-1] - points_left[-1])
 
-        # Get initial distance in [0.1mm]
-        points_right_cor = min(points_right)
-        points_left_cor = max(points_left)
-        points_bottom_cor = min(points_bottom)
+            # Get initial distance in [0.1mm]
+            points_right_cor = min(points_right)
+            points_left_cor = max(points_left)
+            points_bottom_cor = min(points_bottom)
 
-        # Set initial distance to zero with conversion factor to [mm]
-        distance_right = 0.1 * (points_right - points_right_cor)
-        distance_left = -0.1 * (points_left - points_left_cor)
-        distance_bottom = 0.1 * (points_bottom - points_bottom_cor)
-        distance_horizontal = 0.5 * (distance_right + distance_left)
-        velocity_horizontal = 0.5 * (velocity_right + velocity_left)
+            # Set initial distance to zero with conversion factor to [mm]
+            distance_right = 0.1 * (points_right - points_right_cor)
+            distance_left = -0.1 * (points_left - points_left_cor)
+            distance_bottom = 0.1 * (points_bottom - points_bottom_cor)
+            distance_horizontal = 0.5 * (distance_right + distance_left)
+            velocity_horizontal = 0.5 * (velocity_right + velocity_left)
 
-        # Calculate radius from ongoing measurement or from last frame for vertical data in [mm]
-        radius_horizontal = 0.1 * (points_right - points_left)/2
-        radius_vertical = (distance_bottom + (diameter_vertical/2 - max(distance_bottom)))
-
-        print(f'Mean difference between distance horizontal and radius horizontal: {np.mean(np.array(distance_horizontal) - np.array(radius_horizontal))}')
-        print(f'Mean difference between distance vertical and radius vertical: {np.mean(np.array(distance_bottom) - np.array(radius_vertical))}')
-
-        # Filter velocity values with mean filter
-        filter_size = 29
-        velocity_right = np.convolve(velocity_right, np.ones(filter_size)/filter_size, mode='same')
-        velocity_left = np.convolve(velocity_left, np.ones(filter_size)/filter_size, mode='same')
-        velocity_bottom = np.convolve(velocity_bottom, np.ones(filter_size)/filter_size, mode='same')
-        velocity_horizontal = np.convolve(velocity_horizontal, np.ones(filter_size)/filter_size, mode='same')
-    
-        # Save measured parameters to dataframe
-        dict = {'time': time_frame, 'distance_left': distance_left, 'distance_right': distance_right, 
-                'velocity_left': velocity_left, 'velocity_right': velocity_right, 
-                'distance_horizontal': distance_horizontal, 'velocity_horizontal': velocity_horizontal, 
-                'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom,
-                'radius_horizontal': radius_horizontal, 'radius_vertical': radius_vertical,
-                'diameter_horizontal': diameter_horizontal, 'diameter_vertical': diameter_vertical}
-        df = pd.DataFrame(dict)
+            # Calculate radius from ongoing measurement or from last frame for vertical data in [mm]
+            radius_horizontal = 0.1 * (points_right - points_left)/2
+            radius_vertical = (distance_bottom + (diameter_vertical/2 - max(distance_bottom)))
+            
+            # Filter velocity values with mean filter
+            filter_size = 29
+            velocity_right = np.convolve(velocity_right, np.ones(filter_size)/filter_size, mode='same')
+            velocity_left = np.convolve(velocity_left, np.ones(filter_size)/filter_size, mode='same')
+            velocity_bottom = np.convolve(velocity_bottom, np.ones(filter_size)/filter_size, mode='same')
+            velocity_horizontal = np.convolve(velocity_horizontal, np.ones(filter_size)/filter_size, mode='same')
+        
+            # Save measured parameters to dataframe
+            dict = {'time': time_frame, 'distance_left': distance_left, 'distance_right': distance_right, 
+                    'velocity_left': velocity_left, 'velocity_right': velocity_right, 
+                    'distance_horizontal': distance_horizontal, 'velocity_horizontal': velocity_horizontal, 
+                    'distance_bottom': distance_bottom, 'velocity_bottom': velocity_bottom,
+                    'radius_horizontal': radius_horizontal, 'radius_vertical': radius_vertical,
+                    'diameter_horizontal': diameter_horizontal, 'diameter_vertical': diameter_vertical}
+            df = pd.DataFrame(dict)
 
         # Stop time calculation
         ts_calculation = time.time()
         time_calculation += ts_calculation - ts_measurement_end
+
+        # Get final diameter from df
+        diameter_vertical = df['diameter_vertical'].iloc[-1]
+        diameter_horizontal = df['diameter_horizontal'].iloc[-1]
 
         # Plot measured parameters
         plotparams(data_path, exp, df, layout, basis, direction, diameter[1:], h_initial, diameter_vertical, diameter_horizontal)
