@@ -10,6 +10,7 @@ from detectMarkers import detect
 from warpPerspective import warp
 from filterImage import threshold
 from alignPointcloud import export
+from alignPointcloud import convertimage
 
 def measuretop(image, image_thr, search_width):
 #    print('start time: ', datetime.now())
@@ -172,7 +173,7 @@ if __name__ == "__main__":
     raster_size_img = 0.0001
 
     # Convert last frame to needed data structure for asc export
-    img_z, img_x, img_y = convert(img_thr_bf)
+    img_z, img_x, img_y = convertimage(img_thr_bf)
 
     print('image threshold shape: ', img_thr_bf.shape)
     print('image shape: ', img_z.shape)

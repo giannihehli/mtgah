@@ -32,9 +32,13 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define path with data to be analysed
-#    data_path = 'G:/data/pipeline_tests/'
-    data_path = 'G:/experiments/20240604/'
-#    data_path = 'G:/experiments/combined/'
+    data = 'G:/data/'
+#    data = 'G:/experiments/'
+
+    # Define day (or name) of experiments that should be analysed
+    day = 'pipeline_tests'
+#    day = '20240604'
+#    day = 'combined'
 
     #######################################
     # CAMERA OPTIONS
@@ -94,6 +98,9 @@ if __name__ == '__main__':
 
     # Get start time
     ts_start = time.time()
+
+    # Define data path
+    data_path = data + day + '/'
 
     # Calibrate camera
     if os.path.isfile(f'{data_path}camera/calibration/K.txt'):
@@ -484,8 +491,15 @@ if __name__ == '__main__':
     # Plot total measured parameters
     plottotal(data_path, df_tot)
 
+    # Try making the directory for rasters
+    try:
+        os.mkdir(f'{data_path}data')
+        print(f'Directory data created. All data saved there.')
+    except FileExistsError:
+        pass
+
     # Save total measured parameters to csv file
-    df_tot.to_csv(f'{data_path}camera/raw_data/total_raw.csv')
+    df_tot.to_csv(f'{data_path}/data/{day}_total.csv')
 
     # Get end time
     ts_end = time.time()
