@@ -82,9 +82,9 @@ if __name__ == '__main__':
 
     # Define raster size in [m] for rasterization of last frame
     img_min_x = 0 # [m] Minimum value of the raster in x direction
-    img_max_x = 0.6 # [m] Maximum value of the raster in x direction
-    img_min_y = 0 # [m] Minimum value of the raster in y direction
-    img_max_y = 0.6 # [m] Maximum value of the raster in y direction
+    img_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    img_min_y = 0.2 # [m] Minimum value of the raster in y direction
+    img_max_y = 0.3 # [m] Maximum value of the raster in y direction
 
     ############################################################################################################
     
@@ -322,7 +322,14 @@ if __name__ == '__main__':
                     print('Directory end frames created and last frame saved as threshold.')
                 except FileExistsError:
                     print('Directory end frames already exists but last frame saved as threshold.')
-                    
+
+                # Try making the directory for rasters
+                try:
+                    os.mkdir(f'{data_path}rasters')
+                    print(f'Directory rasters created. All rasters saved there.')
+                except FileExistsError:
+                    pass
+
                 # Save last frame as .tiff file
                 cv2.imwrite(f'{frame_output}{exp}_endframe.tiff', img_thr)
 
@@ -333,7 +340,7 @@ if __name__ == '__main__':
                 raster_size_img = 0.0001 # [m] for image with 6000 pixels with the 0.6m basis
 
                 # Export last frame as ascii file
-                export(img_z, img_x, img_y, raster_size_img, f'{frame_output}{exp}_endframe.asc')           
+                export(img_z, img_x, img_y, raster_size_img, f'{data_path}raster/{exp}_endframe.asc')           
             
             # Stop time measurement
             timestamp_end = time.time()
@@ -463,13 +470,6 @@ if __name__ == '__main__':
 
         # Define the output path
         ptc_output = f'{data_path}rasters/{exp}_raster.asc'
-
-        # Try making the directory for rasters
-        try:
-            os.mkdir(f'{data_path}rasters')
-            print(f'Directory rasters created. All rasters saved there.')
-        except FileExistsError:
-            pass
 
         # Export pointcloud data as ascii file
         export(max_z, x_edges, y_edges, raster_size, ptc_output)

@@ -130,6 +130,9 @@ if __name__ == "__main__":
     # Concatenate all the dataframes in the list into a single DataFrame
     df_tot = pd.concat(dfs, ignore_index=True)
 
+    # Sort df_tot by 'roughness' and 'diameter' in increasing order
+    df_tot = df_tot.sort_values(by=['roughness', 'diameter'])
+
     print('df_tot: ', df_tot)
 
     plottotal(data_path, df_tot)
