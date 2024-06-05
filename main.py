@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from calibrateCameravideo import calibratevideo
 from undistortImage import undistort
 from detectMarkers import detect
+from detectMarkers import sortcorners
 from warpPerspective import warp
 from filterImage import threshold
 from measureDistance import measure
@@ -44,7 +45,7 @@ if __name__ == '__main__':
     img_out = '' # Options: '', _undst', '_det', '_warp', '_thr', '_mes'
 
     # Define exp_out for optional output of all respective experiment images
-    exp_out = '' # Options: '', 'f_r8_d113_h40', 'f_r0-pa_d114_h35_5'
+    exp_out = '' # Options: '', '<<experiment_name>>',
 
     # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
     kernel_size = 35 # [px] must be positive and odd
@@ -57,18 +58,21 @@ if __name__ == '__main__':
     filter_threshold = 100 # [px] Threshold value for binary thresholding - the lower the number the less points will be black
 
     # Define ROI width for measurement
-    search_width = 600 # [px] Width of the ROI for distance measurement
+    search_width = 1000 # [px] Width of the ROI for distance measurement
 
     #######################################
     # SCANNER OPTIONS
+
+    # Define how many aruco codes are used on the scanned area
+    aruco_count = 4 # [] Number of aruco codes used on the scanned area
 
     # Define raster size in m for rasterization of scanned pointcloud
     raster_size = 0.001 # [m] Size of one bin in the raster in x and y direction
 
     # Define raster min and max values in [m] for x and y direction
-    raster_min_x = 0 # [m] Minimum value of the raster in x direction
-    raster_max_x = 0.6 # [m] Maximum value of the raster in x direction
-    raster_min_y = 0# [m] Minimum value of the raster in y direction
+    raster_min_x = 0.1 # [m] Minimum value of the raster in x direction
+    raster_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    raster_min_y = 0.1 # [m] Minimum value of the raster in y direction
     raster_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
     ############################################################################################################
@@ -224,6 +228,9 @@ if __name__ == '__main__':
 
             # Detect markers
             img_det, corners, ids = detect(img_undst, marker)
+            
+            # Define used corners so that wrongly detected corners are filtered out
+            corners = corners[0:16]
 
             # Save image of wanted experiment in folder
             if exp == exp_out:
@@ -310,6 +317,8 @@ if __name__ == '__main__':
         # Release video capture
         cap.release()
 
+        print('Released video - starting with data processing.')
+
         # Get final diameter
         diameter_vertical = 0.1 * (points_bottom[-1] - distance_top)
         diameter_horizontal = 0.1 * (points_right[-1] - points_left[-1])
@@ -360,8 +369,6 @@ if __name__ == '__main__':
 
         # Save raw parameters to csv file
         df.to_csv(f'{data_path}camera/raw_data/{exp}_raw.csv')
-        
-        print(f'Saved camera measurements at {data_path}camera/raw_data/{exp}_raw.csv.')
 
         # Append measured parameters to total list
         layout_tot.append(layout)
@@ -373,6 +380,8 @@ if __name__ == '__main__':
         attempt_tot.append(attempt)
         d_vertical_tot.append(diameter_vertical)
         d_horizontal_tot.append(diameter_horizontal)
+
+        print(f'Saved camera measurements at {data_path}camera/raw_data/{exp}_raw.csv - starting with orientation of pointcloud.')
 
         # Load the .ply file of the processed experiment
         cloud = PyntCloud.from_file(f'{data_path}scanner/{exp}.ply')
@@ -397,7 +406,7 @@ if __name__ == '__main__':
         cv2.imwrite(f'{data_path}scanner/images/{exp}_det.jpg', ptc_det)
         
         # Sort the detected corners and target points
-        source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern)   
+        source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern, aruco_count)   
 
         # Calculate the transformation matrix from the detected corners and the measured pattern
         M = calculate_transformation(source_ptc, target_ptc)

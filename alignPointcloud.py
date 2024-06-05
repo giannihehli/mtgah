@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
 from pyntcloud import PyntCloud
 from scipy.spatial.transform import Rotation as R
@@ -35,14 +36,18 @@ def getimage(cloud):
     return image, indices
 
 
-def sortpoints(ptc_corners, ptc_ids, pattern):
+def sortpoints(ptc_corners, ptc_ids, pattern, aruco_count):
+    # Throw out the aruco ids that are above the aruco count
+    ptc_ids = ptc_ids[ptc_ids < aruco_count]
+    print(f'ptc_ids: {ptc_ids}')
+
     # Define source and target points structure
     ptc_corners_det = np.ones((len(ptc_ids)*4, 2))
     target_ptc = np.ones((len(ptc_ids)*4, 3))
 
     # Sort detected corners and target points according to detected marker IDs
     for i, id in enumerate(ptc_ids):
-        ptc_corners_det[i*4:i*4+4] = ptc_corners[id*4:id*4+4]
+        ptc_corners_det[i*4:i*4+4] = ptc_corners[i*4:i*4+4]
         target_ptc[i*4:i*4+4] = 0.1 * pattern[id*4:id*4+4]
 
     # Define corners in 3D as source points
@@ -96,10 +101,11 @@ def transform(cloud, M):
     # Inverse the z-coordinates
     z = -z
 
-    # Fill the new point cloud with the transformed coordinates in higher resolution (0.1mm)
+    # Fill the new point cloud with the transformed coordinates in higher resolution (0.1mm) -
+    # except z-values stay in [mm]
     df_new['x'] = 10*x
     df_new['y'] = 10*y
-    df_new['z'] = 10*z
+    df_new['z'] = z
     df_new['red'] = cloud.points['red']
     df_new['green'] = cloud.points['green']
     df_new['blue'] = cloud.points['blue']
@@ -110,7 +116,7 @@ def transform(cloud, M):
     return cloud_corr
 
 def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
-    # Compute the number of bins for the x and y axes in [m]
+    # Compute the number of bins for the x and y axes in [0.1 mm]
     x_bins = np.arange(10000*x_min, 10000*x_max, 10000*raster_size)
     y_bins = np.arange(10000*y_min, 10000*y_max, 10000*raster_size)
 
@@ -159,19 +165,32 @@ if __name__ == '__main__':
                             [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], [50.66, 59.14, 0],
                             [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], [1.04, 59.11, 0]])
 
-    # Define experiment to be analysed
+    # Define the path to the data
+    data_path = 'G:/data/pipeline_tests/scanner/'
+
+    # Define experiment to be aligned
     exp = 'f_r0-pa_d114_h35_5'
 
+    # Define the number of ArUco markers on the scanned area
+    aruco_count = 4
+
     # Load the .ply file
-    cloud = PyntCloud.from_file(f'G:/data/pipeline_tests/scanner/{exp}.ply')
+    cloud = PyntCloud.from_file(f'{data_path}{exp}.ply')
 
     # Get the image and indices
     image, indices = getimage(cloud)
     cv2.imshow('image', image)
     cv2.waitKey(0)
 
+    # Try making the directory for the pointcloud images
+    try:
+        os.mkdir(f'{data_path}images')
+        print(f'Directory scanner/images created. All pointcloud images saved there.')
+    except FileExistsError:
+        pass
+    
     # Save the image
-    cv2.imwrite(f'G:/data/pipeline_tests/scanner/images/{exp}_ptc.jpg', image)
+    cv2.imwrite(f'{data_path}images/{exp}_ptc.jpg', image)
 
     # Detect ArUco markers
     marker = 'DICT_4X4_1000'
@@ -180,12 +199,19 @@ if __name__ == '__main__':
     # Show the image with detected markers
     cv2.imshow('image detected', ptc_det)
     cv2.waitKey(0)
-
+    
     # Save the image with detected markers
-    cv2.imwrite(f'G:/data/pipeline_tests/scanner/images/{exp}_det.jpg', ptc_det)
+    cv2.imwrite(f'{data_path}images/{exp}_det.jpg', ptc_det)
+
+    print('ptc_ids: ', ptc_ids)
+
+    ptc_ids = np.array(ptc_ids)
+    ptc_ids = np.append(ptc_ids, 10)
+
+    print('ptc_ids: ', ptc_ids)
 
     # Sort the detected corners and target points
-    source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern)    
+    source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern, aruco_count)    
 
     # Calculate the transformation matrix from the detected corners and the measured pattern
     M = calculate_transformation(source_ptc, target_ptc)
@@ -250,7 +276,7 @@ if __name__ == '__main__':
     max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
 
     # Define the output path
-    output_path = f'G:/data/pipeline_tests/rasters/{exp}_smallnew.asc'
+    output_path = f'G:/data/pipeline_tests/rasters/{exp}_raster.asc'
 
     print(f'max_z shape: {max_z.shape}')
     print(f'x_edges shape: {x_edges.shape}')

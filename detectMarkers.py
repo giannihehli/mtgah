@@ -98,22 +98,28 @@ def detect(image, marker):
 #    cv2.imshow('frame', cv2.resize(frame, (1080, 1080)))
 #    cv2.waitKey(0)
 
-#    print('ids = ', ids)
-#    print('corners = ', corners_sub)
+    # Sort corners and ids in correct order
+    corners_sort, ids_sort = sortcorners(corners_sub, ids)    
 
-    ## Arange corners and ids in clockwise order
-    # Initialize corner_sort array with needed array dimension
-    corners_sort = -9999 * np.ones((4*4, 2))
+    return frame, corners_sort, ids_sort
 
-    # Sort corners and ids in clockwise order and only if the id is below 4
-    for i in range(len(ids)):
-        if ids[i] >= 4:
-            continue
-        corners_sort[ids[i]*4:ids[i]*4+4] = corners_sub[i]
+def sortcorners(corners_sub, ids):
+    
+    # Create numpy arrays of lists of corners and ids
+    corners_sub = np.array(corners_sub)
+    ids = np.array(ids)
 
-#    print('corners_sort = ', corners_sort)
+    # Get the sort indices according to the ids
+    sort_indices = np.argsort(ids)
 
-    return frame, corners_sort, ids
+    # Sort the corners and ids so that they are in increasing order
+    corners_sort = corners_sub[sort_indices]
+    ids_sort = ids[sort_indices]
+
+    # Reshape the corners_sort array to a 2D array
+    corners_sort = corners_sort.reshape(4*len(ids), 2)
+
+    return corners_sort, ids_sort
 
 if __name__ == '__main__':
 
@@ -123,7 +129,7 @@ if __name__ == '__main__':
     d = np.loadtxt('calibration/' + camera + '/d.txt')  # distortion coefficients[2x1]
 
     marker = 'DICT_4X4_1000'
-    image = cv2.imread('G:/experiments/20240531/scanner/f_r2-pa_d114_h35_2_ptc.JPG')
+    image = cv2.imread('G:/data/pipeline_tests/camera/100_warp.png')
     img_det, corners, ids = detect(image, marker)
-    cv2.imshow('image', img_det)
-    cv2.waitKey(0)
+#    cv2.imshow('image', cv2.resize(img_det, (1080, 1080)))
+#    cv2.waitKey(0)
