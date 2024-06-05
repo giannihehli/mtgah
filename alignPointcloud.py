@@ -39,7 +39,6 @@ def getimage(cloud):
 def sortpoints(ptc_corners, ptc_ids, pattern, aruco_count):
     # Throw out the aruco ids that are above the aruco count
     ptc_ids = ptc_ids[ptc_ids < aruco_count]
-    print(f'ptc_ids: {ptc_ids}')
 
     # Define source and target points structure
     ptc_corners_det = np.ones((len(ptc_ids)*4, 2))
@@ -129,6 +128,23 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
         bins=[x_bins, y_bins])
 
     return max_z, x_edges, y_edges
+
+def convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y):
+    
+    # Rotate the 2D array 90 degrees clockwise
+    rotated_img_thr = np.rot90(img_thr, -1)
+
+    # Get the needed part of the image
+    cut_img_thr = rotated_img_thr[img_min_y:img_max_y, img_min_x:img_max_x]
+
+    # Define the z-values of the image and set the background to NaN
+    img_z = np.where(cut_img_thr == 0, np.nan, 0)
+
+    # Define x and y edges of raster by adjustng to raster size
+    img_x = np.linspace(10000*img_min_x, 10000*img_max_x-1, num = img_max_x - img_min_x)
+    img_y = np.linspace(10000*img_min_y, 10000*img_max_y-1, num = img_max_y - img_min_y)
+
+    return img_z, img_x, img_y
 
 def export(max_z, x_edges, y_edges, raster_size, output_path):
     # Define the header of the output data

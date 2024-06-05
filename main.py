@@ -19,12 +19,12 @@ from measureDistance import measure
 from plotParameters import plotparams
 from plotExperiments import plottotal
 from measureTop import measuretop
-from measureTop import convert
 from alignPointcloud import getimage
 from alignPointcloud import sortpoints
 from alignPointcloud import calculate_transformation
 from alignPointcloud import transform
 from alignPointcloud import rasterize
+from alignPointcloud import convertimage
 from alignPointcloud import export
 
 if __name__ == '__main__':
@@ -74,6 +74,12 @@ if __name__ == '__main__':
     raster_max_x = 0.5 # [m] Maximum value of the raster in x direction
     raster_min_y = 0.1 # [m] Minimum value of the raster in y direction
     raster_max_y = 0.5 # [m] Maximum value of the raster in y direction
+
+    # Define raster size in [m] for rasterization of last frame
+    img_min_x = 0.1 # [m] Minimum value of the raster in x direction
+    img_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    img_min_y = 0.1 # [m] Minimum value of the raster in y direction
+    img_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
     ############################################################################################################
 
@@ -297,7 +303,7 @@ if __name__ == '__main__':
                 cv2.imwrite(f'{frame_output}{exp}_endframe.tiff', img_thr)
 
                 # Convert last frame to needed data structure for asc export
-                img_z, img_x, img_y = convert(img_thr)
+                img_z, img_x, img_y = convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y)
 
                 # Define image raster size in [m]
                 raster_size_img = 0.0001 # [m] for image with 6000 pixels with the 0.6m basis

@@ -84,19 +84,6 @@ def measuretop(image, image_thr, search_width):
 
     return y_top, image_windows
 
-def convert(img_thr):
-    
-    # Rotate the 2D array 90 degrees clockwise
-    rotated_img_thr = np.rot90(img_thr, -1)
-
-    img_z = np.where(rotated_img_thr == 0, np.nan, 0)
-
-    # Define x and y edges of raster by adjustng to raster size
-    img_x = np.linspace(0, 5999, num = 6000)
-    img_y = np.linspace(0, 5999, num = 6000)
-
-    return img_z, img_x, img_y
-
 if __name__ == "__main__":
        
     # Define used camera
