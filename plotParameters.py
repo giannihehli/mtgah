@@ -116,9 +116,8 @@ def plotparams(data_path, exp, df, layout, basis, direction, diameter, height, d
     # Make directory for graphs and save plot
     try:
         os.mkdir(f'{data_path}graphs/')
-        print('Directory graphs created and plot saved as pdf.')
     except FileExistsError:
-        print('Directory graphs already exists but plot saved as pdf.')
+        pass
     
     plt.savefig(f'{data_path}graphs/{exp}.pdf', transparent = True, bbox_inches = 'tight', pad_inches = 0.1, orientation = 'landscape')
     
