@@ -87,24 +87,32 @@ def calculate_transformation(points_3d_source, points_3d_target):
 
     return transformation_matrix
 
-def transform(cloud, M):
+def transform(cloud, M, basis_length, R, t):
     # Create an empty DataFrame with the same columns as the original point cloud's points
     df_new = pd.DataFrame(columns=cloud.points.columns)
 
     # Apply the transformation matrix to the point cloud
-    x, y, z, _ = np.dot(M, np.array([cloud.points['x'], cloud.points['y'], cloud.points['z'], np.ones(cloud.points.shape[0])]))
+    x_rast, y, z, _ = np.dot(M, np.array([cloud.points['x'], cloud.points['y'], cloud.points['z'], np.ones(cloud.points.shape[0])]))
 
     # Mirror the y-coordinates
-    y = 600 - y
+    y_rast = 1000*basis_length - y
 
     # Inverse the z-coordinates
-    z = -z
+    z_rast = -z
+
+    # Rotate the pointcloud to the wanted world frame
+    x_world, y_world, z_world = np.dot(R, np.array([x_rast, y_rast, z_rast]))
+
+    # Translate the pointcloud to the wanted world frame [mm]
+    x_world += 1000*t[0]
+    y_world += 1000*t[1]
+    z_world += 1000*t[2]
 
     # Fill the new point cloud with the transformed coordinates in higher resolution (0.1mm) -
     # except z-values stay in [mm]
-    df_new['x'] = 10*x
-    df_new['y'] = 10*y
-    df_new['z'] = z
+    df_new['x'] = 10*x_world
+    df_new['y'] = 10*y_world
+    df_new['z'] = z_world
     df_new['red'] = cloud.points['red']
     df_new['green'] = cloud.points['green']
     df_new['blue'] = cloud.points['blue']
@@ -201,6 +209,10 @@ if __name__ == '__main__':
     # Define the number of ArUco markers on the scanned area
     aruco_count = 4
 
+    # Define the length of the basis in [m] as the y-distance between the image and raster
+    # coordinate frame
+    basis_length = 0.6 # [m] Length of the basis in y direction
+
     # Load the .ply file
     cloud = PyntCloud.from_file(f'{data_path}{exp}.ply')
 
@@ -246,7 +258,7 @@ if __name__ == '__main__':
     print(M)
 
     # Transform the pointcloud to correct origin
-    cloud_corr = transform(cloud, M)
+    cloud_corr = transform(cloud, M, basis_length)
     
     """ # Plot the corrected point cloud
     fig = plt.figure()

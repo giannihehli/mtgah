@@ -6,6 +6,7 @@ import time
 import numpy as np
 import pandas as pd
 from pyntcloud import PyntCloud
+from datetime import datetime
 
 
 # IMPORT USER-DEFINED MODULES
@@ -15,10 +16,11 @@ from detectMarkers import detect
 from detectMarkers import sortcorners
 from warpPerspective import warp
 from filterImage import threshold
-from measureDistance import measure
+from measureFlat import measure
+from measureFlat import get_extrema
 from plotParameters import plotparams
 from plotExperiments import plottotal
-from measureTop import measuretop
+from measureInclined import measurefront
 from alignPointcloud import getimage
 from alignPointcloud import sortpoints
 from alignPointcloud import calculate_transformation
@@ -28,6 +30,9 @@ from alignPointcloud import convertimage
 from alignPointcloud import export
 
 if __name__ == '__main__':
+
+    # Print current time
+    print(f'Starting at {datetime.now()}.')
         
     # Loop over all data and experiments
     # Define the parent directory that contains the three folders
@@ -81,12 +86,24 @@ if __name__ == '__main__':
 
         #######################################
         # SCANNER OPTIONS
-
+        
         # Define how many aruco codes are used on the scanned area
         aruco_count = 4 # [] Number of aruco codes used on the scanned area
 
+        # Define the length of the basis in [m] as the y-distance between the image and raster
+        # coordinate frame
+        basis_length = 0.6 # [m] Length of the basis in y direction
+        
+        # Define angle of inclined base plane in [deg]
+        angle = 0 # [deg] Angle of the inclined base plane with codes - if codes are on runout set to 0
+
+        # Define the translation of the wanted world frame with regard to the raster frame in [m]
+        trans_x = 0.0 # [m] Translation of the wanted world frame in x direction
+        trans_y = 0.0 # [m] Translation of the wanted world frame in y direction
+        trans_z = 0.0 # [m] Translation of the wanted world frame in z direction
+
         # Define raster size in m for rasterization of scanned pointcloud
-        raster_size = 0.001 # [m] Size of one bin in the raster in x and y direction
+        raster_size = 0.001 # [m] Size of one bin in the raster in x and y directionn
 
         # Define raster min and max values in [m] for x and y direction in raster frame
         raster_min_x = 0.1 # [m] Minimum value of the raster in x direction
@@ -118,14 +135,14 @@ if __name__ == '__main__':
 
         # Calibrate camera
         if os.path.isfile(f'{data_path}camera/calibration/K.txt'):
-            print(f'Camera calibrated. Loading calibration parameters from {data_path}camera/calibration/.')
+            print(f'Camera calibrated. Loading calibration parameters from {data_path}camera/calibration/ - {datetime.now()}.')
             K = np.loadtxt(f'{data_path}camera/calibration/K.txt')  # calibration matrix[3x3]
             d = np.loadtxt(f'{data_path}camera/calibration/d.txt')  # distortion coefficients[5x1]
         elif os.path.isfile(f'{data_path}camera/calibration.mp4'):
-            print(f'Camera not calibrated. Calibrating with {data_path}camera/calibration.mp4.')
+            print(f'Camera not calibrated. Calibrating with {data_path}camera/calibration.mp4 - {datetime.now()}.')
             rep, K, d, rvec, tvec, X_W = calibratevideo(f'{data_path}camera/', skip_frames)
         else:
-            print(f'Camera not calibrated and no calibration file found - approximated parameters used from G:/data/pipeline_tests/camera/calibration/')
+            print(f'Camera not calibrated and no calibration file found - approximated parameters used from G:/data/pipeline_tests/camera/calibration/ - {datetime.now()}.')
             K = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/K.txt')  # calibration matrix[3x3]
             d = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/d.txt')  # distortion coefficients[5x1]
 
@@ -149,7 +166,7 @@ if __name__ == '__main__':
         for vid_path in glob.glob(data_path + 'camera/' + '*.MP4'):
             # Check if video is calibration and skip if so
             if vid_path.split('\\')[-1] == 'calibration.MP4':
-                print('Calibration video - skip processing.')
+                print(f'Calibration video - skip processing - {datetime.now()}.')
                 continue
 
             # Get experiment name
@@ -167,11 +184,11 @@ if __name__ == '__main__':
 
             # If video is already processed, jump to last frame
             if video_check:
-                print(f'Experiment {exp} already processed - jump to last image.')
+                print(f'Experiment {exp} already processed - jump to last image - {datetime.now()}.')
                 # Set the current position to the last frame
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count - 1)
             else:
-                print(f'Processing experiment {exp}.')
+                print(f'Processing experiment {exp} - {datetime.now()}.')
 
             # Define used parameters according to experiment name
             layout = exp.split('_')[0]
@@ -185,8 +202,8 @@ if __name__ == '__main__':
             # Define experiment layout
             if layout == 'f':
                     layout = 'flat'
-            elif layout == 'i':
-                    layout = 'inclined'
+            else:
+                raise ValueError(f'File name {exp} is not in the expected format - please check experiment name or directory files - {datetime.now()}.')
 
             # Define reference pattern in clockwise order in world frame (3D) in [0.1mm]
             match basis:
@@ -232,9 +249,8 @@ if __name__ == '__main__':
                 output_folder = f'{data_path}camera/{exp}/'
                 try: 
                     os.mkdir(output_folder)
-                    print('Directory ', output_folder, ' created.')
                 except FileExistsError:
-                    print('Directory ', output_folder, ' already exists - images saved again.')
+                    pass
 
             # Initialize lists for measured distances per experiment
             points_right = np.empty(0)
@@ -250,7 +266,6 @@ if __name__ == '__main__':
 
             for frame in range(frame_count):
                 # Load image
-                print(f'Analyse frame {frame}')
                 ret, image = cap.read()
 
                 # Stop video analysis if no frame is loaded anymore
@@ -261,10 +276,9 @@ if __name__ == '__main__':
                 if exp == exp_out:
                     try:
                         os.mkdir(f'{data_path}camera/{exp_out}')
-                        print(f'Directory {exp_out} created. All images of this experiment saved there.')
                     except FileExistsError:
                         pass
-                    print(f'Saving {frame+100}_orig')
+                    print(f'Saving {frame+100}_orig - {datetime.now()}')
                     cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_orig.png', image)
 
                 # Undistort images
@@ -272,18 +286,39 @@ if __name__ == '__main__':
 
                 # Save image of wanted experiment in folder
                 if exp == exp_out:
-                    print(f'Saving {frame+100}_undst')
+                    print(f'Saving {frame+100}_undst - {datetime.now()}')
                     cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_undst.png', img_undst)
 
                 # Detect markers
                 img_det, corners, ids = detect(img_undst, marker)
+
+                # Define the correct ids for the experiment
+                correct_ids = [0, 1, 2, 3]
                 
+                # Check if correct ids are detected and stop measurement if not
+                if not np.array_equal(ids[0:4], correct_ids):
+                    print(f'Wrong ids detected in frame {frame} - {datetime.now()}')
+                    # Append the same parameters to lists as the previous frame
+                    points_right = np.append(points_right, points_right[-1])
+                    points_left = np.append(points_left, points_left[-1])
+                    points_bottom = np.append(points_bottom, points_bottom[-1])
+                    time_frame = np.append(time_frame, time_frame[-1])
+
+                    # Calculate velocity with conversion factor to [mm/s]
+                    if frame >= 1:
+                        velocity_right = np.append(velocity_right, velocity_right[-1])
+                        velocity_left = np.append(velocity_left, velocity_left[-1])
+                        velocity_bottom = np.append(velocity_bottom, velocity_bottom[-1])
+                    
+                    # Skip the rest of the loop
+                    continue
+
                 # Define used corners so that wrongly detected corners are filtered out
                 corners = corners[0:16]
 
                 # Save image of wanted experiment in folder
                 if exp == exp_out:
-                    print(f'Saving {frame+100}_det')
+                    print(f'Saving {frame+100}_det - {datetime.now()}')
                     cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_det.png', img_det)
 
                 # Warp perspective
@@ -291,7 +326,7 @@ if __name__ == '__main__':
 
                 # Save image of wanted experiment in folder
                 if exp == exp_out:
-                    print(f'Saving {frame+100}_warp')
+                    print(f'Saving {frame+100}_warp - {datetime.now()}')
                     cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_warp.png', img_warp)
 
                 # Threshold image
@@ -299,20 +334,20 @@ if __name__ == '__main__':
 
                 # Save image of wanted experiment in folder
                 if exp == exp_out:
-                    print(f'Saving {frame+100}_thr')
+                    print(f'Saving {frame+100}_thr - {datetime.now()}')
                     cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_thr.png', img_thr)
 
                 # Measure distances
-                x_right, x_left, y_bottom, img_mes = measure(img_warp, img_thr, search_width)
+                x_right, x_left, _, y_bottom, img_mes = measure(img_warp, img_thr, search_width, top_search=False)
 
                 # Save image of wanted experiment in folder
                 if exp == exp_out:
-                    print(f'Saving {frame+100}_mes')
+                    print(f'Saving {frame+100}_mes - {datetime.now()}')
                     cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_mes.png', img_mes)
 
                 # If needed save images to folder
                 if img_out:
-                    print(f'Saving img{img_out}')
+                    print(f'Saving img{img_out} - {datetime.now()}')
                     cv2.imwrite(f'{output_folder}{frame+100}{img_out}.png', locals().get(f'img{img_out}'))
 
                 # If video already processed, stop here
@@ -332,16 +367,15 @@ if __name__ == '__main__':
                     velocity_bottom = np.append(velocity_bottom, (points_bottom[frame] - points_bottom[frame-1]) * 0.1 * fps)
             
             # Measure the top distance in last frame    
-            distance_top, img_mes_top = measuretop(img_warp, img_thr, search_width)
+            _, _, distance_top, _, img_mes_top = measure(img_warp, img_thr, search_width, top_search=True)
 
             # Define output path for last frame
             frame_output = f'{data_path}end frames/'
 
             try: 
                 os.mkdir(frame_output)
-                print('Directory end frames created and last frame saved as threshold.')
             except FileExistsError:
-                print('Directory end frames already exists but last frame saved as threshold.')
+                pass
 
             # Save last frame as .tiff file
             cv2.imwrite(f'{frame_output}{exp}_endframe.tiff', img_thr)
@@ -352,7 +386,6 @@ if __name__ == '__main__':
             # Try making the directory for rasters
             try:
                 os.mkdir(f'{data_path}rasters')
-                print(f'Directory rasters created. All rasters saved there.')
             except FileExistsError:
                 pass
             
@@ -373,7 +406,7 @@ if __name__ == '__main__':
             time_measurement += ts_measurement_end - ts_measurement_start
             time_ptc_img += ts_pointcloud_img - ts_measurement_end
 
-            print('Released video - starting with data processing.')
+            print(f'Released video - starting with data processing - {datetime.now()}.')
 
             # If video already processed, load data from csv file
             if video_check:
@@ -430,7 +463,6 @@ if __name__ == '__main__':
             # Make folder for raw data
             try:
                 os.mkdir(f'{data_path}camera/raw_data')
-                print(f'Directory camera/raw_data created. All measurements of this experiment saved there.')
             except FileExistsError:
                 pass
 
@@ -448,7 +480,7 @@ if __name__ == '__main__':
             d_vertical_tot.append(diameter_vertical)
             d_horizontal_tot.append(diameter_horizontal)
 
-            print(f'Saved camera measurements at {data_path}camera/raw_data/{exp}_raw.csv - starting with orientation of pointcloud.')
+            print(f'Saved camera measurements at {data_path}camera/raw_data/{exp}_raw.csv - starting with orientation of pointcloud - {datetime.now()}.')
 
             # Stop time plotting
             ts_plotting = time.time()
@@ -463,7 +495,6 @@ if __name__ == '__main__':
             # Try making the directory for the pointcloud images
             try:
                 os.mkdir(f'{data_path}scanner/images')
-                print(f'Directory scanner/images created. All pointcloud images saved there.')
             except FileExistsError:
                 pass
 
@@ -482,8 +513,19 @@ if __name__ == '__main__':
             # Calculate the transformation matrix from the detected corners and the measured pattern
             M = calculate_transformation(source_ptc, target_ptc)
 
+            # Define the rotation angle in radians
+            theta = np.radians(angle)
+
+            # Define the additional rotation matrix for the inclined base plane
+            R = np.array([[1, 0, 0],
+                        [0, np.cos(theta), -np.sin(theta)],
+                        [0, np.sin(theta), np.cos(theta)]])
+            
+            # Define the translation vector for the wanted world frame
+            t = np.array([trans_x, trans_y, trans_z])
+
             # Transform the pointcloud to correct origin
-            cloud_corr = transform(cloud, M)
+            cloud_corr = transform(cloud, M, basis_length, R, t)
 
             # Rasterise the corrected point cloud
             max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
@@ -494,7 +536,7 @@ if __name__ == '__main__':
             # Export pointcloud data as ascii file
             export(max_z, x_edges, y_edges, raster_size, ptc_output)
 
-            print(f'Saved pointcloud raster at {ptc_output}.')
+            print(f'Saved pointcloud raster at {ptc_output} - {datetime.now()}.')
 
             # Stop time pointcloud pointcloud
             ts_pointcloud_ptc = time.time()
@@ -514,7 +556,6 @@ if __name__ == '__main__':
         # Try making the directory for rasters
         try:
             os.mkdir(f'{data_path}data')
-            print(f'Directory data created. All data saved there.')
         except FileExistsError:
             pass
 
