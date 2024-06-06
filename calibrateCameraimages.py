@@ -187,7 +187,7 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
         ax.plot(objp[:,0], objp[:,1], objp[:,2], ".")
     
     ax.view_init(azim=45, elev=-160, roll=0)
-    plt.show()
+#    plt.show()
     cv2.waitKey(0)
     plt.savefig("calibration/" + camera + "/result.pdf")
 

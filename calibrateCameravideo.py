@@ -198,7 +198,7 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
 
     ax.view_init(azim=45, elev=-160, roll=0)
     plt.savefig(f'{data_path}calibration/result.pdf')
-    plt.show()
+#    plt.show()
 
 if __name__ == '__main__':
     # Camera selection
