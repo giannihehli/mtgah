@@ -22,7 +22,7 @@ def plottotal(data_path, df_tot):
         # Filter the DataFrame to only include rows with that roughness value
         df_filtered = df_tot[df_tot['roughness'] == roughness]
 
-        """ color = 'bo' if roughness == 0 else 'ro' if roughness == 4 else 'go'
+        """ color = 'bo' if roughness == 0 else 'go' if roughness == 4 else 'ro'
         print('color: ', color, type(color))
         print('roughness: ', roughness, type(roughness))
         print("bools: ", roughness == 0, roughness == 2, roughness == 4) """
@@ -30,17 +30,17 @@ def plottotal(data_path, df_tot):
         # Plot data roughness direction each
         axis[i//2, i%2].plot(df_filtered['height']/(df_filtered['diameter']/2), 
                             (df_filtered['d_vertical']-df_filtered['diameter'])/df_filtered['diameter'], 
-                            'bo' if roughness == 0 else 'ro' if roughness == 4 else 'go', 
+                            'bo' if roughness == 0 else 'go' if roughness == 4 else 'ro', 
                             label='parallel to roughness')
         axis[i//2, i%2].plot(df_filtered['height']/(df_filtered['diameter']/2), 
                             (df_filtered['d_horizontal']-df_filtered['diameter'])/df_filtered['diameter'], 
-                            'bs' if roughness == 0 else 'rs' if roughness == 4 else 'gs', 
+                            'bs' if roughness == 0 else 'gs' if roughness == 4 else 'rs', 
                             label='perpendicular to roughness')
         
         # Plot the total diameter comparison
         axis[1, 1].plot(df_filtered['height']/(df_filtered['diameter']/2),
                         np.where(df_filtered['direction'] == 'pa', df_filtered['d_horizontal']/df_filtered['d_vertical'], df_filtered['d_vertical']/df_filtered['d_horizontal']),
-                        'b^' if roughness == 0 else 'r^' if roughness == 4 else 'g^',	 
+                        'b^' if roughness == 0 else 'g^' if roughness == 4 else 'r^',	 
                         label=f'{roughness} mm roughness perpendicular')
         
         # Get the minimum and maximum x-values
@@ -110,10 +110,10 @@ if __name__ == "__main__":
 #    df_tot = pd.read_csv(f'{data_path}camera/raw_data/total_raw.csv')
 
     # Define the data path for analysing multiple test days from different csv files
-    data_path = 'G:/experiments/total/'
+    data_path = 'G:/experiments/combined/'
 
     # Get a list of all CSV files in the directory
-    csv_files = glob.glob(f'{data_path}*.csv')
+    csv_files = glob.glob(f'{data_path}data/*.csv')
 
     # Initialize an empty list to store the dataframes
     dfs = []
