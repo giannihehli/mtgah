@@ -141,9 +141,9 @@ if __name__ == '__main__':
             print(f'Camera not calibrated. Calibrating with {data_path}camera/calibration.mp4 - {datetime.now()}.')
             rep, K, d, rvec, tvec, X_W = calibratevideo(f'{data_path}camera/', skip_frames)
         else:
-            print(f'Camera not calibrated and no calibration file found - approximated parameters used from G:/data/pipeline_tests/camera/calibration/ - {datetime.now()}.')
-            K = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/K.txt')  # calibration matrix[3x3]
-            d = np.loadtxt(f'G:/data/pipeline_tests/camera/calibration/d.txt')  # distortion coefficients[5x1]
+            print(f'Camera not calibrated and no calibration file found - approximated parameters used from data/calibration/sony_hs - {datetime.now()}.')
+            K = np.loadtxt('data/calibration/sony_hs/K.txt')  # calibration matrix[3x3]
+            d = np.loadtxt('data/calibration/sony_hs/d.txt')  # distortion coefficients[5x1]
 
         # Initialize lists for measured distances in every experiment
         exp_ids = []
