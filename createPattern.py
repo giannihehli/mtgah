@@ -1,5 +1,6 @@
 # Import libraries and packages
 import numpy as np
+import os
 from PIL import Image as im
 
 # Define pattern creation function
@@ -20,7 +21,8 @@ def createPattern(pattern, pattern_type, height, width):
 
     image = im.fromarray(array)
     image.show()
-    image.save("H:/data/patterns/" + pattern_type + "_pattern.png")
+
+    return image
 
 if __name__ == "__main__":
     # Define size of image
@@ -28,7 +30,7 @@ if __name__ == "__main__":
     width = 1600
 
     # Define pattern type
-    pattern_type = "chessboard" # "finder", "alignment", chessboard
+    pattern_type = "alignment" # "finder", "alignment", "chessboard"
     
     # Define pattern
     match pattern_type:
@@ -63,4 +65,11 @@ if __name__ == "__main__":
                                 [1, 0, 1, 0, 1, 0, 1, 0],
                                 [0, 1, 0, 1, 0, 1, 0, 1],
                                 [1, 0, 1, 0, 1, 0, 1, 0]])
-    createPattern(pattern, pattern_type, height, width)
+    image = createPattern(pattern, pattern_type, height, width)
+
+    # Try making output folder
+    try:
+        os.mkdir('output')
+    except FileExistsError:
+        pass
+    image.save('output/' + pattern_type + "_pattern.png")
