@@ -1,25 +1,25 @@
 import cv2
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Function to generate ArUco markers
 def generate_aruco(size, code, aruco_dict):
     marker = np.zeros((size, size), dtype=np.uint8)
-    aruco_marker = cv2.aruco.drawMarker(aruco_dict, code, size, marker, 1)
+    aruco_marker = cv2.aruco.generateImageMarker(aruco_dict, code, size, marker, 1)
     return aruco_marker
 
 # Function to create printable image with ArUco markers arranged as specified
 def create_aruco_page(marker_size, spacing, aruco_dict_name):
 
     # Get ArUco dictionary
-    aruco_dict = cv2.aruco.Dictionary_get(getattr(cv2.aruco, aruco_dict_name))
+    aruco_dict = cv2.aruco.getPredefinedDictionary(getattr(cv2.aruco, aruco_dict_name))
 
     # Create a blank canvas
     canvas_size = 2 * marker_size + 2*spacing + 1
     canvas = np.ones((canvas_size, canvas_size), dtype=np.uint8) * 255
     
     # Generate ArUco markers
-    aruco_codes = [0, 1, 2, 3]  # First four ArUco markers
     markers = [generate_aruco(marker_size, code, aruco_dict) for code in aruco_codes]
 
     # Arrange markers on the canvas
@@ -41,6 +41,7 @@ if __name__ == "__main__":
     marker_size = 1000  # Size of each ArUco marker
     spacing = 200  # Spacing between and around markers
     aruco_dict_name = "DICT_4X4_1000"  # Default ArUco dictionary name. choose from:
+    aruco_codes = [0, 1, 2, 3]  # ArUco code ids to be used. Must be four codes to be output in a 2x2 grid
 
     # "DICT_4X4_50", "DICT_4X4_100", "DICT_4X4_250", "DICT_4X4_1000", "DICT_5X5_50", "DICT_5X5_100",
     # "DICT_5X5_250", "DICT_5X5_1000", "DICT_6X6_50", "DICT_6X6_100", "DICT_6X6_250", "DICT_6X6_1000",
@@ -50,12 +51,18 @@ if __name__ == "__main__":
     # Generate printable ArUco page
     aruco_page = create_aruco_page(marker_size, spacing, aruco_dict_name)
 
+    # Try making output folder
+    try:
+        os.mkdir('output')
+    except FileExistsError:
+        pass
+
     # Save the image as a PNG file
-    save_path = "H:/data/patterns/" + aruco_dict_name + ".png"
+    save_path = 'output/' + aruco_dict_name + '.png'
     plt.imsave(save_path, aruco_page, cmap='gray', format='png')
 
     # Save the image as a PDF file
-    save_path = "H:/data/patterns/" + aruco_dict_name + ".pdf"
+    save_path = 'output/' + aruco_dict_name + '.pdf'
     plt.imsave(save_path, aruco_page, cmap='gray', format='pdf')
 
     print(f"ArUco page saved as {save_path}")
