@@ -35,7 +35,7 @@ if __name__ == '__main__':
     
     # Loop over all data and experiments by uncommenting the lines below and inclining everything after this line
     # Define the parent directory that contains the three folders
-    parent_dir = 'G:/experiments/'
+    parent_dir = 'G:/horizontal experiments/'
 
     # Get a list of all folders in the parent directory
     folders = [f for f in os.listdir(parent_dir) if os.path.isdir(os.path.join(parent_dir, f))]
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
         # Define parent directory of data to be analysed
     #    parent_dir = 'G:/data/'
-    #    parent_dir = 'G:/experiments/'
+    #    parent_dir = 'G:/horizontal experiments/'
 
         # Define day (or name) of experiments that should be analysed
     #    data_folder = 'pipeline_tests'
