@@ -17,7 +17,8 @@ def createPattern(pattern, pattern_type, height, width):
     # Fill array with pattern
     for i in range(0, pattern.shape[0]):
         for j in range(0, pattern.shape[1]):
-            array[i*pattern_height:(i+1)*pattern_height, j*pattern_width:(j+1)*pattern_width] = pattern[i, j]*255
+            array[i*pattern_height:(i+1)*pattern_height, 
+                  j*pattern_width:(j+1)*pattern_width] = pattern[i, j]*255
 
     image = im.fromarray(array)
     image.show()

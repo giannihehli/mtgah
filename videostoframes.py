@@ -37,4 +37,11 @@ def extract(dir, files):
             pass
 
 if __name__ == "__main__":
-    extract("H:/data/tests/sony_hs/", "f_r8_d113_h40.MP4") # "*.MP4" for all files
+    # Define the data path for the frame extraction
+    data_path = 'G:/data/pipeline_tests/camera/'
+
+    # Define the video file to extract frames from - "*.MP4" for all files
+    file = "f_r4-pa_d114_h105_7.MP4" 
+
+    # Extract frames from video
+    extract(data_path, file)
