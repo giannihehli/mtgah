@@ -1,7 +1,4 @@
-# Resources: 
-# - OpenCV-Python tutorial for calibration: http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html
-#   - Variable names were changed for clarity
-
+# Import needed packages
 import numpy as np
 import cv2
 import os
@@ -15,26 +12,18 @@ def calibratevideo(data_path, skip_frames):
     # Chessboard variables for how many corners and size
     rows = 12
     cols = 8
-    size = 0.0194272727272727 # [m] Physical size of a cell (the distance between neighrboring corners). Any positive number works.
+    size = 0.0194272727272727 # [m] Physical size of a cell
 
-    # Theoretical object points for the chessboard we're calibrating against,
-    # These will come out like: 
-    #     size * (0, 0, 0), (1, 0, 0), ..., 
-    #     size * (rows-1, cols-1, 0)
-    # Note that the Z value for all stays at 0, as this is a printed out 2D image
-    # And also that the max point is -1 of the max because we're zero-indexing
-    # The following line generates all the tuples needed at (0, 0, 0)
+    # Create object points for the chessboard
     objp = np.zeros((rows*cols,3), np.float32)
     
-    # The following line fills the tuples just generated with their values size * (0, 0, 0), size * (1, 0, 0), ...
+    # Fill the tuples just generated with their values
     objp[:,:2] = size*np.mgrid[0:rows,0:cols].T.reshape(-1, 2)
 
-    # All images used should be the same size, which if taken with the same camera shouldn't be a problem
-    # I'm using a set of images taken with the camera with the naming convention:
-    # 'camera-pic-of-chessboard-<NUMBER>.jpg'
+    # Initialise image size
     imageSize = None # Determined at runtime
 
-    # Create arrays you'll use to store object points and image points from all images processed
+    # Create arrays used to store object points and image points from all images processed
     objpoints = [] # 3D point in real world space where chess squares are
     imgpoints = [] # 2D point in image plane, determined by CV2
 
@@ -93,7 +82,7 @@ def calibratevideo(data_path, skip_frames):
                     corners=corners, 
                     winSize=(5, 5), 
                     zeroZone=(-1, -1),
-                    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)) # Last parameter is about termination critera
+                    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1))
             
             # Add the accurate points in 2D that we just discovered
             imgpoints.append(corners_acc)
@@ -123,7 +112,7 @@ def calibratevideo(data_path, skip_frames):
     # if we ever determined the image size
     if not imageSize:
         # Calibration failed because we didn't see any chessboards of the PatternSize used
-        print(f'Calibration was unsuccessful. We could not detect chessboards in any of the frames supplied. Try changing the patternSize passed into findChessboardCorners(), or re-do video of chessboard.')
+        print(f'Calibration was unsuccessful -  could not detect chessboards in any of the frames supplied.')
         # Exit for failure
         exit()
     
@@ -205,7 +194,7 @@ if __name__ == '__main__':
     camera = 'sony_hs' # 'sony', 'sony_hs' 'gopro1', 'gopro2
 
     # Define data path
-    data_path = 'H:/data/tests/sony_hs/'
+    data_path = 'H:/data/tests/sony_hs/camera/'
 
     # Input factor for skipping frames in calibration video
     skip_frames = 10    

@@ -1,7 +1,4 @@
-# Resources: 
-# - OpenCV-Python tutorial for calibration: http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html
-#   - Variable names were changed for clarity
-
+# Import needed packages
 import numpy as np
 import cv2
 import glob
@@ -15,40 +12,37 @@ def calibrate(camera, data_path):
     # Chessboard variables for how many corners and size
     rows = 12
     cols = 8
-    size = 0.0194272727272727 # [m] Physical size of a cell (the distance between neighrboring corners). Any positive number works.
+    size = 0.0194272727272727 # [m] Physical size of a cell
 
-    # Theoretical object points for the chessboard we"re calibrating against,
-    # These will come out like: 
-    #     size * (0, 0, 0), (1, 0, 0), ..., 
-    #     size * (rows-1, cols-1, 0)
-    # Note that the Z value for all stays at 0, as this is a printed out 2D image
-    # And also that the max point is -1 of the max because we"re zero-indexing
-    # The following line generates all the tuples needed at (0, 0, 0)
+    # Create object points for the chessboard
     objp = np.zeros((rows*cols,3), np.float32)
     
-    # The following line fills the tuples just generated with their values size * (0, 0, 0), size * (1, 0, 0), ...
+    # Fill the tuples just generated with their values
     objp[:,:2] = size*np.mgrid[0:rows,0:cols].T.reshape(-1, 2)
 
-    # Need a set of images or a video taken with the camera you want to calibrate
-    # Input images capturing the chessboard above
-    input_files = data_path + "/*.jpg"
-    output_path = data_path
-    #input_files = "H:/data/calibration/" + camera + "/*.jpg"
-    #output_path = "H:/data/calibration/" + camera
-
-    # All images used should be the same size, which if taken with the same camera shouldn"t be a problem
-    # I"m using a set of images taken with the camera with the naming convention:
-    # "camera-pic-of-chessboard-<NUMBER>.jpg"
-    images = glob.glob(input_files)
+    # Initialise image size
     imageSize = None # Determined at runtime
 
-    # Create arrays you"ll use to store object points and image points from all images processed
+    # Create arrays used to store object points and image points from all images processed
     objpoints = [] # 3D point in real world space where chess squares are
     imgpoints = [] # 2D point in image plane, determined by CV2
 
     # Count variables
     count_found = 0
     count_failed = 0
+
+
+    # Define inputs files and output path
+    input_files = data_path + "/*.jpg"
+    output_path = data_path
+    #input_files = "H:/data/calibration/" + camera + "/*.jpg"
+    #output_path = "H:/data/calibration/" + camera
+    
+    # Get all image pathes
+    images = glob.glob(input_files)
+
+    # Define images
+    
 
     # Loop through images glob"ed
     for image_path in images:
@@ -73,7 +67,7 @@ def calibrate(camera, data_path):
                     corners=corners, 
                     winSize=(5, 5), 
                     zeroZone=(-1, -1),
-                    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)) # Last parameter is about termination critera
+                    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1))
             imgpoints.append(corners_acc)
 
             # If our image size is unknown, set it now
@@ -105,7 +99,7 @@ def calibrate(camera, data_path):
     # Make sure at least one image was found
     if len(images) < 1:
         # Calibration failed because there were no images, warn the user
-        print("Calibration was unsuccessful. No images of chessboards were found. Add images of chessboards and use or alter the naming conventions used in this file.")
+        print("Calibration was unsuccessful - no images of chessboards were found.")
         # Exit for failure
         exit()
 
@@ -113,7 +107,7 @@ def calibrate(camera, data_path):
     # if we ever determined the image size
     if not imageSize:
         # Calibration failed because we didn"t see any chessboards of the PatternSize used
-        print("Calibration was unsuccessful. We couldn't detect chessboards in any of the images supplied. Try changing the patternSize passed into findChessboardCorners(), or try different pictures of chessboards.")
+        print(f'Calibration was unsuccessful -  could not detect chessboards in any of the frames supplied.')
         # Exit for failure
         exit()
     
@@ -188,14 +182,16 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
     
     ax.view_init(azim=45, elev=-160, roll=0)
 #    plt.show()
-    cv2.waitKey(0)
+#    cv2.waitKey(0)
     plt.savefig("calibration/" + camera + "/result.pdf")
+    
+    return
 
 if __name__ == "__main__":
     # Camera selection
     camera = "sony_hs" # "sony", "sony_hs" "gopro1", "gopro2
 
     # Define data path
-    data_path = "H:/data/calibration/" + camera
+    data_path = "H:/data/tests/calibration/" + camera
 
     calibrate(camera, data_path)
