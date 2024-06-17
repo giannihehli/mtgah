@@ -200,4 +200,4 @@ if __name__ == "__main__":
 
     ####################################################################################
 
-    calibrate(camera, data_path)
+    rpe, K, d, rvec, tvec, objp = calibrate(camera, data_path)

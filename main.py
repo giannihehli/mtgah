@@ -49,13 +49,13 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define parent directory of data to be analysed
-    parent_dir = 'G:/data/'
-#    parent_dir = 'G:/horizontal experiments/'
+#    parent_dir = 'G:/data/'
+    parent_dir = 'G:/horizontal experiments/'
 
     # Define day (or name) of experiments that should be analysed
-    data_folder = 'pipeline_tests'
+#    data_folder = 'pipeline_tests'
 #    data_folder = '20240531'
-#    data_folder = '20240604'
+    data_folder = '20240604'
 #    data_folder = 'combined'
 
     #######################################
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     img_out = '' # Options: '', _undst', '_det', '_warp', '_thr', '_mes'
 
     # Define exp_out for optional output of all respective experiment images
-    exp_out = 'f_r0-pa_d114_h105_10' # Options: '', '<<experiment_name>>',
+    exp_out = 'f_r2-pa_d41_h148_16' # Options: '', 'experiment_name',
 
     # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
     kernel_size = 35 # [px] must be positive and odd
@@ -142,8 +142,8 @@ if __name__ == '__main__':
         rep, K, d, rvec, tvec, X_W = calibratevideo(f'{data_path}camera/', skip_frames)
     else:
         print(f'Camera not calibrated and no calibration file found - approximated parameters used from data/calibration/sony_hs - {datetime.now()}.')
-        K = np.loadtxt('data/calibration/sony_hs/K.txt')  # calibration matrix[3x3]
-        d = np.loadtxt('data/calibration/sony_hs/d.txt')  # distortion coefficients[5x1]
+        K = np.loadtxt('calibration/sony_hs/K.txt')  # calibration matrix[3x3]
+        d = np.loadtxt('calibration/sony_hs/d.txt')  # distortion coefficients[5x1]
 
     # Initialize lists for measured distances in every experiment
     exp_ids = []
@@ -376,6 +376,9 @@ if __name__ == '__main__':
         except FileExistsError:
             pass
 
+        # Save last frame as .png file
+        cv2.imwrite(f'{frame_output}{exp}_endframe.png', img_mes_top)
+        
         # Save last frame as .tiff file
         cv2.imwrite(f'{frame_output}{exp}_endframe.tiff', img_thr)
 

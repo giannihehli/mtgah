@@ -53,14 +53,16 @@ def measure(image, image_thr, search_width, top_search):
     vertical_top = int(3000)
     vertical_bottom = int(5500)
 
+    # Create copy of image for drawing search windows
+    image_windows = image.copy()
+
     # For last frame set vertical search window to top search window
     if top_search:
         vertical_top = int(500)
 
     # Draw search windows
-    image_windows = image.copy()
     cv2.rectangle(image_windows, (horizontal_left, horizontal_y-search_width//2), (horizontal_right, horizontal_y + search_width//2), (0, 0, 255), 20)
-    cv2.rectangle(image_windows, (vertical_x-search_width//2, vertical_bottom), (vertical_x + search_width//2, horizontal_y+search_width//2), (0, 0, 255), 20)
+    cv2.rectangle(image_windows, (vertical_x + search_width//2, vertical_top), (vertical_x-search_width//2, vertical_bottom), (0, 0, 255), 20)
 
     # Draw search direction
     cv2.arrowedLine(image_windows, (horizontal_left, horizontal_y), (horizontal_left+500, horizontal_y), (255, 0, 0), 20)
@@ -86,16 +88,10 @@ def measure(image, image_thr, search_width, top_search):
     # Display extrema results on image
     cv2.circle(image_windows, (int(x_left), int(y_left)), 10, (0, 255, 0), 5)
     cv2.circle(image_windows, (int(x_right), int(y_right)), 10, (0, 255, 0), 5) 
-    cv2.circle(image_windows, (int(x_top), int(y_top)), 10, (0, 255, 0), 5)
-    cv2.circle(image_windows, (int(x_bottom), int(y_bottom)), 10, (0, 255, 0), 5) 
-    
-    """ # Plot result
-    fig, axis = plt.subplots(2, 1,sharex=True, sharey=True)
-    axis[0].imshow(image_windows)
-    axis[1].imshow(image_thr)
-    manager = plt.get_current_fig_manager()
-    manager.window.showMaximized()
-    plt.show() """
+    cv2.circle(image_windows, (int(x_bottom), int(y_bottom)), 10, (0, 255, 0), 5)
+    if top_search:
+        cv2.arrowedLine(image_windows, (vertical_x, vertical_top), (vertical_x, vertical_top+500), (255, 0, 0), 20)
+        cv2.circle(image_windows, (int(x_top), int(y_top)), 10, (0, 255, 0), 5)
 
     return x_right, x_left, y_top, y_bottom, image_windows
 

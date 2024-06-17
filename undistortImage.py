@@ -5,30 +5,37 @@ import os
 def undistort(K, d, image):
 
     height,  width = image.shape[:2]
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(K, d, (width,height), 1, (width,height))
 
-    # undistort
+    # Get optimal camera matrix
+    newcameramtx, _ = cv2.getOptimalNewCameraMatrix(K, d, (width, height), 1, (width, height))
+
+    # Undistort image
     img_undst = cv2.undistort(image, K, d, None, newcameramtx)
 
     return img_undst
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    ####################################################################################
+    # ONLY SECTION TO ADJUST PARAMETERS
 
-    camera = "sony" # "sony", "gopro1", "gopro2
-    # Import calibration parameters
-    K = np.loadtxt("C:/Users/hehligia/OneDrive - ETH Zurich/Documents/Code/masterthesis/calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
-    d = np.loadtxt("C:/Users/hehligia/OneDrive - ETH Zurich/Documents/Code/masterthesis/calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
+    camera = 'sony_hs' # 'sony', 'sony_hs', 'gopro1', 'gopro2'
 
     # Define paths
-    data_path = "H:/data/calibration/" + camera + "/"
-    img_path = "H:/data/calibration/" + camera + "/216"
+    data_path = 'data/'
+    img_name = 'orig.png'
+
+    ####################################################################################
+
+    # Import calibration parameters
+    K = np.loadtxt('calibration/' + camera + '/K.txt')  # calibration matrix[3x3]
+    d = np.loadtxt('calibration/' + camera + '/d.txt')  # distortion coefficients[2x1]
 
     # Load image
-    image = cv2.imread(img_path)
+    image = cv2.imread(data_path + img_name)
 
     # Undistort images
     img_undst = undistort(K, d, image)
 
     # Save undistorted images
-    print("Save undistorted image: ", "calib_" + os.path.basename(img_path))
-    cv2.imwrite(data_path + "calib_" + os.path.basename(img_path) + ".PNG", img_undst)
+    print('Save undistorted image: ', 'undst_' + img_name)
+    cv2.imwrite(data_path + 'undst_' + img_name, img_undst)
