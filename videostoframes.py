@@ -39,11 +39,16 @@ def extract(dir, files):
     return
 
 if __name__ == "__main__":
+    ####################################################################################
+    # ONLY SECTION TO ADJUST PARAMETERS
+
     # Define the data path for the frame extraction
     data_path = 'G:/data/pipeline_tests/camera/'
 
     # Define the video file to extract frames from - "*.MP4" for all files
     file = "f_r4-pa_d114_h105_7.MP4" 
 
+    ####################################################################################
+    
     # Extract frames from video
     extract(data_path, file)

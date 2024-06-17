@@ -26,12 +26,19 @@ def createPattern(pattern, pattern_type, height, width):
     return image
 
 if __name__ == "__main__":
+    ####################################################################################
+    # ONLY SECTION TO ADJUST PARAMETERS
+
     # Define size of image
     height = 1200
     width = 1600
 
     # Define pattern type
     pattern_type = "alignment" # "finder", "alignment", "chessboard"
+
+    # To add another  pattern, add a new case to the pattern_type switch statement
+
+    ####################################################################################
     
     # Define pattern
     match pattern_type:

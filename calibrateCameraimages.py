@@ -51,7 +51,7 @@ def calibrate(camera, data_path):
         # Grayscale of the image
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # Find chessboard in the image, setting PatternSize(2nd arg) to a tuple of (#rows, #columns)
+        # Find chessboard in the image, setting PatternSizeto a tuple of (#rows, #columns)
         ret, corners = cv2.findChessboardCorners(gray, (rows,cols), None)
 
         # If a chessboard was found, let"s collect image/corner points
@@ -107,7 +107,7 @@ def calibrate(camera, data_path):
     # if we ever determined the image size
     if not imageSize:
         # Calibration failed because we didn"t see any chessboards of the PatternSize used
-        print(f'Calibration was unsuccessful -  could not detect chessboards in any of the frames supplied.')
+        print(f'Calibration was unsuccessful -  could not detect chessboards in any frame.')
         # Exit for failure
         exit()
     
@@ -121,8 +121,9 @@ def calibrate(camera, data_path):
             distCoeffs=None,
             flags=cv2.CALIB_FIX_ASPECT_RATIO)
         
-    # Save values to be used where matrix+dist is required, for instance for posture estimation
-    print("Calibration successful / RPE: ", rpe, " / found: ", count_found, " / failed: ", count_failed)
+    # Save values to be used where matrix+dist is required
+    print("Calibration successful / found: ", count_found, " / failed: ", count_failed)
+    print("Reprojection error (RPE): ", rpe)
     np.savetxt("calibration/" + camera + "/K.txt", K)
     print("Saved intrinsic parameter K = ", K)
     np.savetxt("calibration/" + camera + "/d.txt", d)
@@ -135,7 +136,7 @@ def calibrate(camera, data_path):
 
 def plot_calibration(rvec, tvec, objp, data_path, rpe):
     # plotCamera() config
-    plot_mode   = 0    # 0: fixed camera / moving chessboard,  1: fixed chessboard, moving camera
+    plot_mode   = 0 # 0: fixed camera/moving chessboard, 1: fixed chessboard/moving camera
     plot_range  = 0.5 # target volume [-plot_range:plot_range]
     camera_size = 0.03  # size of the camera in plot
 
@@ -158,22 +159,22 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
 
     if plot_mode == 0: # fixed camera = plot in CCS
         
-        plotCamera(ax, np.eye(3), np.zeros((1,3)), color="b", scale=camera_size) # camera is at (0,0,0)
+        plotCamera(ax, np.eye(3), np.zeros((1,3)), color="b", scale=camera_size)
 
         for i_ex in range(len(rvec)):
             X_C = np.zeros((objp.shape))
             for i_x in range(objp.shape[0]):
                 R_w2c = cv2.Rodrigues(rvec[i_ex])[0] # convert to the rotation matrix
                 t_w2c = tvec[i_ex].reshape(3)
-                X_C[i_x,:] = R_w2c.dot(objp[i_x,:]) + t_w2c # Transform chess corners in WCS to CCS
+                X_C[i_x,:] = R_w2c.dot(objp[i_x,:]) + t_w2c # Transform from WCS to CCS
                     
             ax.plot(X_C[:,0], X_C[:,1], X_C[:,2], ".") # plot chess corners in CCS
 
     elif plot_mode == 1: # fixed chessboard = plot in WCS
         
         for i_ex in range(len(rvec)):
-            R_c2w = np.linalg.inv(cv2.Rodrigues(rvec[i_ex])[0]) # Camera orientation in world coordinate system
-            t_c2w = -R_c2w.dot(tvec[i_ex]).reshape((1,3)) # Camera position in world coordinate system
+            R_c2w = np.linalg.inv(cv2.Rodrigues(rvec[i_ex])[0]) # Camera orientation in WCS
+            t_c2w = -R_c2w.dot(tvec[i_ex]).reshape((1,3)) # Camera position in WCS
             
             plotCamera(ax, R_c2w, t_c2w, color="b", scale=camera_size)
             print("Plot camera", i_ex, "at", t_c2w)
@@ -188,10 +189,15 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
     return
 
 if __name__ == "__main__":
+    ####################################################################################
+    # ONLY SECTION TO ADJUST PARAMETERS
+
     # Camera selection
     camera = "sony_hs" # "sony", "sony_hs" "gopro1", "gopro2
 
     # Define data path
     data_path = "H:/data/tests/calibration/" + camera
+
+    ####################################################################################
 
     calibrate(camera, data_path)
