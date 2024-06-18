@@ -18,72 +18,50 @@ def threshold(image, kernel_size, sigma_color, sigma_space, filter_threshold):
     # Apply bilateral filter
     img_bf = cv2.bilateralFilter(image, kernel_size, sigma_color, sigma_space)
 
-    # Apply Otsu thresholding
-#    _, img_thr_gb = cv2.threshold(img_gb, filter_threshold, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-#    _, img_thr_bf = cv2.threshold(img_bf, filter_threshold, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
+    # Apply binary thresholding
     _, img_thr_gb = cv2.threshold(img_gb, filter_threshold, 255, cv2.THRESH_BINARY)
     _, img_thr_bf = cv2.threshold(img_bf, filter_threshold, 255, cv2.THRESH_BINARY)
 
     return img_thr_gb, img_thr_bf
 
 if __name__ == "__main__":
+    ####################################################################################
+    # ONLY SECTION TO ADJUST PARAMETERS
     
-    # Define used camera
-    camera = "sony_hs" # "sony", "sony_hs", "gopro1", "gopro2
+    # Define paths
+    data_path = 'data/'
+    img_name = 'warp.png'
 
-    # Define used marker
-    marker = 'DICT_4X4_50'
+    # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter (45)
+    kernel_size = 35 # [px] must be positive and odd
 
-    # Define gaussian blur kernel size for Gaussian blur in/and bilateral filter
-    kernel_size = 25 # must be positive and odd
+    # Define bilateral filter parameters (200, 25)
+    sigma_color = 80 # [px] Filter sigma in the color space.A larger value of the parameter 
+    # means that farther colors within the pixel neighborhood (see sigmaSpace) will be 
+    # mixed together, resulting in larger areas of semi-equal color.
 
-    # Define bilateral filter
-    sigma_color = 15
-    sigma_space = 35
+    sigma_space = 35 # [px] Filter sigma in the coordinate space. A larger value of the 
+    # parameter means that farther pixels will influence each other as long as their colors 
+    # are close enough (see sigmaColor ). When d>0, it specifies the neighborhood size 
+    # regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
 
-    # Define filter threshold
-    filter_threshold = 90
+    # Define filter threshold for binary thresholding (90)
+    filter_threshold = 100 # [px] Threshold value for binary thresholding - the lower the 
+    #number the less points will be black
 
-    # Define pattern
-    pattern = 10 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
-                    [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
-                    [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
-                    [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], [12.6, 587.3, 0]]
-                    )
+    ####################################################################################
 
-    # Import calibration parameters
-    K = np.loadtxt("calibration/" + camera + "/K.txt")  # calibration matrix[3x3]
-    d = np.loadtxt("calibration/" + camera + "/d.txt")  # distortion coefficients[2x1]
-    
-    # Import image
-    image = cv2.imread("data/f_r8_d113_h40_200.jpg")
-
-    """ cv2.imshow("image", image)
-    cv2.waitKey(0) """
-
-    # Undistort image
-    img_undst = undistort(K, d, image)
-
-    
-    # Detect markers
-    img_det, corners, ids = detect(img_undst, marker)
-#    cv2.imshow('image_det', cv2.resize(img_det, (1920, 1080)))
-#    cv2.waitKey(0)
-
-    # Warp perspective
-    img_warp, M = warp(corners, pattern, img_undst)
-#    cv2.imshow('image_warp', cv2.resize(img_warp, (1080, 1080)))
-#    cv2.waitKey(0)
+    # Load undistorted image
+    img_warp = cv2.imread(data_path + img_name)
 
     # Threshold image
-    img_thr_gb, img_thr_bf = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold)
+    gb, bf = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold)
     
     fig, axis = plt.subplots(2, 2,sharex=True, sharey=True)
     axis[0, 0].set_title('Gausian Blur')
-    axis[0, 0].imshow(img_thr_gb)
+    axis[0, 0].imshow(gb)
     axis[0, 1].set_title('Bilateral Filter')
-    axis[0, 1].imshow(img_thr_bf)
+    axis[0, 1].imshow(bf)
     axis[1, 0].set_title('Original Image')
     axis[1, 0].imshow(img_warp)
     axis[1, 1].set_title('Original Image')

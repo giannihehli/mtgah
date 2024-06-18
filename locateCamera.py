@@ -29,8 +29,10 @@ def get_rpe(img_undst, imgpoints, objpoints, K, rvec, tvec):
     mean_error = 0
     for i in range(len(objpoints)):
         reprojected, _ = cv2.projectPoints(objpoints[i], rvec, tvec, K, np.zeros((5,1)))
-        img_rep = cv2.circle(img_undst, (int(reprojected[0][0][0]), int(reprojected[0][0][1])), 5, (0,0,255), -1)
-        img_corners = cv2.circle(img_rep, (int(imgpoints[i][0]), int(imgpoints[i][1])), 5, (0,255,0), -1)
+        img_rep = cv2.circle(img_undst, (int(reprojected[0][0][0]), int(reprojected[0][0][1])), 
+                             5, (0,0,255), -1)
+        img_corners = cv2.circle(img_rep, (int(imgpoints[i][0]), int(imgpoints[i][1])), 
+                                 5, (0,255,0), -1)
         error = cv2.norm(imgpoints[i]- reprojected, cv2.NORM_L2)/len(reprojected)
         print("error ", i, ": ", error)
         mean_error += error
@@ -66,17 +68,19 @@ def plot_result(rvec, tvec, K, objpoints):
     print("Camera position in world coordinate system: ", t_c2w)
     print("Camera orientation in world coordinate system: ", R_c2w)
 
-    plotCamera(ax_in, R_c2w.T, t_c2w, color="b", scale=0.1) #, width=camera_width, height=camera_height, focal_length=0.01, label="Camera")
+    plotCamera(ax_in, R_c2w.T, t_c2w, color="b", scale=0.1) 
+    # width=camera_width, height=camera_height, focal_length=0.01, label="Camera")
 
     # Plot pattern and camera position
     ax_in.plot(objpoints[:,0], objpoints[:,1], objpoints[:,2], ".")
-    ax_in.quiver(t_c2w[0], t_c2w[1], t_c2w[2], -t_c2w[0], -t_c2w[1], -t_c2w[2], color="r") # tvec points from the camera cooridnate origin to the world coordinate origin
+    ax_in.quiver(t_c2w[0], t_c2w[1], t_c2w[2], -t_c2w[0], -t_c2w[1], -t_c2w[2], color="r") 
+    # tvec points from the camera cooridnate origin to the world coordinate origin
 
     plt.show()
     cv2.waitKey(0)
 
 if __name__ == "__main__":
-
+    ####################################################################################
     # Define used camera
     camera = "sony_hs" # "sony", "sony_hs", "gopro1", "gopro2
 
@@ -90,19 +94,27 @@ if __name__ == "__main__":
     # Load image and define reference pattern in clockwise order in world frame (3D) in [mm]
     match basis:
         case "smooth":
-            image = cv2.imread("data/DSC00233.JPG")
-            pattern = 0.001 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], [98.6, 95, 0], [11.5, 93.2, 0],
-                                [498.8, 8.2, 0], [586, 8.2, 0], [586.5, 95.4, 0], [499.2, 95, 0],
-                                [499.5, 503, 0], [586.7, 503.9, 0], [585.4, 591.2, 0], [498, 590.3, 0],
-                                [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], [15.6, 590.5, 0]]
-                                )
+            image = cv2.imread("data/orig.png")
+            pattern = 0.001 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], [98.6, 95, 0], 
+                                        [11.5, 93.2, 0],
+                                        [498.8, 8.2, 0], [586, 8.2, 0], [586.5, 95.4, 0], 
+                                        [499.2, 95, 0],
+                                        [499.5, 503, 0], [586.7, 503.9, 0], [585.4, 591.2, 0], 
+                                        [498, 590.3, 0],
+                                        [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], 
+                                        [15.6, 590.5, 0]]
+                                        )
         case "rough":
-            image = cv2.imread("data/C0037 - Trim_0.JPG")
-            pattern = 0.001 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], [13.1, 98.8, 0],
-                                [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], [499.1, 98.6, 0],
-                                [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], [499.6, 587.1, 0],
-                                [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], [12.6, 587.3, 0]]
-                                )
+            image = cv2.imread("data/orig.png")
+            pattern = 0.001 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], 
+                                        [13.1, 98.8, 0],
+                                        [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], 
+                                        [499.1, 98.6, 0],
+                                        [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], 
+                                        [499.6, 587.1, 0],
+                                        [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], 
+                                        [12.6, 587.3, 0]]
+                                        )
 
     # Undistort image
     img_undst = undistort(K, d, image)

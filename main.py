@@ -49,13 +49,13 @@ if __name__ == '__main__':
     # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define parent directory of data to be analysed
-#    parent_dir = 'G:/data/'
-    parent_dir = 'G:/horizontal experiments/'
+    parent_dir = 'G:/data/'
+#    parent_dir = 'G:/horizontal experiments/'
 
     # Define day (or name) of experiments that should be analysed
-#    data_folder = 'pipeline_tests'
+    data_folder = 'pipeline_tests'
 #    data_folder = '20240531'
-    data_folder = '20240604'
+#    data_folder = '20240604'
 #    data_folder = 'combined'
 
     #######################################
@@ -328,7 +328,7 @@ if __name__ == '__main__':
                 print(f'Saving {frame+100}_warp - {datetime.now()}')
                 cv2.imwrite(f'{data_path}camera/{exp_out}/{frame+100}_warp.png', img_warp)
 
-            # Threshold image
+            # Threshold image - first value gaussian blur and second bilateral filter
             _ , img_thr = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold) # img_thr_gb, img_thr_bf
 
             # Save image of wanted experiment in folder

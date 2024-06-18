@@ -75,7 +75,7 @@ def detect(image, marker):
             topLeft = (int(topLeft[0]), int(topLeft[1]))
 
             # calculate thickness for drawing
-            thickness = max(abs(bottomRight[0] - topLeft[0]), abs(bottomLeft[1] - topRight[1]))
+            thickness = max(abs(bottomRight[0] - topLeft[0]), abs(bottomLeft[0] - topRight[0]))
 
             # draw the bounding box of the ArUco marker
             cv2.line(frame, topLeft, topRight, (0, 255, 0), thickness//50)

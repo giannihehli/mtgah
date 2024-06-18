@@ -87,7 +87,6 @@ if __name__ == "__main__":
                                     [0.83, 50.4, 0],
                                     [8.97, 1.23, 0], [8.98, 9.28, 0], [0.87, 9.29, 0], 
                                     [0.89, 1.24, 0]])
-    
 
     # Load undistorted image
     img_undst = cv2.imread(data_path + img_name)
