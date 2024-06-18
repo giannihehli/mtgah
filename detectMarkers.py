@@ -36,11 +36,11 @@ def detect(image, marker):
     arucoParams = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
 
-    # resize image
+    # copy image
     frame = image.copy()
 
     # detect ArUco markers in the input frame
-    (corners, ids, rejected) = detector.detectMarkers(frame)
+    (corners, ids, _) = detector.detectMarkers(frame)
 
     # do subpixel detection
     corners_sub = []
@@ -54,9 +54,6 @@ def detect(image, marker):
 #    print('corners_sub detect = ', corners_sub)
 
     ## Display detection result
-    # Draw a square around the markers
-    cv2.aruco.drawDetectedMarkers(frame, corners_sub)
-
     # verify *at least* one ArUco marker was detected
     if len(corners_sub) > 0:
         # flatten the ArUco IDs list
@@ -77,21 +74,26 @@ def detect(image, marker):
             bottomLeft = (int(bottomLeft[0]), int(bottomLeft[1]))
             topLeft = (int(topLeft[0]), int(topLeft[1]))
 
-            # compute and draw the center (x, y)-coordinates of the
-            # ArUco marker
-            cX = int((topLeft[0] + bottomRight[0]) / 2.0)
-            cY = int((topLeft[1] + bottomRight[1]) / 2.0)
-            cv2.circle(frame, (cX, cY), 10, (255, 0, 0), -1)
+            # calculate thickness for drawing
+            thickness = max(abs(bottomRight[0] - topLeft[0]), abs(bottomLeft[1] - topRight[1]))
 
+            # draw the bounding box of the ArUco marker
+            cv2.line(frame, topLeft, topRight, (0, 255, 0), thickness//50)
+            cv2.line(frame, topRight, bottomRight, (0, 255, 0), thickness//50)
+            cv2.line(frame, bottomRight, bottomLeft, (0, 255, 0), thickness//50)
+            cv2.line(frame, bottomLeft, topLeft, (0, 255, 0), thickness//50)
+
+            # draw the top left corner (x, y)-coordinates of the ArUco marker
             cX = int(topLeft[0])
             cY = int(topLeft[1])
-            cv2.circle(frame, (cX, cY), 10, (255, 0, 0), -1)
-            
+            cv2.circle(frame, (cX, cY), thickness//30, (255, 0, 0), -1)
+
             # draw the ArUco marker ID on the frame
             cv2.putText(frame, str(markerID),
-                (topLeft[0], topLeft[1] - 15),
+                (topLeft[0] + (bottomRight[0] - topLeft[0])//4, 
+                 bottomRight[1] - (bottomRight[1] - topLeft[1])//4),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                5, (0, 255, 0), 10)
+                thickness//50, (0, 0, 255), thickness//50)
 
     # show the output frame
 #    cv2.imshow('frame', cv2.resize(frame, (1080, 1080)))
@@ -135,10 +137,6 @@ if __name__ == '__main__':
     img_name = 'undst.png'
 
     ####################################################################################
-
-    # Import calibration parameters
-    K = np.loadtxt('calibration/' + camera + '/K.txt')  # calibration matrix[3x3]
-    d = np.loadtxt('calibration/' + camera + '/d.txt')  # distortion coefficients[2x1]
 
     # Read image
     image = cv2.imread(data_path + img_name)

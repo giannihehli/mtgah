@@ -65,7 +65,7 @@ if __name__ == '__main__':
     skip_frames = 10  # [] Number of frames to skip in calibration video
 
     # Define images for optional output of respective images
-    img_out = '' # Options: '', _undst', '_det', '_warp', '_thr', '_mes'
+    img_out = '_det' # Options: '', _undst', '_det', '_warp', '_thr', '_mes'
 
     # Define exp_out for optional output of all respective experiment images
     exp_out = 'f_r2-pa_d41_h148_16' # Options: '', 'experiment_name',
