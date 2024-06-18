@@ -200,7 +200,7 @@ if __name__ == '__main__':
     camera = 'sony_hs' # 'sony', 'sony_hs' 'gopro1', 'gopro2
 
     # Define data path
-    data_path = 'H:/data/tests/sony_hs/camera/'
+    data_path = 'G:/horizontal experiments/20240604/camera/'
 
     # Input factor for skipping frames in calibration video
     skip_frames = 10    

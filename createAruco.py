@@ -60,7 +60,7 @@ if __name__ == "__main__":
     aruco_codes = [0, 1, 2, 3]
 
     # Default ArUco dictionary name. choose from:
-    aruco_dict_name = "DICT_4X4_1000"
+    aruco_dict_name = "DICT_4X4_50"
 
     # "DICT_4X4_50", "DICT_4X4_100", "DICT_4X4_250", "DICT_4X4_1000", 
     # "DICT_5X5_50", "DICT_5X5_100", "DICT_5X5_250", "DICT_5X5_1000", 

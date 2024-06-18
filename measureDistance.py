@@ -161,7 +161,7 @@ if __name__ == "__main__":
     img_undst = undistort(K, d, image)
     
     # Detect markers
-    marker = "DICT_4X4_1000"
+    marker = "DICT_4X4_50"
     img_det, corners, ids = detect(img_undst, marker)
 
     """ cv2.imshow("image_det", cv2.resize(img_det, (1920, 1080)))

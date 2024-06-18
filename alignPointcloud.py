@@ -232,7 +232,7 @@ if __name__ == '__main__':
     cv2.imwrite(f'{data_path}images/{exp}_ptc.jpg', image)
 
     # Detect ArUco markers
-    marker = 'DICT_4X4_1000'
+    marker = 'DICT_4X4_50'
     ptc_det, ptc_corners, ptc_ids = detect(image, marker)
 
     # Show the image with detected markers

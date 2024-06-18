@@ -25,8 +25,7 @@ def detect(image, marker):
         'DICT_7X7_1000': cv2.aruco.DICT_7X7_1000
         }
 
-    # verify that the supplied ArUCo tag exists and is supported by
-    # OpenCV
+    # verify that the supplied ArUCo tag exists and is supported by OpenCV
     if ARUCO_DICT.get(marker, None) is None:
         print("[INFO] ArUCo tag of '{}' is not supported".format(
             marker))
@@ -38,7 +37,6 @@ def detect(image, marker):
     detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
 
     # resize image
-#    frame = imutils.resize(image, width=1000)
     frame = image.copy()
 
     # detect ArUco markers in the input frame
@@ -48,7 +46,8 @@ def detect(image, marker):
     corners_sub = []
     for corner in corners:
         term = (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_COUNT, 30, 0.1)
-        refined_corner = cv2.cornerSubPix(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), np.float32(corner), (5,5), (-1,-1), term)
+        refined_corner = cv2.cornerSubPix(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 
+                                          np.float32(corner), (5,5), (-1,-1), term)
         corners_sub.append(refined_corner)
         
 #    print('corners detect = ', corners)
@@ -122,14 +121,35 @@ def sortcorners(corners_sub, ids):
     return corners_sort, ids_sort
 
 if __name__ == '__main__':
+    ####################################################################################
+    # ONLY SECTION TO ADJUST PARAMETERS
+    
+    # Define camera
+    camera = 'sony_hs' # 'sony_hs', 'sony', 'gopro1', 'gopro2
 
-    camera = 'sony' # 'sony', 'gopro1', 'gopro2
+    # Define marker
+    marker = 'DICT_4X4_50'
+
+    # Define paths
+    data_path = 'data/'
+    img_name = 'undst.png'
+
+    ####################################################################################
+
     # Import calibration parameters
     K = np.loadtxt('calibration/' + camera + '/K.txt')  # calibration matrix[3x3]
     d = np.loadtxt('calibration/' + camera + '/d.txt')  # distortion coefficients[2x1]
 
-    marker = 'DICT_4X4_1000'
-    image = cv2.imread('G:/data/pipeline_tests/camera/100_warp.png')
+    # Read image
+    image = cv2.imread(data_path + img_name)
+
+    # Detect markers
     img_det, corners, ids = detect(image, marker)
-#    cv2.imshow('image', cv2.resize(img_det, (1080, 1080)))
-#    cv2.waitKey(0)
+
+    # Show detection result
+    cv2.imshow('image', cv2.resize(img_det, (1920, 1080)))
+    cv2.waitKey(0)
+
+    # Save undistorted images
+    print('Save detected image: ', 'det_' + img_name)
+    cv2.imwrite(data_path + 'det_' + img_name, img_det)

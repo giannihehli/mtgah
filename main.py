@@ -241,7 +241,7 @@ if __name__ == '__main__':
         h_initial = int(height[1:])
                 
         #Define used marker type
-        marker = 'DICT_4X4_1000'
+        marker = 'DICT_4X4_50'
 
         # Make directory for output images
         if img_out:
