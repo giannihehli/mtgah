@@ -56,7 +56,12 @@ if __name__ == "__main__":
 
     # Threshold image
     gb, bf = threshold(img_warp, kernel_size, sigma_color, sigma_space, filter_threshold)
-    
+
+    # Save thresholded image
+    print('Save detected image: ', 'thr_' + img_name)
+    cv2.imwrite(data_path + 'thr_' + img_name, bf)
+
+    # Display images for comparison
     fig, axis = plt.subplots(2, 2,sharex=True, sharey=True)
     axis[0, 0].set_title('Gausian Blur')
     axis[0, 0].imshow(gb)
