@@ -85,30 +85,40 @@ if __name__ == '__main__':
 
     #######################################
     # SCANNER OPTIONS
-    
+
     # Define how many aruco codes are used on the scanned area
     aruco_count = 4 # [] Number of aruco codes used on the scanned area
 
     # Define the length of the basis in [m] as the y-distance between the image and raster
     # coordinate frame
     basis_length = 0.6 # [m] Length of the basis in y direction
+
+    # Define raster size in [m] for rasterization of scanned pointcloud
+    raster_size = 0.001 # [m] Size of one bin in the raster in x and y directionn
     
     # Define angle of inclined base plane in [deg]
-    angle = 0 # [deg] Angle of the inclined base plane with codes - if codes are on runout set to 0
+    angle = 0 # [deg] Angle of the inclined base plane - if codes are on runout set to 0
 
-    # Define the translation of the wanted world frame with regard to the raster frame in [m]
+    # Define the location of the raster frame in the wanted world frame in [m]
+    # This moves the pointcloud to the wanted world frame
+    # If everything is set to zero, the raster frame and world frame align
     trans_x = 0.0 # [m] Translation of the wanted world frame in x direction
     trans_y = 0.0 # [m] Translation of the wanted world frame in y direction
     trans_z = 0.0 # [m] Translation of the wanted world frame in z direction
 
-    # Define raster size in [m] for rasterization of scanned pointcloud
-    raster_size = 0.001 # [m] Size of one bin in the raster in x and y directionn
+    # Define raster min and max values in [m] for x and y direction in world frame
+    # This defines what part of the pointcloud in the world frame is rasterized and exported
+    world_min_x = 0.1 # [m] Minimum value of the raster in x direction
+    world_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    world_min_y = 0.1 # [m] Minimum value of the raster in y direction
+    world_max_y = 0.5 # [m] Maximum value of the raster in y direction
+
 
     # Define raster min and max values in [m] for x and y direction in raster frame
-    raster_min_x = 0.1 # [m] Minimum value of the raster in x direction
-    raster_max_x = 0.5 # [m] Maximum value of the raster in x direction
-    raster_min_y = 0.1 # [m] Minimum value of the raster in y direction
-    raster_max_y = 0.5 # [m] Maximum value of the raster in y direction
+    world_min_x = 0.1 # [m] Minimum value of the raster in x direction
+    world_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    world_min_y = 0.1 # [m] Minimum value of the raster in y direction
+    world_max_y = 0.5 # [m] Maximum value of the raster in y direction
 
     # Define raster min and max values in [m] for rasterization of last frame in raster frame
     img_min_x = 0.1 # [m] Minimum value of the raster in x direction
@@ -530,7 +540,7 @@ if __name__ == '__main__':
         cloud_corr = transform(cloud, M, basis_length, R, t)
 
         # Rasterise the corrected point cloud
-        max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, raster_min_x, raster_max_x, raster_min_y, raster_max_y)
+        max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, world_min_x, world_max_x, world_min_y, world_max_y)
 
         # Define the output path
         ptc_output = f'{data_path}rasters/{exp}_raster.asc'

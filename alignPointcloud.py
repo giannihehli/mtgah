@@ -19,13 +19,17 @@ def getimage(cloud):
     cloud.points['x'] -= min_x
     cloud.points['y'] -= min_y
 
-    # Create an empty list to store the indices - note that x and y axis are flipped to get the
-    # correct image
-    indices = np.empty((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1), dtype=object)
+    # Create an empty list to store the indices - note that x and y axis are flipped 
+    # to get the correct image
+    indices = np.empty((int(cloud.points['y'].max()) + 1, 
+                        int(cloud.points['x'].max()) + 1), 
+                        dtype=object)
 
-    # Now create the image and store the indices - note that x and y axis are flipped to get the
-    # correct image
-    image = np.zeros((int(cloud.points['y'].max()) + 1, int(cloud.points['x'].max()) + 1, 3), dtype=np.uint8)
+    # Now create the image and store the indices - note that x and y axis are flipped 
+    # to get the correct image
+    image = np.zeros((int(cloud.points['y'].max()) + 1, 
+                      int(cloud.points['x'].max()) + 1, 
+                      3), dtype=np.uint8)
 
     # Loop through the points, save the color values and store the indices
     for index, point in cloud.points.iterrows():
@@ -50,7 +54,8 @@ def sortpoints(ptc_corners, ptc_ids, pattern, aruco_count):
         target_ptc[i*4:i*4+4] = 0.1 * pattern[id*4:id*4+4]
 
     # Define corners in 3D as source points
-    source_ptc = np.hstack((ptc_corners_det, np.zeros((len(ptc_ids) * 4, 1), dtype=ptc_corners.dtype)))
+    source_ptc = np.hstack((ptc_corners_det, np.zeros((len(ptc_ids) * 4, 1), 
+                                                      dtype=ptc_corners.dtype)))
 
     return source_ptc, target_ptc
 
@@ -92,7 +97,8 @@ def transform(cloud, M, basis_length, R, t):
     df_new = pd.DataFrame(columns=cloud.points.columns)
 
     # Apply the transformation matrix to the point cloud
-    x_rast, y, z, _ = np.dot(M, np.array([cloud.points['x'], cloud.points['y'], cloud.points['z'], np.ones(cloud.points.shape[0])]))
+    x_rast, y, z, _ = np.dot(M, np.array([cloud.points['x'], cloud.points['y'], 
+                                          cloud.points['z'], np.ones(cloud.points.shape[0])]))
 
     # Mirror the y-coordinates
     y_rast = 1000*basis_length - y
@@ -128,20 +134,13 @@ def rasterize(cloud, raster_size, x_min, x_max, y_min, y_max):
     y_bins = np.arange(10000*y_min, 10000*y_max, 10000*raster_size)
 
     # Compute the maximum z-coordinate in each bin
-    max_z, x_edges, y_edges, binnumber = stats.binned_statistic_2d(
-        cloud.points['x'], 
-        cloud.points['y'], 
-        cloud.points['z'], 
-        statistic='max', 
-        bins=[x_bins, y_bins])
+    max_z, x_edges, y_edges, _ = stats.binned_statistic_2d(cloud.points['x'], 
+                                                           cloud.points['y'], 
+                                                           cloud.points['z'], 
+                                                           statistic='max', 
+                                                           bins=[x_bins, y_bins])
 
     return max_z, x_edges, y_edges
-
-    # Define raster size in [m] for rasterization of last frame in raster frame
-    img_min_x = 0.3 # [m] Minimum value of the raster in x direction
-    img_max_x = 0.5 # [m] Maximum value of the raster in x direction
-    img_min_y = 0.3 # [m] Minimum value of the raster in y direction
-    img_max_y = 0.6 # [m] Maximum value of the raster in y direction
     
 def convertimage(img_thr, img_min_x, img_max_x, img_min_y, img_max_y):
     # Change the indeces from [m] to pixel coordinates [0.1mm]
@@ -193,26 +192,57 @@ def export(max_z, x_edges, y_edges, raster_size, output_path):
 
 
 if __name__ == '__main__':
-
-    # Define pattern as 3D coordinates in 0.1mm
-    pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], [9.12, 8.92, 0], [1.05, 8.92, 0],
-                            [50.7, 0.91, 0], [58.77, 0.94, 0], [58.75, 9.04, 0], [50.66, 9, 0],
-                            [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], [50.66, 59.14, 0],
-                            [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], [1.04, 59.11, 0]])
+    ####################################################################################
+    # ONLY SECTION TO ADJUST PARAMETERS
 
     # Define the path to the data
-    data_path = 'G:/data/pipeline_tests/scanner/'
+    data_path = 'data/'
 
     # Define experiment to be aligned
-    exp = 'f_r0-pa_d114_h35_5'
+    exp = 'f_r2-pa_d41_h148_16'
 
-    # Define the number of ArUco markers on the scanned area
-    aruco_count = 4
+    # Define positions of the Aruco codes as 3D coordinates in 0.1mm in clockwise order
+    pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], [9.12, 8.92, 0], 
+                              [1.05, 8.92, 0], # Code ID 0, counterclockwise from left top
+                              [50.7, 0.91, 0], [58.77, 0.94, 0], [58.75, 9.04, 0], 
+                              [50.66, 9, 0], # Code ID 1, counterclockwise from left top
+                              [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], 
+                              [50.66, 59.14, 0], # Code ID 2, counterclockwise from left top
+                              [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], 
+                              [1.04, 59.11, 0]]) # Code ID 3, counterclockwise from left top
+   
+    #######################################
+    # SCANNER OPTIONS
+    
+    # Define how many aruco codes are used on the scanned area
+    aruco_count = 4 # [] Number of aruco codes used on the scanned area
 
     # Define the length of the basis in [m] as the y-distance between the image and raster
     # coordinate frame
     basis_length = 0.6 # [m] Length of the basis in y direction
 
+    # Define raster size in [m] for rasterization of scanned pointcloud
+    raster_size = 0.001 # [m] Size of one bin in the raster in x and y directionn
+    
+    # Define angle of inclined base plane in [deg]
+    angle = 0 # [deg] Angle of the inclined base plane - if codes are on runout set to 0
+
+    # Define the location of the raster frame in the wanted world frame in [m]
+    # This moves the pointcloud to the wanted world frame
+    # If everything is set to zero, the raster frame and world frame align
+    trans_x = 0.0 # [m] Translation of the wanted world frame in x direction
+    trans_y = 0.0 # [m] Translation of the wanted world frame in y direction
+    trans_z = 0.0 # [m] Translation of the wanted world frame in z direction
+
+    # Define raster min and max values in [m] for x and y direction in world frame
+    # This defines what part of the pointcloud in the world frame is rasterized and exported
+    world_min_x = 0.1 # [m] Minimum value of the raster in x direction
+    world_max_x = 0.5 # [m] Maximum value of the raster in x direction
+    world_min_y = 0.1 # [m] Minimum value of the raster in y direction
+    world_max_y = 0.5 # [m] Maximum value of the raster in y direction
+
+    ####################################################################################
+    
     # Load the .ply file
     cloud = PyntCloud.from_file(f'{data_path}{exp}.ply')
 
@@ -223,13 +253,13 @@ if __name__ == '__main__':
 
     # Try making the directory for the pointcloud images
     try:
-        os.mkdir(f'{data_path}images')
+        os.mkdir(f'{data_path}ptc_images')
         print(f'Directory scanner/images created. All pointcloud images saved there.')
     except FileExistsError:
         pass
     
     # Save the image
-    cv2.imwrite(f'{data_path}images/{exp}_ptc.jpg', image)
+    cv2.imwrite(f'{data_path}ptc_images/{exp}_ptc.jpg', image)
 
     # Detect ArUco markers
     marker = 'DICT_4X4_50'
@@ -240,28 +270,30 @@ if __name__ == '__main__':
     cv2.waitKey(0)
     
     # Save the image with detected markers
-    cv2.imwrite(f'{data_path}images/{exp}_det.jpg', ptc_det)
-
-    print('ptc_ids: ', ptc_ids)
-
-    ptc_ids = np.array(ptc_ids)
-    ptc_ids = np.append(ptc_ids, 10)
-
-    print('ptc_ids: ', ptc_ids)
+    cv2.imwrite(f'{data_path}ptc_images/{exp}_det.jpg', ptc_det)
 
     # Sort the detected corners and target points
-    source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern, aruco_count)    
+    source, target = sortpoints(ptc_corners, ptc_ids, pattern, aruco_count)    
 
     # Calculate the transformation matrix from the detected corners and the measured pattern
-    M = calculate_transformation(source_ptc, target_ptc)
+    M = calculate_transformation(source, target)
 
-    print(M)
+    # Define the rotation angle in radians
+    theta = np.radians(angle)
+
+    # Define the additional rotation matrix for the inclined base plane
+    R = np.array([[1, 0, 0],
+                [0, np.cos(theta), -np.sin(theta)],
+                [0, np.sin(theta), np.cos(theta)]])
+
+    # Define the translation vector for the wanted world frame
+    t = np.array([trans_x, trans_y, trans_z])
 
     # Transform the pointcloud to correct origin
-    cloud_corr = transform(cloud, M, basis_length)
+    cloud_corr = transform(cloud, M, basis_length, R, t)
     
-    """ # Plot the corrected point cloud
-    fig = plt.figure()
+    # Plot the initial point cloud
+    fig = plt.figure(num='Initial Point Cloud')
     ax = fig.add_subplot(111, projection='3d')
     #ax.view_init(elev=0, azim=0, roll=0) # Set the view to y-z plane
     #ax.view_init(elev=0, azim=-90, roll=0) # Set the view to x-z plane
@@ -275,14 +307,9 @@ if __name__ == '__main__':
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     plt.show()
-
-    print(f'x min: {cloud.points['x'].min()}')
-    print(f'x max: {cloud.points['x'].max()}')
-    print(f'y min: {cloud.points['y'].min()}')
-    print(f'y max: {cloud.points['y'].max()}')
-
+    
     # Plot the corrected point cloud
-    fig = plt.figure()
+    fig = plt.figure(num='Corrected Point Cloud')
     ax = fig.add_subplot(111, projection='3d')
     #ax.view_init(elev=0, azim=0, roll=0) # Set the view to y-z plane
     #ax.view_init(elev=0, azim=-90, roll=0) # Set the view to x-z plane
@@ -297,33 +324,12 @@ if __name__ == '__main__':
     ax.set_zlabel('Z')
     plt.show()
 
-    print(f'x min: {cloud_corr.points['x'].min()}')
-    print(f'x max: {cloud_corr.points['x'].max()}')
-    print(f'y min: {cloud_corr.points['y'].min()}')
-    print(f'y max: {cloud_corr.points['y'].max()}') """
-
-    # Define raster size in m
-    raster_size = 0.001
-
-    # Define raster size in [m] for rasterization of last frame in raster frame
-    img_min_x = 0 # [m] Minimum value of the raster in x direction
-    img_max_x = 0.5 # [m] Maximum value of the raster in x direction
-    img_min_y = 0 # [m] Minimum value of the raster in y direction
-    img_max_y = 0.3 # [m] Maximum value of the raster in y direction
-
     # Rasterise the corrected point cloud
-    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, img_min_x, img_max_x, img_min_y, img_max_y)
-
+    max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, 
+                                        world_min_x, world_max_x, 
+                                        world_min_y, world_max_y)
     # Define the output path
-    output_path = f'G:/data/pipeline_tests/rasters/{exp}_raster.asc'
-
-    print(f'max_z shape: {max_z.shape}')
-    print(f'x_edges shape: {x_edges.shape}')
-    print(f'y_edges shape: {y_edges.shape}')
-
-    print(f'max_z: {max_z}')
-    print(f'x_edges: {x_edges}')
-    print(f'y_edges: {y_edges}')
+    output_path = f'output/{exp}_raster.asc'
 
     # Export data as ascii file
     export(max_z, x_edges, y_edges, raster_size, output_path)
