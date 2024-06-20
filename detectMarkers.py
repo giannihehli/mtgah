@@ -76,24 +76,25 @@ def detect(image, marker):
 
             # calculate thickness for drawing
             thickness = max(abs(bottomRight[0] - topLeft[0]), abs(bottomLeft[0] - topRight[0]))
+            line_thickness = max(1, thickness//50)
 
             # draw the bounding box of the ArUco marker
-            cv2.line(frame, topLeft, topRight, (0, 255, 0), thickness//50)
-            cv2.line(frame, topRight, bottomRight, (0, 255, 0), thickness//50)
-            cv2.line(frame, bottomRight, bottomLeft, (0, 255, 0), thickness//50)
-            cv2.line(frame, bottomLeft, topLeft, (0, 255, 0), thickness//50)
+            cv2.line(frame, topLeft, topRight, (0, 255, 0), line_thickness)
+            cv2.line(frame, topRight, bottomRight, (0, 255, 0), line_thickness)
+            cv2.line(frame, bottomRight, bottomLeft, (0, 255, 0), line_thickness)
+            cv2.line(frame, bottomLeft, topLeft, (0, 255, 0), line_thickness)
 
             # draw the top left corner (x, y)-coordinates of the ArUco marker
             cX = int(topLeft[0])
             cY = int(topLeft[1])
-            cv2.circle(frame, (cX, cY), thickness//30, (255, 0, 0), -1)
+            cv2.circle(frame, (cX, cY), line_thickness, (255, 0, 0), -1)
 
             # draw the ArUco marker ID on the frame
             cv2.putText(frame, str(markerID),
                 (topLeft[0] + (bottomRight[0] - topLeft[0])//4, 
                  bottomRight[1] - (bottomRight[1] - topLeft[1])//4),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                thickness//50, (0, 0, 255), thickness//50)
+                line_thickness, (0, 0, 255), line_thickness)
 
     # show the output frame
 #    cv2.imshow('frame', cv2.resize(frame, (1080, 1080)))

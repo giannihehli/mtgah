@@ -51,7 +51,6 @@ def calibratevideo(data_path, skip_frames):
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame*skip_frames)
 
         # Load image
-        print(f'Analyse frame {skip_frames*frame}')
         ret, img = cap.read()
 
         if ret == False:
@@ -142,7 +141,8 @@ def calibratevideo(data_path, skip_frames):
 def plot_calibration(rvec, tvec, objp, data_path, rpe):
     # plotCamera() config
     plot_mode   = 0 # 0: fixed camera/moving chessboard, 1: fixed chessboard/moving camera
-    plot_range  = 0.4 # target volume [-plot_range:plot_range]
+    plot_range_pos  = 0.4 # target volume [plot_range_neg:plot_range_pos]
+    plot_range_neg  = -0.2 # target volume [plot_range_neg:plot_range_pos]
     camera_size = 0.03  # size of the camera in plot
 
     # 3D PLOT
@@ -152,9 +152,9 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
     
-    ax.set_xlim(-plot_range, plot_range)
-    ax.set_ylim(-plot_range, plot_range)
-    ax.set_zlim(0, 2*plot_range)
+    ax.set_xlim(plot_range_neg, plot_range_pos)
+    ax.set_ylim(plot_range_neg, plot_range_pos)
+    ax.set_zlim(0, 2*plot_range_pos)
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -190,7 +190,7 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
 
     ax.view_init(azim=45, elev=-160, roll=0)
     plt.savefig(f'{data_path}calibration/result.pdf')
-#    plt.show()
+    plt.show()
 
 if __name__ == '__main__':
     ####################################################################################

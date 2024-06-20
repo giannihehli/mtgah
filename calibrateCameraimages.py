@@ -41,7 +41,11 @@ def calibrate(camera, data_path):
     # Get all image pathes
     images = glob.glob(input_files)
 
-    # Define images
+    try:
+        os.mkdir(f'{data_path}calibration')
+        print(f'Directory {data_path}calibration created.')
+    except FileExistsError:
+        pass
     
 
     # Loop through images glob"ed
@@ -82,11 +86,11 @@ def calibrate(camera, data_path):
             #cv2.imshow("Chessboard", img)
             #cv2.waitKey(0)
             try:
-                os.mkdir(output_path + "/detected")
+                os.mkdir(output_path + "calibration/detected")
             except FileExistsError:
                 pass
             
-            cv2.imwrite(output_path + "/detected/det_" + os.path.basename(image_path), img)
+            cv2.imwrite(output_path + "calibration/detected/det_" + os.path.basename(image_path), img)
         
         else:     # if not found
             count_failed += 1
@@ -124,9 +128,9 @@ def calibrate(camera, data_path):
     # Save values to be used where matrix+dist is required
     print("Calibration successful / found: ", count_found, " / failed: ", count_failed)
     print("Reprojection error (RPE): ", rpe)
-    np.savetxt("calibration/" + camera + "/K.txt", K)
+    np.savetxt(data_path + "calibration/K.txt", K)
     print("Saved intrinsic parameter K = ", K)
-    np.savetxt("calibration/" + camera + "/d.txt", d)
+    np.savetxt(data_path + "calibration/d.txt", d)
     print("Saved Distortion parameters d = (k1, k2, p1, p2, k3) = ", d)
     
     # Plot calibration
@@ -137,19 +141,20 @@ def calibrate(camera, data_path):
 def plot_calibration(rvec, tvec, objp, data_path, rpe):
     # plotCamera() config
     plot_mode   = 0 # 0: fixed camera/moving chessboard, 1: fixed chessboard/moving camera
-    plot_range  = 0.5 # target volume [-plot_range:plot_range]
+    plot_range_pos  = 0.4 # target volume [plot_range_neg:plot_range_pos]
+    plot_range_neg  = -0.2 # target volume [plot_range_neg:plot_range_pos]
     camera_size = 0.03  # size of the camera in plot
 
     # 3D PLOT
     fig = plt.figure()
-    fig.suptitle(f'Camera calibration from {data_path}calibration.mp4\nRPE: {rpe:.5f}')
+    fig.suptitle(f'Camera calibration from {data_path}*.jpg\nRPE: {rpe:.5f}')
     fig.show()
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
     
-    ax.set_xlim(-plot_range, plot_range)
-    ax.set_ylim(-plot_range, plot_range)
-    ax.set_zlim(0, 2*plot_range)
+    ax.set_xlim(plot_range_neg, plot_range_pos)
+    ax.set_ylim(plot_range_neg, plot_range_pos)
+    ax.set_zlim(0, 2*plot_range_pos)
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -184,7 +189,7 @@ def plot_calibration(rvec, tvec, objp, data_path, rpe):
     ax.view_init(azim=45, elev=-160, roll=0)
 #    plt.show()
 #    cv2.waitKey(0)
-    plt.savefig("calibration/" + camera + "/result.pdf")
+    plt.savefig(data_path + "calibration/result.pdf")
     
     return
 
@@ -196,7 +201,7 @@ if __name__ == "__main__":
     camera = "sony_hs" # "sony", "sony_hs" "gopro1", "gopro2
 
     # Define data path
-    data_path = "H:/data/tests/calibration/" + camera
+    data_path = "G:/data/tests/calibration/" + camera + "/"
 
     ####################################################################################
 
