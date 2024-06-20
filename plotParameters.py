@@ -6,7 +6,8 @@ import os
 # Importing user-defined modules
 
 
-def plotparams(data_path, exp, df, layout, basis, direction, d, height, d_vertical, d_horizontal):
+def plotparams(data_path, exp, df, layout, basis, direction, d, height, 
+               d_vertical, d_horizontal):
 
     # Define roughness basis
     basis = basis[1]

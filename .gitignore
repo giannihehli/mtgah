@@ -163,4 +163,3 @@ cython_debug/
 # ignore GAH
 temp/
 output/
-data/

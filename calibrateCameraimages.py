@@ -90,7 +90,8 @@ def calibrate(camera, data_path):
             except FileExistsError:
                 pass
             
-            cv2.imwrite(output_path + "calibration/detected/det_" + os.path.basename(image_path), img)
+            cv2.imwrite(output_path+"calibration/detected/det_"+os.path.basename(image_path), 
+                        img)
         
         else:     # if not found
             count_failed += 1

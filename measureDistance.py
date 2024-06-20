@@ -75,10 +75,12 @@ def measure(image, image_thr, search_width, top_search):
 
     # Get extrema of vertical search window
     top, bottom = get_extrema(image_thr[vertical_top:vertical_bottom, 
-                                        vertical_x-search_width//2:vertical_x+search_width//2])
+                                        vertical_x-search_width//2:vertical_x + 
+                                        search_width//2])
 
     # Get extrema of horizontal search window
-    left, right = get_extrema((image_thr[horizontal_y-search_width//2:horizontal_y+search_width//2, 
+    left, right = get_extrema((image_thr[horizontal_y-search_width//2:horizontal_y + 
+                                         search_width//2, 
                                          horizontal_left:horizontal_right]).T)
 
     # Calculate the image coordinates of the extrema

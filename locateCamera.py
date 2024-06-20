@@ -13,7 +13,8 @@ def locate(corners, pattern, K, d):
 
     # Get pose estimation
 #    _, rvec, tvec, rpe = cv2.solvePnPGeneric(pattern, corners, K, d)
-    rpe, rvec, tvec, inliers = cv2.solvePnPRansac(pattern, corners, K, d, flags=cv2.SOLVEPNP_EPNP)
+    rpe, rvec, tvec, inliers = cv2.solvePnPRansac(pattern, corners, K, d, 
+                                                  flags=cv2.SOLVEPNP_EPNP)
     # Ensure rvec and tvec are in the correct format
     rvec = np.array(rvec).reshape(-1, 3)
     tvec = np.array(tvec).reshape(-1, 3)
@@ -29,8 +30,8 @@ def get_rpe(img_undst, imgpoints, objpoints, K, rvec, tvec):
     mean_error = 0
     for i in range(len(objpoints)):
         reprojected, _ = cv2.projectPoints(objpoints[i], rvec, tvec, K, np.zeros((5,1)))
-        img_rep = cv2.circle(img_undst, (int(reprojected[0][0][0]), int(reprojected[0][0][1])), 
-                             5, (0,0,255), -1)
+        img_rep = cv2.circle(img_undst, (int(reprojected[0][0][0]), 
+                                         int(reprojected[0][0][1])), 5, (0,0,255), -1)
         img_corners = cv2.circle(img_rep, (int(imgpoints[i][0]), int(imgpoints[i][1])), 
                                  5, (0,255,0), -1)
         error = cv2.norm(imgpoints[i]- reprojected, cv2.NORM_L2)/len(reprojected)
@@ -95,25 +96,25 @@ if __name__ == "__main__":
     match basis:
         case "smooth":
             image = cv2.imread("data/orig.png")
-            pattern = 0.001 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], [98.6, 95, 0], 
-                                        [11.5, 93.2, 0],
-                                        [498.8, 8.2, 0], [586, 8.2, 0], [586.5, 95.4, 0], 
-                                        [499.2, 95, 0],
-                                        [499.5, 503, 0], [586.7, 503.9, 0], [585.4, 591.2, 0], 
-                                        [498, 590.3, 0],
-                                        [16.2, 503.1, 0], [103.3, 503.2, 0], [102.7, 590.5, 0], 
-                                        [15.6, 590.5, 0]]
+            pattern = 0.001 * np.array([[12.5, 6.2, 0], [99.5, 8, 0], 
+                                        [98.6, 95, 0], [11.5, 93.2, 0],
+                                        [498.8, 8.2, 0], [586, 8.2, 0], 
+                                        [586.5, 95.4, 0], [499.2, 95, 0],
+                                        [499.5, 503, 0], [586.7, 503.9, 0], 
+                                        [585.4, 591.2, 0], [498, 590.3, 0],
+                                        [16.2, 503.1, 0], [103.3, 503.2, 0], 
+                                        [102.7, 590.5, 0], [15.6, 590.5, 0]]
                                         )
         case "rough":
             image = cv2.imread("data/orig.png")
-            pattern = 0.001 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], [98.7, 98.5, 0], 
-                                        [13.1, 98.8, 0],
-                                        [499.2, 12.7, 0], [585.3, 12.8, 0], [585.1, 98.7, 0], 
-                                        [499.1, 98.6, 0],
-                                        [499.5, 501.2, 0], [585.5, 501.1, 0], [585.6, 587.1, 0], 
-                                        [499.6, 587.1, 0],
-                                        [12.7, 501.2, 0], [98.3, 501.2, 0], [98.4, 587.5, 0], 
-                                        [12.6, 587.3, 0]]
+            pattern = 0.001 * np.array([[12.6, 12.8, 0], [98.5, 12.3, 0], 
+                                        [98.7, 98.5, 0], [13.1, 98.8, 0],
+                                        [499.2, 12.7, 0], [585.3, 12.8, 0], 
+                                        [585.1, 98.7, 0], [499.1, 98.6, 0],
+                                        [499.5, 501.2, 0], [585.5, 501.1, 0], 
+                                        [585.6, 587.1, 0], [499.6, 587.1, 0],
+                                        [12.7, 501.2, 0], [98.3, 501.2, 0], 
+                                        [98.4, 587.5, 0], [12.6, 587.3, 0]]
                                         )
 
     # Undistort image
