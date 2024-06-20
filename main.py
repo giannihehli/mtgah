@@ -32,23 +32,6 @@ if __name__ == '__main__':
     # Get start time
     ts_start = time.time()
 
-    # Print current time
-    print(f'Starting at {datetime.now()}.')
-    
-    # Loop over all data and experiments by uncommenting the lines below 
-    # this also requires inclining everything after this line
-
-    """ # Define the parent directory that contains the folders
-    parent_dir = 'G:/horizontal experiments/'
-
-    # Get a list of all folders in the parent directory
-    folders = [f for f in os.listdir(parent_dir) if os.path.isdir(os.path.join(parent_dir, f))]
-    print(folders)
-
-    # Loop over the folders
-    for data_folder in folders:
-        print(f'Processing folder: {data_folder}') """
-
     ####################################################################################
     # ONLY SECTION TO ADJUST PARAMETERS
 
@@ -280,6 +263,9 @@ if __name__ == '__main__':
         #Define used marker type
         marker = 'DICT_4X4_50'
 
+        # Define the correct ids for the experiments
+        correct_ids = [0, 1, 2, 3]
+
         # Make directory for output images
         if img_out:
             output_folder = f'{data_path}camera/{exp}/'
@@ -327,10 +313,7 @@ if __name__ == '__main__':
 
             # Detect markers
             img_det, corners, ids = detect(img_undst, marker)
-
-            # Define the correct ids for the experiment
-            correct_ids = [0, 1, 2, 3]
-            
+                      
             # Check if correct ids are detected and stop measurement if not
             if not np.array_equal(ids[0:4], correct_ids):
                 print(f'Wrong ids {ids} detected in frame {frame}')
