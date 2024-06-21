@@ -202,14 +202,14 @@ if __name__ == '__main__':
     exp = 'f_r2-pa_d41_h148_16'
 
     # Define positions of the Aruco codes as 3D coordinates in 0.1mm in clockwise order
-    pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], [9.12, 8.92, 0], 
-                              [1.05, 8.92, 0], # Code ID 0, counterclockwise from left top
-                              [50.7, 0.91, 0], [58.77, 0.94, 0], [58.75, 9.04, 0], 
-                              [50.66, 9, 0], # Code ID 1, counterclockwise from left top
-                              [50.57, 51.09, 0], [58.63, 50.99, 0], [58.73, 59.07, 0], 
-                              [50.66, 59.14, 0], # Code ID 2, counterclockwise from left top
-                              [1.08, 51.02, 0], [9.15, 51.02, 0], [9.12, 59.13, 0], 
-                              [1.04, 59.11, 0]]) # Code ID 3, counterclockwise from left top
+    pattern = 100 * np.array([[1.06, 0.82, 0], [9.15, 0.82, 0], # Code ID 0
+                              [9.12, 8.92, 0], [1.05, 8.92, 0], # clockwise from left top
+                              [50.7, 0.91, 0], [58.77, 0.94, 0], # Code ID 1
+                              [58.75, 9.04, 0], [50.66, 9, 0], # clockwise from left top
+                              [50.57, 51.09, 0], [58.63, 50.99, 0], # Code ID 2
+                              [58.73, 59.07, 0], [50.66, 59.14, 0], # clockwise from left top
+                              [1.08, 51.02, 0], [9.15, 51.02, 0], # Code ID 3
+                              [9.12, 59.13, 0], [1.04, 59.11, 0]]) # clockwise from left top
    
     #######################################
     # SCANNER OPTIONS

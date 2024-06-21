@@ -39,9 +39,9 @@ if __name__ == '__main__':
 
     # Define day (or name) of experiments that should be analysed
 #    data_folder = 'pipeline_tests'
-    data_folder = '20240531'
+#    data_folder = '20240531'
 #    data_folder = '20240604'
-#    data_folder = 'combined'
+    data_folder = 'combined'
 
     #######################################
     # CAMERA OPTIONS
@@ -76,6 +76,9 @@ if __name__ == '__main__':
 
     #######################################
     # SCANNER OPTIONS
+
+    # Define if the scanned point cloud should be processed or not
+    process_pointcloud = True # [] True if pointcloud should be processed, False if not
 
     # Define the length of the basis in [m] as the y-distance between the image and raster
     # coordinate frame
@@ -538,66 +541,68 @@ if __name__ == '__main__':
         ts_plotting = time.time()
         time_plotting += ts_plotting - ts_calculation
 
-        # Load the .ply file of the processed experiment
-        cloud = PyntCloud.from_file(f'{data_path}scanner/{exp}.ply')
+        # Process pointcloud if needed
+        if process_pointcloud:
+            # Load the .ply file of the processed experiment
+            cloud = PyntCloud.from_file(f'{data_path}scanner/{exp}.ply')
 
-        # Get the image and indices
-        img_ptc, indices = getimage(cloud)
+            # Get the image and indices
+            img_ptc, indices = getimage(cloud)
 
-        # Try making the directory for the pointcloud images
-        try:
-            os.mkdir(f'{data_path}scanner/images')
-        except FileExistsError:
-            pass
+            # Try making the directory for the pointcloud images
+            try:
+                os.mkdir(f'{data_path}scanner/images')
+            except FileExistsError:
+                pass
 
-        # Save the pointcloud image
-        cv2.imwrite(f'{data_path}scanner/images/{exp}_ptc.jpg', img_ptc)
+            # Save the pointcloud image
+            cv2.imwrite(f'{data_path}scanner/images/{exp}_ptc.jpg', img_ptc)
 
-        # Detect ArUco markers on pointcloud image
-        ptc_det, ptc_corners, ptc_ids = detect(img_ptc, marker)
+            # Detect ArUco markers on pointcloud image
+            ptc_det, ptc_corners, ptc_ids = detect(img_ptc, marker)
 
-        # Save the image with detected markers
-        cv2.imwrite(f'{data_path}scanner/images/{exp}_det.jpg', ptc_det)
+            # Save the image with detected markers
+            cv2.imwrite(f'{data_path}scanner/images/{exp}_det.jpg', ptc_det)
 
-        # Define how many aruco codes are used on the scanned area
-        aruco_count = 4 # [] Number of aruco codes used on the scanned area
+            # Define how many aruco codes are used on the scanned area
+            aruco_count = 4 # [] Number of aruco codes used on the scanned area
 
-        # Sort the detected corners and target points
-        source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern, aruco_count)   
+            # Sort the detected corners and target points
+            source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern, aruco_count)   
 
-        # Calculate the transformation matrix from the detected corners and the 
-        # real world measured pattern
-        M = calculate_transformation(source_ptc, target_ptc)
+            # Calculate the transformation matrix from the detected corners and the 
+            # real world measured pattern
+            M = calculate_transformation(source_ptc, target_ptc)
 
-        # Define the rotation angle in radians
-        theta = np.radians(angle)
+            # Define the rotation angle in radians
+            theta = np.radians(angle)
 
-        # Define the additional rotation matrix for the inclined base plane
-        R = np.array([[1, 0, 0],
-                    [0, np.cos(theta), -np.sin(theta)],
-                    [0, np.sin(theta), np.cos(theta)]])
-        
-        # Define the translation vector for the wanted world frame
-        t = np.array([trans_x, trans_y, trans_z])
+            # Define the additional rotation matrix for the inclined base plane
+            R = np.array([[1, 0, 0],
+                        [0, np.cos(theta), -np.sin(theta)],
+                        [0, np.sin(theta), np.cos(theta)]])
+            
+            # Define the translation vector for the wanted world frame
+            t = np.array([trans_x, trans_y, trans_z])
 
-        # Transform the pointcloud to correct origin
-        cloud_corr = transform(cloud, M, basis_length, R, t)
+            # Transform the pointcloud to correct origin
+            cloud_corr = transform(cloud, M, basis_length, R, t)
 
-        # Rasterise the corrected point cloud
-        max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, world_min_x, 
-                                            world_max_x, world_min_y, world_max_y)
+            # Rasterise the corrected point cloud
+            max_z, x_edges, y_edges = rasterize(cloud_corr, raster_size, world_min_x, 
+                                                world_max_x, world_min_y, world_max_y)
 
-        # Define the output path
-        ptc_output = f'{data_path}rasters/{exp}_raster.asc'
+            # Define the output path
+            ptc_output = f'{data_path}rasters/{exp}_raster.asc'
 
-        # Export pointcloud data as ascii file
-        export(max_z, x_edges, y_edges, raster_size, ptc_output)
+            # Export pointcloud data as ascii file
+            export(max_z, x_edges, y_edges, raster_size, ptc_output)
 
-        print(f'Saved pointcloud raster at {ptc_output}.')
+            print(f'Saved pointcloud raster at {ptc_output}.')
 
-        # Stop time pointcloud pointcloud
-        ts_pointcloud_ptc = time.time()
-        time_ptc_scan += ts_pointcloud_ptc - ts_plotting
+            # Stop time pointcloud pointcloud
+            ts_pointcloud_ptc = time.time()
+            time_ptc_scan += ts_pointcloud_ptc - ts_plotting
 
     # Save total measured parameters to dataframe
     dict_tot = {'id': exp_ids, 'layout': layout_tot, 'basis': basis_tot, 
