@@ -6,8 +6,6 @@ import time
 import numpy as np
 import pandas as pd
 from pyntcloud import PyntCloud
-from datetime import datetime
-
 
 # IMPORT USER-DEFINED MODULES
 from calibrateCameravideo import calibratevideo
@@ -66,8 +64,8 @@ if __name__ == '__main__':
     # (see sigmaSpace) will be mixed together, resulting in larger areas of semi-equal color.
     sigma_space = 35 # [px] Filter sigma in the coordinate space. 
     # A larger value of the parameter means that farther pixels will influence each other 
-    # as long as their colors are close enough (see sigmaColor ). When d>0, it specifies the 
-    # neighborhood size regardless of sigmaSpace. Otherwise, d is proportional to sigmaSpace.
+    # as long as their colors are close enough (see sigmaColor ). When sigma_color>0, it specifies the 
+    # neighborhood size regardless of sigmaSpace. Otherwise, sigma_color is proportional to sigma_space.
 
     # Define filter threshold for binary thresholding (90)
     filter_threshold = 100 # [px] Threshold value for binary thresholding -
@@ -78,9 +76,6 @@ if __name__ == '__main__':
 
     #######################################
     # SCANNER OPTIONS
-
-    # Define how many aruco codes are used on the scanned area
-    aruco_count = 4 # [] Number of aruco codes used on the scanned area
 
     # Define the length of the basis in [m] as the y-distance between the image and raster
     # coordinate frame
@@ -563,7 +558,10 @@ if __name__ == '__main__':
 
         # Save the image with detected markers
         cv2.imwrite(f'{data_path}scanner/images/{exp}_det.jpg', ptc_det)
-        
+
+        # Define how many aruco codes are used on the scanned area
+        aruco_count = 4 # [] Number of aruco codes used on the scanned area
+
         # Sort the detected corners and target points
         source_ptc, target_ptc = sortpoints(ptc_corners, ptc_ids, pattern, aruco_count)   
 
